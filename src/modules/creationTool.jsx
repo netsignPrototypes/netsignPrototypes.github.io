@@ -23,6 +23,10 @@ const TEXT_ZONE_BG_DEFAULT = "cursor-pointer hover:bg-blue-600 hover:bg-opacity-
 //const DEV_POSITION_ZONES_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 const DEV_POSITION_ZONES_NUMBERS = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',];
 
+const POSITION_ZONES_CLASSES = {
+
+}
+
 const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
 
   // STATES MANAGEMENT ------------------------------------------------------------------------------
@@ -791,7 +795,7 @@ const CreationTool = () => {
             </div>
           </div>}
 
-          <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
+          {/* <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
             <div className={`flex flex-row h-8 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
               <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-2/5 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[1]}</div>
               <div className={`flex-grow h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-full', textClass: 'pt-8 px-8 pb-4'})}>{DEV_POSITION_ZONES_NUMBERS[2]}</div>
@@ -870,6 +874,44 @@ const CreationTool = () => {
               <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-2/5 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[39]}</div>
               <div className={`flex-grow h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-full', textClass: 'pb-8 px-8 pt-4'})}>{DEV_POSITION_ZONES_NUMBERS[40]}</div>
               <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'w-2/5 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})} >{DEV_POSITION_ZONES_NUMBERS[41]}</div>
+            </div>
+          </div> */}
+
+          <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
+            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-3/5 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'w-3/5 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
+            </div>
+            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+            </div>
+            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+            </div>
+            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+            </div>
+            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-3/5 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'w-3/5 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
             </div>
           </div>
 
