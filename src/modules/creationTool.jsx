@@ -976,6 +976,9 @@ const CreationTool = ({ isHidden }) => {
           </div>
         </div>} */}
         <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full">
+          {thumbBgImage !== "" && !playingPreview && <div className="relative w-full">
+            {playingPreview ? <StopIcon onClick={event => handlePlayingPreview(event, false)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" /> : <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-0 top-0 h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" />}
+          </div>}
           <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
             Taille du texte :
           </div>
@@ -1009,9 +1012,6 @@ const CreationTool = ({ isHidden }) => {
           <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
             <input type="range" id="textWidth" step={1} name="textWidth" min="0" max="100" onChange={e => setTextMaxWidth(e.target.value)} defaultValue={DEFAULT_TEXT_MAX_WIDTH} />
           </div>
-          {thumbBgImage !== "" && !playingPreview && <div className="flex-auto flex justify-end">
-            {playingPreview ? <StopIcon onClick={event => handlePlayingPreview(event, false)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" /> : <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" />}
-          </div>}
         </div>
         <div className="container grid grid-cols-3 gap-2 mx-auto">
           <div onClick={event => handleChangeThumbTemplate(event, 4)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 4 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
