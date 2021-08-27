@@ -3,6 +3,7 @@ import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
 import { ArrowCircleLeftIcon, ArrowLeftIcon, BeakerIcon, SparklesIcon, PlusSmIcon, MinusSmIcon, XCircleIcon, PlusCircleIcon, MinusCircleIcon, PlayIcon, StopIcon, CollectionIcon, ViewGridAddIcon } from '@heroicons/react/outline'
 import {  } from '@heroicons/react/solid'
+import Resizer from './resizer';
 
 //const defaultText = "La beauté est dans le regard de celui qui regarde.";
 
@@ -23,9 +24,35 @@ const TEXT_ZONE_BG_DEFAULT = "cursor-pointer hover:bg-blue-600 hover:bg-opacity-
 //const DEV_POSITION_ZONES_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 const DEV_POSITION_ZONES_NUMBERS = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',];
 
-const POSITION_ZONES_CLASSES = {
+const DEFAULT_TEXT_MAX_WIDTH = 60;
 
-}
+const TEXT_ZONE_POSITION_CLASS = {
+	1: {containerClass: 'items-start justify-start', zoneClass: 'mr-10 mb-10 max-w-60 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'},
+	2: {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'},
+	3: {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'},
+	4: {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'},
+	5: {containerClass: 'items-start justify-end', zoneClass: 'ml-10 mb-10 max-w-60 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'},
+	6: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm pl-8 py-3 pr-4', textClass: ''},
+	7: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	8: {containerClass: 'items-start justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
+	9: {containerClass: 'items-start justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	10: {containerClass: 'items-start justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
+	11: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'},
+	12: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	13: {containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
+	14: {containerClass: 'items-center justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	15: {containerClass: 'items-center justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
+	16: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'},
+	17: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	18: {containerClass: 'items-end justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
+	19: {containerClass: 'items-end justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
+	20: {containerClass: 'items-end justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
+	21: {containerClass: 'items-end justify-start', zoneClass: 'mr-10 mt-10 max-w-60 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'},
+	22: {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'},
+	23: {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'},
+	24: {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'},
+	25: {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'}
+};
 
 const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
 
@@ -57,8 +84,9 @@ const LoadingSpinner = ({ className }) => {
   );
 }
 
-const CreationTool = () => {
+const CreationTool = ({ isHidden }) => {
   const [text, setText] = useState(defaultText);
+  const [textMaxWidth, setTextMaxWidth] = useState(DEFAULT_TEXT_MAX_WIDTH);
   const [searchQueryWords, setSearchQueryWords] = useState([]);
   const [images, setImages] = useState([]);
   const [imagesToDisplay, setImagesToDisplay] = useState([]);
@@ -71,7 +99,7 @@ const CreationTool = () => {
   const [playingPreview, setPlayingPreview] = useState(true);
 
   const [thumbPreviewTextClass, setThumbPreviewTextClass] = useState({});
-  const [thumbTextClass, setThumbTextClass] = useState({containerClass: 'items-center justify-center p-3', zoneClass: 'mx-20 text-center rounded-sm', textClass: 'py-3 px-4'});
+  const [thumbTextClass, setThumbTextClass] = useState({containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'});
 
   const [thumbTextZoneAllowPreview, setThumbTextZoneAllowPreview] = useState(true);
 
@@ -282,6 +310,10 @@ const CreationTool = () => {
       });
 
       setSearchQueryWords(newSearchWords);
+
+      if (newSearchWords.length === 0) {
+        getCorrespondingImages([], lang);
+      }
 
       setSearchData(tagSearchData);
 
@@ -698,19 +730,23 @@ const CreationTool = () => {
     setTextZoneBg(TEXT_ZONE_BG_DEFAULT);
   }
 
-  const handleClickTextZonePosition = (e) => {
+  const handleClickTextZonePosition = (e, positionNo) => {
     e.preventDefault();
     const { target } = e;
 
-    if (thumbTextZoneAllowPreview) {
-      let newThumbTextClass = {...thumbPreviewTextClass};
+    let newThumbTextClass = {};
 
-      setThumbTextClass(newThumbTextClass);
+    if (thumbTextZoneAllowPreview) {
+      newThumbTextClass = {...thumbPreviewTextClass};
+      setThumbTextClass(TEXT_ZONE_POSITION_CLASS[positionNo]);
       setThumbPreviewTextClass({});
       setThumbTextZoneAllowPreview(false);
       setTextZoneBg("text-transparent");
     } else {
+      newThumbTextClass = {...thumbTextClass};
       setThumbTextZoneAllowPreview(true);
+      setTextZoneBg(TEXT_ZONE_BG_DEFAULT);
+      setThumbPreviewTextClass(thumbTextClass);
     }
     
   }
@@ -722,8 +758,17 @@ const CreationTool = () => {
     setPlayingPreview(play);
   }
 
+  /* const handleResize = (movementX, movementY) => {
+
+    let currentMaxWidth = {...textMaxWidth};
+
+    setTextMaxWidth(currentMaxWidth + movementX);
+
+    console.log(handleResize, movementX);
+  }; */
+
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row items-start justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 space-y-20 lg:space-y-0 lg:space-x-40">
+    <div className={`min-h-screen flex-col lg:flex-row items-start justify-center bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-8 space-y-20 lg:space-y-0 lg:space-x-40 ${isHidden ? 'hidden' : 'flex'}`}>
       <div className="max-w-2xl w-full space-y-3">
         <div className="flex flex-col items-start justify-start">
           <h2 className="ml-2 text-left text-3xl font-extrabold text-gray-900 select-none">Création simplifiée</h2>
@@ -741,7 +786,7 @@ const CreationTool = () => {
                 name="texte"
                 type="textarea"
                 required
-                className="appearance-none rounded-none relative block w-full h-20 max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="resize-none appearance-none rounded-none relative block w-full h-20 max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Écrivez le texte qui s'affichera dans la vignette"
                 onKeyDown={handleKeyDown}
               />
@@ -788,12 +833,6 @@ const CreationTool = () => {
       <div className="max-w-2xl w-full space-y-4">
         {isThumbCreated && <><div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
           {thumbBgImage !== "" && <div className="overflow-hidden"><img src={thumbBgImage} alt="ThumbBg" onLoad={event => {handlePlayingPreview(event, true); setIsLoadingThumbImage(false)}} onAnimationStart={event => handlePlayingPreview(event, true)} onAnimationEnd={event => handlePlayingPreview(event, false)} className={`${playingPreview ? 'zoom-in-zoom-out' : 'zoom-ended'} select-none rounded-md w-full h-full object-center object-cover`} /></div>}
-
-          {thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
-            <div className={`pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`}>
-              <div className={`select-none pointer-events-none align-middle font-medium text-${thumbFontSize} ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)"} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)"}}>{thumbText}</div>
-            </div>
-          </div>}
 
           {/* <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
             <div className={`flex flex-row h-8 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
@@ -879,45 +918,52 @@ const CreationTool = () => {
 
           <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-3/5 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'w-3/5 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 1)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mr-10 mb-10 max-w-60 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 2)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 3)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 4)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 5)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'ml-10 mb-10 max-w-60 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 w-3/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 6)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm pl-8 py-3 pr-4', textClass: ''})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 7)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 8)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 9)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 10)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 11)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 12)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 13)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 14)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 15)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 16)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 17)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 18)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 19)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 20)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-3/5 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 w-3/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'w-3/5 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 21)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mr-10 mt-10 max-w-60 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 22)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 23)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 24)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 25)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
             </div>
           </div>
 
           {thumbPreviewTextClass.containerClass && thumbTextZoneAllowPreview && <div className={`pointer-events-none flex w-full h-full ${thumbPreviewTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-800 bg-opacity-15'}  ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
-            <div className={`pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`}>
+            <div className={`min-w-min pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`} style={{maxWidth: `${parseInt(textMaxWidth) + 2}%`}}>
               <div className={`select-none pointer-events-none align-middle font-medium text-${thumbFontSize} rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)"} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)"}}>{thumbText}</div>
+            </div>
+          </div>}
+
+          {thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
+            <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`}}>
+              {/* <Resizer onResize={handleResize} sides={["left", "right"]} /> */}
+              <div className={`select-none pointer-events-none font-medium text-${thumbFontSize} ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)"} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)"}}>{thumbText}</div>
             </div>
           </div>}
 
@@ -930,7 +976,7 @@ const CreationTool = () => {
           </div>
         </div>} */}
         <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full">
-          <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle cursor-pointer border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+          <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
             Taille du texte :
           </div>
           <div onClick={event => handleChangeThumbFontSize(event, 'thumb1')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
@@ -957,6 +1003,12 @@ const CreationTool = () => {
             (thumbFontSize === "thumb6" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             6
           </div>
+          <div className={"select-none rounded-md m-1 lg:pl-6 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+            Largeur du texte :
+          </div>
+          <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+            <input type="range" id="textWidth" step={1} name="textWidth" min="0" max="100" onChange={e => setTextMaxWidth(e.target.value)} defaultValue={DEFAULT_TEXT_MAX_WIDTH} />
+          </div>
           {thumbBgImage !== "" && !playingPreview && <div className="flex-auto flex justify-end">
             {playingPreview ? <StopIcon onClick={event => handlePlayingPreview(event, false)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" /> : <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" />}
           </div>}
@@ -967,7 +1019,7 @@ const CreationTool = () => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="w-3/5 justify-center items-center text-center align-middle flex flex-row bg-gray-50 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-3 px-4 text-center text-gray-900 align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ____</div>
+                <div className="pt-1 pb-3 px-4 text-center text-gray-900 align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ________</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
@@ -998,7 +1050,7 @@ const CreationTool = () => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="w-3/5 justify-center items-center text-center align-middle flex flex-row bg-gray-900 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-3 px-4 text-center text-white align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ____</div>
+                <div className="pt-1 pb-3 px-4 text-center text-white align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ________</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>

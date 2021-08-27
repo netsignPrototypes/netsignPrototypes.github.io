@@ -1,11 +1,20 @@
+import React, { useState } from 'react'
 import './App.css';
 import { CreationTool, BirthdayTool } from './modules';
+import { DatabaseIcon, PhotographIcon } from '@heroicons/react/outline'
 
 function App() {
+
+  const [currentTool, setCurrentTool] = useState("CreationTool");
+
   return (
     <>
     {/* <BirthdayTool /> */}
-    <CreationTool />
+    <div className="z-50 fixed flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
+      <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+      <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+    </div>
+    <CreationTool isHidden={currentTool !== "CreationTool"} />
     {/* <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8"> */}
         

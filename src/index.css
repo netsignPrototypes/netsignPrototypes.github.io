@@ -51,31 +51,97 @@
 }
 
 .text-thumb1 {
-    font-size: 1.15rem;
-    line-height: 1.45rem;
+    font-size: 0.65rem;
+    line-height: 0.95rem;
 }
 
 .text-thumb2 {
-    font-size: 1.35rem;
-    line-height: 1.65rem;
+    font-size: 0.85rem;
+    line-height: 1.15rem;
 }
 
 .text-thumb3 {
-    font-size: 1.55rem;
-    line-height: 1.85rem;
+    font-size: 1.05rem;
+    line-height: 1.35rem;
 }
 
 .text-thumb4 {
-    font-size: 1.75rem;
-    line-height: 2.05rem;
+    font-size: 1.25rem;
+    line-height: 1.55rem;
 }
 
 .text-thumb5 {
-    font-size: 1.95rem;
-    line-height: 2.15rem;
+    font-size: 1.45rem;
+    line-height: 1.65rem;
 }
 
 .text-thumb6 {
-    font-size: 2.15rem;
-    line-height: 2.4rem;
+    font-size: 1.65rem;
+    line-height: 1.9rem;
+}
+
+@media (min-width:1024px) {
+    .text-thumb1 {
+        font-size: 1.15rem;
+        line-height: 1.45rem;
+    }
+    
+    .text-thumb2 {
+        font-size: 1.35rem;
+        line-height: 1.65rem;
+    }
+    
+    .text-thumb3 {
+        font-size: 1.55rem;
+        line-height: 1.85rem;
+    }
+    
+    .text-thumb4 {
+        font-size: 1.75rem;
+        line-height: 2.05rem;
+    }
+    
+    .text-thumb5 {
+        font-size: 1.95rem;
+        line-height: 2.15rem;
+    }
+    
+    .text-thumb6 {
+        font-size: 2.15rem;
+        line-height: 2.4rem;
+    }
+}
+
+/* .text-thumb1 {
+    font-size: 0.958vw;
+    line-height: 1.208vw;
+}
+
+.text-thumb2 {
+    font-size: 1.125vw;
+    line-height: 1.375vw;
+}
+
+.text-thumb3 {
+    font-size: 1.292vw;
+    line-height: 1.542vw;
+}
+
+.text-thumb4 {
+    font-size: 1.458vw;
+    line-height: 1.708vw;
+}
+
+.text-thumb5 {
+    font-size: 1.625vw;
+    line-height: 1.792vw;
+}
+
+.text-thumb6 {
+    font-size: 1.792vw;
+    line-height: 2vw;
+} */
+
+.max-w-62 {
+    max-width: 60%;
 }
