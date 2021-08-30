@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './App.css';
-import { CreationTool, BirthdayTool } from './modules';
+import { CreationTool, BirthdayTool, DataSourceTool } from './modules';
 import { DatabaseIcon, PhotographIcon } from '@heroicons/react/outline'
 
 function App() {
@@ -15,6 +15,7 @@ function App() {
       <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
     </div>
     <CreationTool isHidden={currentTool !== "CreationTool"} />
+    <DataSourceTool isHidden={currentTool !== "DataSourceTool"} />
     {/* <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8"> */}
         

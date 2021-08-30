@@ -1,3 +1,9 @@
+
+const dataSourceType = {
+    GOOGLESHEET: "GOOGLESHEET",
+    API: "API"
+};
+
 function DataSource() {
     // CONFIG
     this.name = "";
@@ -31,6 +37,29 @@ DataSource.prototype.init = function(name, fetchQuery, type, dataRefreshRate) {
     this.dataRefreshRate = dataRefreshRate;
 
     this.loadData();
+}
+
+DataSource.prototype.initType = function() {
+    if (this.parameters.url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
+        this.type = dataSourceType.GOOGLESHEET;
+    } else {
+        this.type = dataSourceType.API;
+    }
+}
+
+DataSource.prototype.initFetchQuery = function() {
+    switch (this.type) {
+        case dataSourceType.GOOGLESHEET:
+            let id = this.parameters.url.substring(this.parameters.url.indexOf("/d/") + 3, this.parameters.url.lastIndexOf("/"));
+            this.fetchQuery = `https://spreadsheets.google.com/feeds/list/${id}/3/public/values?alt=json`;
+            break;
+        case dataSourceType.API:
+            this.fetchQuery = this.parameters.url;
+            break;
+        default:
+            this.fetchQuery = this.parameters.url;
+            break;
+    }
 }
 
 DataSource.prototype.setData = function(data) {
@@ -182,3 +211,5 @@ DataSource.prototype.formatDataToModel = function(data, model) {
 
     this.formatedData = formatedData;
 }
+
+export default DataSource;

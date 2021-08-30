@@ -1,16 +1,17 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
 import { ArrowCircleLeftIcon, ArrowLeftIcon, BeakerIcon, SparklesIcon, PlusSmIcon, MinusSmIcon, XCircleIcon, PlusCircleIcon, MinusCircleIcon, PlayIcon, StopIcon, CollectionIcon, ViewGridAddIcon } from '@heroicons/react/outline'
 import {  } from '@heroicons/react/solid'
 import Resizer from './resizer';
 
+import { useMediaQuery } from 'react-responsive';
+
 //const defaultText = "La beauté est dans le regard de celui qui regarde.";
 
 //const defaultText = "A sign of the return of the beautiful season, this unique exhibition in the country, which showcases the poetry of the shape of the egg, is coming to Quebec for the first time. A dozen emerging and established artists take over the spaces of the mall, giving the public free rein to their imagination."
 
 const defaultText = "";
-const NB_IMAGE_TO_DISPLAY = 20;
 
 /* const TEXT_ZONE_POSITION_SPACE = "1";
 const TEXT_ZONE_BG = "rounded-md bg-gray-800 bg-opacity-20"; */
@@ -27,31 +28,42 @@ const DEV_POSITION_ZONES_NUMBERS = ['', '', '', '', '', '', '', '', '', '', '', 
 const DEFAULT_TEXT_MAX_WIDTH = 60;
 
 const TEXT_ZONE_POSITION_CLASS = {
-	1: {containerClass: 'items-start justify-start', zoneClass: 'mr-10 mb-10 max-w-60 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'},
-	2: {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'},
-	3: {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'},
-	4: {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'},
-	5: {containerClass: 'items-start justify-end', zoneClass: 'ml-10 mb-10 max-w-60 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'},
-	6: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm pl-8 py-3 pr-4', textClass: ''},
-	7: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	8: {containerClass: 'items-start justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
-	9: {containerClass: 'items-start justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	10: {containerClass: 'items-start justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
-	11: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'},
-	12: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	13: {containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
-	14: {containerClass: 'items-center justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	15: {containerClass: 'items-center justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
-	16: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'},
-	17: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	18: {containerClass: 'items-end justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'},
-	19: {containerClass: 'items-end justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'},
-	20: {containerClass: 'items-end justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'},
-	21: {containerClass: 'items-end justify-start', zoneClass: 'mr-10 mt-10 max-w-60 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'},
-	22: {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'},
-	23: {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'},
-	24: {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'},
-	25: {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'}
+	1: {containerClass: 'items-start justify-start', zoneClass: 'mr-10 mb-10 max-w-60 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5', margins: [0, 40, 40, 0], paddings: [32, 20, 16, 32]},
+	2: {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4', margins: [0, 40, 40, 40], paddings: [32, 16, 12, 16]},
+	3: {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4', margins: [0, 40, 40, 40], paddings: [32, 16, 12, 16]},
+	4: {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4', margins: [0, 40, 40, 40], paddings: [32, 16, 12, 16]},
+	5: {containerClass: 'items-start justify-end', zoneClass: 'ml-10 mb-10 max-w-60 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5', margins: [0, 0, 40, 40], paddings: [32, 32, 16, 20]},
+	6: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4', margins: [60, 40, 40, 0], paddings: [12, 16, 12, 32]},
+	7: {containerClass: 'items-start justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [60, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	8: {containerClass: 'items-start justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4', margins: [60, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	9: {containerClass: 'items-start justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [60, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	10: {containerClass: 'items-start justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4', margins: [60, 0, 40, 40], paddings: [12, 32, 12, 16]},
+	11: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4', margins: [40, 40, 40, 0], paddings: [12, 16, 12, 32]},
+	12: {containerClass: 'items-center justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [40, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	13: {containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4', margins: [40, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	14: {containerClass: 'items-center justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [40, 40, 40, 40], paddings: [12, 16, 12, 16]},
+	15: {containerClass: 'items-center justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4', margins: [40, 0, 40, 40], paddings: [12, 32, 12, 16]},
+	16: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4', margins: [40, 40, 60, 0], paddings: [12, 16, 12, 32]},
+	17: {containerClass: 'items-end justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [40, 40, 60, 40], paddings: [12, 16, 12, 16]},
+	18: {containerClass: 'items-end justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4', margins: [40, 40, 60, 40], paddings: [12, 16, 12, 16]},
+	19: {containerClass: 'items-end justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4', margins: [40, 40, 60, 40], paddings: [12, 16, 12, 16]},
+	20: {containerClass: 'items-end justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4', margins: [40, 0, 60, 40], paddings: [12, 32, 12, 16]},
+	21: {containerClass: 'items-end justify-start', zoneClass: 'mr-10 mt-10 max-w-60 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5', margins: [40, 40, 0, 0], paddings: [16, 20, 32, 32]},
+	22: {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4', margins: [40, 40, 0, 40], paddings: [12, 16, 32, 16]},
+	23: {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4', margins: [40, 40, 0, 40], paddings: [12, 16, 32, 16]},
+	24: {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4', margins: [40, 40, 0, 40], paddings: [12, 16, 32, 16]},
+	25: {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5', margins: [40, 0, 0, 40], paddings: [16, 32, 32, 20]}
+};
+
+const TEXT_ZONE_FONT_SIZE = {
+  thumb0: [18.4, 23.2],
+  thumb1: [21.6, 26.4],
+  thumb2: [24.8, 29.6],
+  thumb3: [28, 32.8],
+  thumb4: [31.2, 34.4],
+  thumb5: [34.4, 38.4],
+  thumb6: [37.6, 41.6],
+  thumb7: [40.8, 44.8],
 };
 
 const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
@@ -66,13 +78,23 @@ const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isMouseOver, setIsMouseOver] = useState(false);
 
-  return (
-    <div onClick={onClick} onMouseOver={() => setIsMouseOver(true)} onMouseLeave={() => setIsMouseOver(false)} className="aspect-w-16 aspect-h-9 cursor-pointer">
-      {isLoading && <div className="flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
-      <img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" />
-      {(isMouseOver && hoverOptions.length > 0) && <div className="flex flex-row items-end justify-end"><div className="p-1 bg-gray-800 bg-opacity-50 rounded-tl-lg">{hoverOptions.map(option => option)}</div></div>}
-    </div>
-  );
+  const isMobile = useMediaQuery({ query: `(max-width: 760px)` });
+
+  return (<>
+    {isMobile ? 
+      <div onClick={onClick} className="aspect-w-16 aspect-h-9 cursor-pointer">
+        {isLoading && <div className="flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
+        <img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" />
+        {((isMouseOver || isMobile) && hoverOptions.length > 0) && <div className="flex flex-row items-end justify-end"><div className="p-1 bg-gray-800 bg-opacity-50 rounded-tl-lg rounded-br-sm">{hoverOptions.map(option => option)}</div></div>}
+      </div>
+    :
+      <div onClick={onClick} onMouseOver={() => setIsMouseOver(true)} onMouseLeave={() => setIsMouseOver(false)} className="aspect-w-16 aspect-h-9 cursor-pointer">
+        {isLoading && <div className="flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
+        <img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" />
+        {((isMouseOver || isMobile) && hoverOptions.length > 0) && <div className="flex flex-row items-end justify-end"><div className="p-1 bg-gray-800 bg-opacity-50 rounded-tl-lg rounded-tl-lg rounded-br-sm">{hoverOptions.map(option => option)}</div></div>}
+      </div>
+    }
+  </>);
 }
 
 const LoadingSpinner = ({ className }) => {
@@ -99,7 +121,7 @@ const CreationTool = ({ isHidden }) => {
   const [playingPreview, setPlayingPreview] = useState(true);
 
   const [thumbPreviewTextClass, setThumbPreviewTextClass] = useState({});
-  const [thumbTextClass, setThumbTextClass] = useState({containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'});
+  const [thumbTextClass, setThumbTextClass] = useState(TEXT_ZONE_POSITION_CLASS[13]);
 
   const [thumbTextZoneAllowPreview, setThumbTextZoneAllowPreview] = useState(true);
 
@@ -109,11 +131,16 @@ const CreationTool = ({ isHidden }) => {
 
   const [TEXT_ZONE_BG, setTextZoneBg] = useState(TEXT_ZONE_BG_DEFAULT);
 
-  const [thumbFontSize, setThumbFontSize] = useState("thumb3");
+  const [thumbFontSize, setThumbFontSize] = useState("thumb4");
+
+  const thumbPreview = useRef();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingThumbImage, setIsLoadingThumbImage] = useState(false);
   const [isThumbCreated, setIsThumbCreated] = useState(false);
+  const isMobile = useMediaQuery({ query: `(max-width: 760px)` });
+
+  const NB_IMAGE_TO_DISPLAY = isMobile ? 21 : 20;
 
   const analyzeEntities = (text) => {
     CloudNaturalLanguageAPI.analyzeEntities(text).then((Result)=>{
@@ -184,7 +211,7 @@ const CreationTool = ({ isHidden }) => {
 
       let newImagesToDisplay = [...Result.hits];
 
-      setImagesToDisplay(newImagesToDisplay.splice(0,NB_IMAGE_TO_DISPLAY))
+      setImagesToDisplay(newImagesToDisplay.splice(0, NB_IMAGE_TO_DISPLAY))
 
       setIsLoading(false);
 
@@ -710,13 +737,13 @@ const CreationTool = ({ isHidden }) => {
     }
   }
 
-  const handleOverTextZonePosition = (e, classList) => {
+  const handleOverTextZonePosition = (e, positionNo) => {
     e.preventDefault();
     e.stopPropagation();
     const { target } = e;
 
     if (thumbTextZoneAllowPreview) {
-      setThumbPreviewTextClass(classList);
+      setThumbPreviewTextClass(TEXT_ZONE_POSITION_CLASS[positionNo]);
     }
     
   }
@@ -736,17 +763,18 @@ const CreationTool = ({ isHidden }) => {
 
     let newThumbTextClass = {};
 
-    if (thumbTextZoneAllowPreview) {
+    if (thumbTextZoneAllowPreview || isMobile) {
       newThumbTextClass = {...thumbPreviewTextClass};
       setThumbTextClass(TEXT_ZONE_POSITION_CLASS[positionNo]);
       setThumbPreviewTextClass({});
       setThumbTextZoneAllowPreview(false);
+      
       setTextZoneBg("text-transparent");
     } else {
-      newThumbTextClass = {...thumbTextClass};
+      newThumbTextClass = {...thumbPreviewTextClass};
       setThumbTextZoneAllowPreview(true);
       setTextZoneBg(TEXT_ZONE_BG_DEFAULT);
-      setThumbPreviewTextClass(thumbTextClass);
+      setThumbPreviewTextClass(TEXT_ZONE_POSITION_CLASS[positionNo]);
     }
     
   }
@@ -756,6 +784,14 @@ const CreationTool = ({ isHidden }) => {
     const { target } = e;
 
     setPlayingPreview(play);
+  }
+
+  const getComputedPixelSize = (pixel) => {
+    let computedPixelSize = 0;
+
+    computedPixelSize = thumbPreview.current.offsetWidth / 672 * pixel;
+
+    return computedPixelSize;
   }
 
   /* const handleResize = (movementX, movementY) => {
@@ -768,8 +804,8 @@ const CreationTool = ({ isHidden }) => {
   }; */
 
   return (
-    <div className={`min-h-screen flex-col lg:flex-row items-start justify-center bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-8 space-y-20 lg:space-y-0 lg:space-x-40 ${isHidden ? 'hidden' : 'flex'}`}>
-      <div className="max-w-2xl w-full space-y-3">
+    <div className={`min-h-screen flex-col lg:flex-row items-start justify-center bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-8 space-y-8 lg:space-y-0 lg:space-x-40 ${isHidden ? 'hidden' : 'flex'}`}>
+      <div className="lg:max-w-2xl w-full space-y-3">
         <div className="flex flex-col items-start justify-start">
           <h2 className="ml-2 text-left text-3xl font-extrabold text-gray-900 select-none">Création simplifiée</h2>
         </div>
@@ -799,14 +835,14 @@ const CreationTool = ({ isHidden }) => {
         </div>
         {isThumbCreated ? <>
 
-        {(selectedSearchTags.length > 0 || searchQueryWords.length > 0) && <div className="flex flex-col flex-wrap item-center justify-start align-middle bg-gray-100 p-1 rounded-md w-full">
+        {(selectedSearchTags.length > 0 || searchQueryWords.length > 0) && <div className="flex flex-col flex-wrap item-center justify-start align-middle bg-gray-100 py-1 px-2 rounded-md w-full">
           <div className="flex flex-row flex-wrap item-center justify-start align-middle">
             {searchQueryWords.length > 0 && searchQueryWords.map((word, index) => {
               return <div className={`flex flex-row flex-wrap item-center justify-start align-middle rounded-full my-1 ${(word.searched || word.addedSearch) && searchQueryWords[index + 1] && (!searchQueryWords[index + 1].addedSearch) ? 'mr-8' : (word.searched || word.addedSearch) ? 'mr-px' : 'mr-1 ml-1' }`}>
-                {(!word.searched && !(word.addedSearch && !word.searched)) && <div onClick={event => handleChangeAddSearchQueryWord(event, index)} value={index} key={index + '-words23'} className={"rounded-full mx-0.5 text-center text-xs flex items-center justify-center align-middle cursor-pointer border-2 text-blue-600 hover:text-blue-500 border-gray-100"}>
-                  <PlusCircleIcon key={index + '-words23Ico'} className="h-5 w-5"/>
+                {(!word.searched && !(word.addedSearch && !word.searched)) && <div onClick={event => handleChangeAddSearchQueryWord(event, index)} value={index} key={index + '-words23'} className={"rounded-full mx-0.5 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 text-blue-600 hover:text-blue-500 border-gray-100"}>
+                  <PlusCircleIcon key={index + '-words23Ico'} className="lg:h-5 lg:w-5 h-6 w-6"/>
                 </div>}
-                <div onClick={event => handleChangeQueryWords(event, index)} value={index} key={word.text + '-words'} className={`${word.searched && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? 'rounded-l-full' : word.addedSearch && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? '' : word.addedSearch ? 'rounded-r-full' : 'rounded-full' } py-0.5 px-2 text-center text-xs flex items-center justify-center align-middle cursor-pointer border-2 select-none ` + 
+                <div onClick={event => handleChangeQueryWords(event, index)} value={index} key={word.text + '-words'} className={`${word.searched && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? 'rounded-l-full' : word.addedSearch && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? '' : word.addedSearch ? 'rounded-r-full' : 'rounded-full' } py-0.5 px-2 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 select-none ` + 
                   (word.searched ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : (word.addedSearch && !word.searched) ? "text-white bg-blue-500 hover:bg-blue-400 cursor-pointer border-2 border-blue-500 hover:border-blue-400" : "text-gray-900 bg-gray-300 hover:bg-gray-200 border-gray-300 hover:border-gray-200 rounded-r-full")}>
                   {word.text} {word.addedSearch && <XCircleIcon key={index + '-wordsIco'} className="ml-2 h-4 w-4"/>}
                 </div>
@@ -814,24 +850,27 @@ const CreationTool = ({ isHidden }) => {
             })}
           </div>
           <div className="flex flex-row flex-wrap item-center justify-start align-middle">
-            {selectedSearchTags.length > 0 && <div onClick={handlePreviousSelectedSearchTag} className="flex flex-row flex-wrap item-center justify-start align-middle m-1 cursor-pointer"><ArrowCircleLeftIcon className="h-5 w-5 text-blue-500"/></div>}
+            {selectedSearchTags.length > 0 && <div onClick={handlePreviousSelectedSearchTag} className="flex flex-row flex-wrap item-center justify-start align-middle m-1 cursor-pointer"><ArrowCircleLeftIcon className="lg:h-5 lg:w-5 h-6 w-6 text-blue-500"/></div>}
             {selectedSearchTags.map((tag, index) => {
-                return <div onClick={event => handleChangeAutoSelectedSearchTags(event, index)} value={index} key={tag + '-selectedSearchTags'} className={"select-none rounded-md ml-1 text-center text-xs flex items-center justify-center align-middle cursor-pointer " + 
-                (selectedSearchTags.length - 1 === index ? "text-blue-500 cursor-pointer" : "text-gray-400 cursor-pointer")}>
+                return <div onClick={event => handleChangeAutoSelectedSearchTags(event, index)} value={index} key={tag + '-selectedSearchTags'} className={"select-none rounded-md ml-1 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer " + 
+                (selectedSearchTags.length - 1 === index ? "text-blue-500 cursor-pointer" : "text-gray-500 cursor-pointer")}>
                   {tag} {selectedSearchTags.length - 1 !== index && '/'}
                 </div>
               })}
           </div>
         </div>}
 
-        <div className="container grid grid-cols-4 gap-2 mx-auto">
+        <div className="container grid grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 mx-auto">
           {imagesToDisplay.map((image, index) => {
-            return <LibraryMediaContainer key={image.id} alt={image.tags} onClick={event => handleChangeThumbBgImage(event, index)} src={image.previewURL} hoverOptions={checkAsSimilarImages(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarImages(event, index)} className="h-5 w-5 text-white hover:text-opacity-75" />] : []} />
+            return <LibraryMediaContainer key={image.id} alt={image.tags} onClick={event => handleChangeThumbBgImage(event, index)} src={image.previewURL} hoverOptions={checkAsSimilarImages(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarImages(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} />
           })}
         </div></> : <></>}
+
+        {isThumbCreated && <div className="text-blue-500 text-xs lg:text-sm text-center w-full mt-1">Sélectionnez une image ci-haut</div>}
       </div>
-      <div className="max-w-2xl w-full space-y-4">
-        {isThumbCreated && <><div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
+      <div className="lg:max-w-2xl w-full" ref={thumbPreview}>
+        {isThumbCreated && thumbBgImage !== "" && <>
+        <div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
           {thumbBgImage !== "" && <div className="overflow-hidden"><img src={thumbBgImage} alt="ThumbBg" onLoad={event => {handlePlayingPreview(event, true); setIsLoadingThumbImage(false)}} onAnimationStart={event => handlePlayingPreview(event, true)} onAnimationEnd={event => handlePlayingPreview(event, false)} className={`${playingPreview ? 'zoom-in-zoom-out' : 'zoom-ended'} select-none rounded-md w-full h-full object-center object-cover`} /></div>}
 
           {/* <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
@@ -917,94 +956,125 @@ const CreationTool = ({ isHidden }) => {
           </div> */}
 
           <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
+            {[1, 4].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 1)} onMouseOver={event => handleOverTextZonePosition(event, 1)}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 2)} onMouseOver={event => handleOverTextZonePosition(event, 2)}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 3)} onMouseOver={event => handleOverTextZonePosition(event, 3)}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 4)} onMouseOver={event => handleOverTextZonePosition(event, 4)}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 5)} onMouseOver={event => handleOverTextZonePosition(event, 5)}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
+            </div>}
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 1)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mr-10 mb-10 max-w-60 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 2)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 3)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 4)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'mx-10 mb-10 max-w-60 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 5)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'ml-10 mb-10 max-w-60 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 6)} onMouseOver={event => handleOverTextZonePosition(event, 6)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 7)} onMouseOver={event => handleOverTextZonePosition(event, 7)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 8)} onMouseOver={event => handleOverTextZonePosition(event, 8)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 9)} onMouseOver={event => handleOverTextZonePosition(event, 9)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 10)} onMouseOver={event => handleOverTextZonePosition(event, 10)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 6)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm pl-8 py-3 pr-4', textClass: ''})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 7)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 8)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 9)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 10)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 11)} onMouseOver={event => handleOverTextZonePosition(event, 11)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 12)} onMouseOver={event => handleOverTextZonePosition(event, 12)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 13)} onMouseOver={event => handleOverTextZonePosition(event, 13)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 14)} onMouseOver={event => handleOverTextZonePosition(event, 14)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 15)} onMouseOver={event => handleOverTextZonePosition(event, 15)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 11)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 12)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 13)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 14)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 15)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 16)} onMouseOver={event => handleOverTextZonePosition(event, 16)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 17)} onMouseOver={event => handleOverTextZonePosition(event, 17)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 18)} onMouseOver={event => handleOverTextZonePosition(event, 18)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 19)} onMouseOver={event => handleOverTextZonePosition(event, 19)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 20)} onMouseOver={event => handleOverTextZonePosition(event, 20)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
-            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 16)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'my-10 mr-10 max-w-60 rounded-r-sm', textClass: 'pl-8 py-3 pr-4'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 17)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 18)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 19)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'my-10 mx-10 max-w-60 rounded-sm', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 20)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'my-10 ml-10 max-w-60 rounded-l-sm', textClass: 'pr-8 py-3 pl-4'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
-            </div>
-            <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 21)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mr-10 mt-10 max-w-60 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 22)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 23)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 24)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'mx-10 mt-10 max-w-60 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 25)} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
-            </div>
+            {[1, 4].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 21)} onMouseOver={event => handleOverTextZonePosition(event, 21)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 22)} onMouseOver={event => handleOverTextZonePosition(event, 22)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 23)} onMouseOver={event => handleOverTextZonePosition(event, 23)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 24)} onMouseOver={event => handleOverTextZonePosition(event, 24)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
+              <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 25)} onMouseOver={event => handleOverTextZonePosition(event, 25)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
+            </div>}
           </div>
 
-          {thumbPreviewTextClass.containerClass && thumbTextZoneAllowPreview && <div className={`pointer-events-none flex w-full h-full ${thumbPreviewTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-800 bg-opacity-15'}  ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
-            <div className={`min-w-min pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`} style={{maxWidth: `${parseInt(textMaxWidth) + 2}%`}}>
-              <div className={`select-none pointer-events-none align-middle font-medium text-${thumbFontSize} rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)"} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)"}}>{thumbText}</div>
+          {thumbPreview && thumbPreviewTextClass.containerClass && thumbTextZoneAllowPreview && <div className={`pointer-events-none flex w-full h-full ${thumbPreviewTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-800 bg-opacity-15'}  ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
+            <div className={`min-w-min pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`} style={{maxWidth: `${parseInt(textMaxWidth) + 2}%`, 
+            margin: `${getComputedPixelSize(thumbPreviewTextClass.margins[0] - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[0] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbPreviewTextClass.margins[1])}px ${getComputedPixelSize(thumbPreviewTextClass.margins[2] - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[2] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbPreviewTextClass.margins[3])}px`
+            }}>
+              <div className={`select-none pointer-events-none align-middle font-medium rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
+              padding: `${getComputedPixelSize(thumbPreviewTextClass.paddings[0])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[1])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[2])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              } 
+              : 
+              {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", 
+              padding: `${getComputedPixelSize(thumbPreviewTextClass.paddings[0])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[1])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[2])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              }}>{thumbText}</div>
             </div>
           </div>}
 
-          {thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
-            <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`}}>
+          {thumbPreview && thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
+            <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`, 
+            margin: `${getComputedPixelSize(thumbTextClass.margins[0] - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[0] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbTextClass.margins[1])}px ${getComputedPixelSize(thumbTextClass.margins[2] - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[2] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbTextClass.margins[3])}px`}}>
               {/* <Resizer onResize={handleResize} sides={["left", "right"]} /> */}
-              <div className={`select-none pointer-events-none font-medium text-${thumbFontSize} ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)"} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)"}}>{thumbText}</div>
+              <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
+              padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              } 
+              : 
+              {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", 
+              padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              }}>{thumbText}</div>
             </div>
           </div>}
 
           {isLoadingThumbImage && <div className="flex w-full h-full bg-gray-800 bg-opacity-70 items-center justify-center p-3"><LoadingSpinner className="h-8 w-8 text-white" /></div>}
 
         </div>
+        <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
+          {thumbBgImage !== "" && !playingPreview && <div className="relative w-full">
+            <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-0 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />
+          </div>}
+          <div className="text-blue-500 text-xs lg:text-sm text-left w-full mt-0 ml-1">Cliquez dans la vignette pour déplacer le texte</div>
+        </div>
+        
         {/* {thumbBgImage !== "" && <div className="relative pt-1">
           <div className="overflow-hidden h-1 mb-4 text-xs flex rounded-full bg-blue-200">
             <div className="animationProgress shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600"></div>
           </div>
         </div>} */}
-        <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full">
-          {thumbBgImage !== "" && !playingPreview && <div className="relative w-full">
-            {playingPreview ? <StopIcon onClick={event => handlePlayingPreview(event, false)} className="h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" /> : <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-0 top-0 h-8 w-8 -mt-2 text-blue-600 hover:text-blue-500 cursor-pointer" />}
-          </div>}
+        <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-4">
           <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
             Taille du texte :
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb1')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb1')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb1" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             1
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb2')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb2')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb2" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}> {/* text-gray-500 bg-gray-300 hover:bg-gray-200 border-gray-300 hover:border-gray-200 */}
             2
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb3')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb3')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb3" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             3
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb4')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb4')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb4" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             4
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb5')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb5')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb5" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             5
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb6')} className={"select-none rounded-md m-1 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb6')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
             (thumbFontSize === "thumb6" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             6
+          </div>
+          <div onClick={event => handleChangeThumbFontSize(event, 'thumb7')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === "thumb7" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+            7
           </div>
           <div className={"select-none rounded-md m-1 lg:pl-6 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
             Largeur du texte :
@@ -1013,65 +1083,65 @@ const CreationTool = ({ isHidden }) => {
             <input type="range" id="textWidth" step={1} name="textWidth" min="0" max="100" onChange={e => setTextMaxWidth(e.target.value)} defaultValue={DEFAULT_TEXT_MAX_WIDTH} />
           </div>
         </div>
-        <div className="container grid grid-cols-3 gap-2 mx-auto">
+        <div className="container grid grid-cols-3 gap-2 mx-auto mt-4">
           <div onClick={event => handleChangeThumbTemplate(event, 4)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 4 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />}
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
-              <div className="w-3/5 justify-center items-center text-center align-middle flex flex-row bg-gray-50 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-3 px-4 text-center text-gray-900 align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ________</div>
+              <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-50 bg-opacity-75 rounded-sm">
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
           </div>
           <div onClick={event => handleChangeThumbTemplate(event, 2)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 2 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />}
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: '0.625vw'}}>_________________ ______________ _______________ ____</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(0,0,0,0.56), 0 0px 10px rgba(0,0,0,0.5)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
           </div>
           <div onClick={event => handleChangeThumbTemplate(event, 3)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 3 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />}
             <div className="bg-gray-900 bg-opacity-20"></div>
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: '0.625vw'}}>_________________ ______________ _______________ ____</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
           </div>
           <div onClick={event => handleChangeThumbTemplate(event, 1)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 1 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />} 
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
-              <div className="w-3/5 justify-center items-center text-center align-middle flex flex-row bg-gray-900 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-3 px-4 text-center text-white align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: '0.625vw'}}>_________________ ______________ ________</div>
+              <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-900 bg-opacity-75 rounded-sm">
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
           </div>
           <div onClick={event => handleChangeThumbTemplate(event, 5)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 5 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />}
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: '0.625vw'}}>_________________ ______________ _______________ ____</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(255,255,255,0.56), 0 0px 10px rgba(255,255,255,0.50)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
           </div>
           <div onClick={event => handleChangeThumbTemplate(event, 6)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 6 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>
-            {/* {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="rounded-md w-full h-full object-center object-cover" />} */}
+            {thumbBgImage !== "" && <img src={thumbBgImage} alt="ThumbBg" className="w-full h-full object-center object-cover" />}
             <div className="bg-gray-50 bg-opacity-20"></div>
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={{"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: '0.625vw'}}>_________________ ______________ _______________ ____</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
