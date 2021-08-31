@@ -1,8 +1,7 @@
 import React, { useRef, useState } from 'react'
 import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
-import { ArrowCircleLeftIcon, ArrowLeftIcon, BeakerIcon, SparklesIcon, PlusSmIcon, MinusSmIcon, XCircleIcon, PlusCircleIcon, MinusCircleIcon, PlayIcon, StopIcon, CollectionIcon, ViewGridAddIcon } from '@heroicons/react/outline'
-import {  } from '@heroicons/react/solid'
+import { ArrowCircleLeftIcon, XCircleIcon, PlusCircleIcon, PlayIcon, ViewGridAddIcon, FingerPrintIcon, CursorClickIcon } from '@heroicons/react/outline'
 import Resizer from './resizer';
 
 import { useMediaQuery } from 'react-responsive';
@@ -120,6 +119,7 @@ const CreationTool = ({ isHidden }) => {
 
   const [playingPreview, setPlayingPreview] = useState(true);
 
+  const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
   const [thumbPreviewTextClass, setThumbPreviewTextClass] = useState({});
   const [thumbTextClass, setThumbTextClass] = useState(TEXT_ZONE_POSITION_CLASS[13]);
 
@@ -362,7 +362,7 @@ const CreationTool = ({ isHidden }) => {
     setIsThumbCreated(true);
     analyzeEntities(text);
     setThumbText(text);
-    setThumbBgImage("");
+    /* setThumbBgImage(""); */
   }
 
   const handleChange = (e) => {
@@ -598,7 +598,6 @@ const CreationTool = ({ isHidden }) => {
       setIsLoadingThumbImage(true);
     }
     
-
     setThumbBgImage(imagesToDisplay[index].fullHDURL);
   };
 
@@ -788,8 +787,14 @@ const CreationTool = ({ isHidden }) => {
 
   const getComputedPixelSize = (pixel) => {
     let computedPixelSize = 0;
+    let currentThuumbPreviewWidth = thumbPreviewWidth;
 
-    computedPixelSize = thumbPreview.current.offsetWidth / 672 * pixel;
+    if (thumbPreviewWidth === 0) {
+      currentThuumbPreviewWidth = thumbPreview.current.offsetWidth;
+      setThumbPreviewWidth(currentThuumbPreviewWidth);
+    }
+
+    computedPixelSize = currentThuumbPreviewWidth / 672 * pixel;
 
     return computedPixelSize;
   }
@@ -838,13 +843,13 @@ const CreationTool = ({ isHidden }) => {
         {(selectedSearchTags.length > 0 || searchQueryWords.length > 0) && <div className="flex flex-col flex-wrap item-center justify-start align-middle bg-gray-100 py-1 px-2 rounded-md w-full">
           <div className="flex flex-row flex-wrap item-center justify-start align-middle">
             {searchQueryWords.length > 0 && searchQueryWords.map((word, index) => {
-              return <div className={`flex flex-row flex-wrap item-center justify-start align-middle rounded-full my-1 ${(word.searched || word.addedSearch) && searchQueryWords[index + 1] && (!searchQueryWords[index + 1].addedSearch) ? 'mr-8' : (word.searched || word.addedSearch) ? 'mr-px' : 'mr-1 ml-1' }`}>
-                {(!word.searched && !(word.addedSearch && !word.searched)) && <div onClick={event => handleChangeAddSearchQueryWord(event, index)} value={index} key={index + '-words23'} className={"rounded-full mx-0.5 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 text-blue-600 hover:text-blue-500 border-gray-100"}>
-                  <PlusCircleIcon key={index + '-words23Ico'} className="lg:h-5 lg:w-5 h-6 w-6"/>
+              return <div key={word.text + '-words'} className={`flex flex-row flex-wrap item-center justify-start align-middle rounded-full my-1 ${(word.searched || word.addedSearch) && searchQueryWords[index + 1] && (!searchQueryWords[index + 1].addedSearch) ? 'mr-8' : (word.searched || word.addedSearch) ? 'mr-px' : 'mr-1 ml-1' }`}>
+                {(!word.searched && !(word.addedSearch && !word.searched)) && <div onClick={event => handleChangeAddSearchQueryWord(event, index)}  className={"rounded-full mx-0.5 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 text-blue-600 hover:text-blue-500 border-gray-100"}>
+                  <PlusCircleIcon className="lg:h-5 lg:w-5 h-6 w-6"/>
                 </div>}
-                <div onClick={event => handleChangeQueryWords(event, index)} value={index} key={word.text + '-words'} className={`${word.searched && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? 'rounded-l-full' : word.addedSearch && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? '' : word.addedSearch ? 'rounded-r-full' : 'rounded-full' } py-0.5 px-2 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 select-none ` + 
+                <div onClick={event => handleChangeQueryWords(event, index)} className={`${word.searched && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? 'rounded-l-full' : word.addedSearch && searchQueryWords[index + 1] && (searchQueryWords[index + 1].addedSearch) ? '' : word.addedSearch ? 'rounded-r-full' : 'rounded-full' } py-0.5 px-2 text-center text-sm lg:text-xs flex items-center justify-center align-middle cursor-pointer border-2 select-none ` + 
                   (word.searched ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : (word.addedSearch && !word.searched) ? "text-white bg-blue-500 hover:bg-blue-400 cursor-pointer border-2 border-blue-500 hover:border-blue-400" : "text-gray-900 bg-gray-300 hover:bg-gray-200 border-gray-300 hover:border-gray-200 rounded-r-full")}>
-                  {word.text} {word.addedSearch && <XCircleIcon key={index + '-wordsIco'} className="ml-2 h-4 w-4"/>}
+                  {word.text} {word.addedSearch && <XCircleIcon className="ml-2 h-4 w-4"/>}
                 </div>
               </div>
             })}
@@ -860,100 +865,18 @@ const CreationTool = ({ isHidden }) => {
           </div>
         </div>}
 
+        {isThumbCreated && imagesToDisplay.length > 0 && !isLoading && <div className="flex flex-row w-full mt-1 items-center justify-center">{isMobile ? <FingerPrintIcon className="h-4 w-4 text-green-500 mr-1" /> : <CursorClickIcon className="h-4 w-4 text-green-500 mr-1" />}<div className="select-none text-green-500 text-xs text-center">Sélectionnez une image ci-dessous</div></div>}
+
         <div className="container grid grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 mx-auto">
           {imagesToDisplay.map((image, index) => {
             return <LibraryMediaContainer key={image.id} alt={image.tags} onClick={event => handleChangeThumbBgImage(event, index)} src={image.previewURL} hoverOptions={checkAsSimilarImages(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarImages(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} />
           })}
         </div></> : <></>}
-
-        {isThumbCreated && <div className="text-blue-500 text-xs lg:text-sm text-center w-full mt-1">Sélectionnez une image ci-haut</div>}
       </div>
       <div className="lg:max-w-2xl w-full" ref={thumbPreview}>
         {isThumbCreated && thumbBgImage !== "" && <>
         <div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
           {thumbBgImage !== "" && <div className="overflow-hidden"><img src={thumbBgImage} alt="ThumbBg" onLoad={event => {handlePlayingPreview(event, true); setIsLoadingThumbImage(false)}} onAnimationStart={event => handlePlayingPreview(event, true)} onAnimationEnd={event => handlePlayingPreview(event, false)} className={`${playingPreview ? 'zoom-in-zoom-out' : 'zoom-ended'} select-none rounded-md w-full h-full object-center object-cover`} /></div>}
-
-          {/* <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
-            <div className={`flex flex-row h-8 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-2/5 rounded-br-sm', textClass: 'pt-8 pl-8 pb-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[1]}</div>
-              <div className={`flex-grow h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'w-full', textClass: 'pt-8 px-8 pb-4'})}>{DEV_POSITION_ZONES_NUMBERS[2]}</div>
-              <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'w-2/5 rounded-bl-sm', textClass: 'pt-8 pr-8 pb-4 pl-5'})} >{DEV_POSITION_ZONES_NUMBERS[3]}</div>
-            </div>
-            <div className={`flex flex-row flex-grow space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`w-8 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start', zoneClass: 'h-full w-2/5', textClass: 'py-8 pl-8 pr-7'})}>{DEV_POSITION_ZONES_NUMBERS[4]}</div>
-              <div className="flex-grow h-full">
-
-                <div className={`flex flex-col w-full h-full space-y-${TEXT_ZONE_POSITION_SPACE}`}>
-                  <div className={`flex flex-row h-10 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                    <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start py-10 pl-8', zoneClass: 'w-2/5 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start px-10 pb-3', zoneClass: 'w-2/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center px-3 pb-3', zoneClass: 'w-2/5 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end px-10 pb-3', zoneClass: 'w-2/5 rounded-b-sm', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[8]}</div>
-                    <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end py-10 pr-8', zoneClass: 'w-2/5 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
-                  </div>
-                  <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start py-10 pr-3', zoneClass: 'w-2/5 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[10]}</div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start py-10 pr-3', zoneClass: 'mr-20 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[11]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-start py-10 pl-8', zoneClass: 'mr-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[12]}</div>
-                    </div>
-                    <div className={`flex flex-col h-full flex-auto space-y-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center px-3 pb-3', zoneClass: 'mx-12 rounded-b-sm text-center', textClass: 'pt-8 pb-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[13]}</div>
-                      <div className={`flex-auto ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-center py-10 px-8', zoneClass: 'mx-12 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[14]}</div>
-                    </div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end py-10 pr-8', zoneClass: 'ml-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[15]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end py-10 pl-3', zoneClass: 'ml-20 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[16]}</div>
-                    </div>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end py-10 pl-3', zoneClass: 'w-2/5 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[17]}</div>
-                  </div>
-                  <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start py-10 pr-3', zoneClass: 'w-2/5 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[18]}</div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start py-10 pr-3', zoneClass: 'mr-20 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[19]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-start py-10 pl-8', zoneClass: 'mr-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[20]}</div>
-                    </div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-center p-8', zoneClass: 'mx-12 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[21]}</div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end py-10 pr-8', zoneClass: 'ml-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[22]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end py-10 pl-3', zoneClass: 'ml-20 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[23]}</div>
-                    </div>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-center justify-end py-10 pl-3', zoneClass: 'w-2/5 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[24]}</div>
-                  </div>
-                  <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start py-10 pr-3', zoneClass: 'w-2/5 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[25]}</div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start py-10 pr-3', zoneClass: 'mr-20 rounded-r-sm', textClass: 'pr-4 pl-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[26]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start py-10 pl-8', zoneClass: 'mr-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[27]}</div>
-                    </div>
-                    <div className={`flex flex-col h-full flex-auto space-y-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center py-10 px-8', zoneClass: 'mx-12 rounded-sm text-center', textClass: 'py-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[28]}</div>
-                      <div className={`flex-auto ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center px-3 pt-3', zoneClass: 'mx-12 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[29]}</div>
-                    </div>
-                    <div className={`flex flex-row flex-auto space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end py-10 pr-8', zoneClass: 'ml-12 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[30]}</div>
-                      <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end py-10 pl-3', zoneClass: 'ml-20 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[31]}</div>
-                    </div>
-                    <div className={`w-10 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end py-10 pl-3', zoneClass: 'w-2/5 rounded-l-sm', textClass: 'pl-4 pr-8 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[32]}</div>
-                  </div>
-                  <div className={`flex flex-row h-10 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-                    <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start py-10 pl-8', zoneClass: 'w-2/5 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start px-10 pt-3', zoneClass: 'w-2/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-center px-3 pt-3', zoneClass: 'w-2/5 rounded-t-sm text-center', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
-                    <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end px-10 pt-3', zoneClass: 'w-2/5 rounded-t-sm', textClass: 'pb-8 pt-3 px-4'})}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-                    <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end py-10 pr-8', zoneClass: 'w-2/5 rounded-sm', textClass: 'px-4 py-3'})}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>
-                  </div>
-                </div>
-
-              </div>
-              <div className={`w-8 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-start justify-end', zoneClass: 'h-full w-2/5', textClass: 'py-8 pr-8 pl-7'})}>{DEV_POSITION_ZONES_NUMBERS[38]}</div>
-            </div>
-            <div className={`flex flex-row h-8 space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-2/5 rounded-tr-sm', textClass: 'pb-8 pl-8 pt-4 pr-5'})}>{DEV_POSITION_ZONES_NUMBERS[39]}</div>
-              <div className={`flex-grow h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-start', zoneClass: 'w-full', textClass: 'pb-8 px-8 pt-4'})}>{DEV_POSITION_ZONES_NUMBERS[40]}</div>
-              <div className={`w-20 h-full ${TEXT_ZONE_BG}`} onClick={handleClickTextZonePosition} onMouseOver={event => handleOverTextZonePosition(event, {containerClass: 'items-end justify-end', zoneClass: 'w-2/5 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5'})} >{DEV_POSITION_ZONES_NUMBERS[41]}</div>
-            </div>
-          </div> */}
 
           <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
             {[1, 4].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
@@ -1036,7 +959,7 @@ const CreationTool = ({ isHidden }) => {
           {thumbBgImage !== "" && !playingPreview && <div className="relative w-full">
             <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-0 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />
           </div>}
-          <div className="text-blue-500 text-xs lg:text-sm text-left w-full mt-0 ml-1">Cliquez dans la vignette pour déplacer le texte</div>
+          <div className="flex flex-row w-full mt-0 items-center ml-1">{isMobile ? <FingerPrintIcon className="h-4 w-4 text-green-500 mr-1" /> : <CursorClickIcon className="h-4 w-4 text-green-500 mr-1" />}<div className="select-none text-green-500 text-xs text-center">Cliquez dans la vignette pour déplacer le texte</div></div>
         </div>
         
         {/* {thumbBgImage !== "" && <div className="relative pt-1">
@@ -1089,7 +1012,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-50 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
@@ -1099,7 +1022,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(0,0,0,0.56), 0 0px 10px rgba(0,0,0,0.5)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(0,0,0,0.56), 0 0px 10px rgba(0,0,0,0.5)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1110,7 +1033,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1120,7 +1043,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-900 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
@@ -1130,7 +1053,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(255,255,255,0.56), 0 0px 10px rgba(255,255,255,0.50)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(255,255,255,0.56), 0 0px 10px rgba(255,255,255,0.50)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1141,7 +1064,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>{isMobile ? 'Abc' : 'Abc'}</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>

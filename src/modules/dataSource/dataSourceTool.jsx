@@ -20,6 +20,7 @@ const DataSourceTool = ({ isHidden }) => {
     const [url, setUrl] = useState("");
     const [type, setType] = useState("");
     const [options, setOptions] = useState({});
+    const [dataSources, setDataSources] = useState([]);
 
     const [isLoading, setIsLoading] = useState(false);
     const [isValidSource, setIsValidSource] = useState(false)
@@ -59,6 +60,20 @@ const DataSourceTool = ({ isHidden }) => {
     const handleAddDataSource = (e) => {
         e.preventDefault();
         setIsLoading(true);
+        createDataSource();
+    }
+
+    const createDataSource = () => {
+        let newDataSource = new DataSource();
+
+        newDataSource.load(url).then(valid => {
+            if (valid) {
+                dataSources.push(newDataSource);
+                console.log(newDataSource);
+
+                setIsLoading(false);
+            }
+        });
     }
 
     return (
@@ -81,27 +96,17 @@ const DataSourceTool = ({ isHidden }) => {
                                 placeholder="Entrez l'url de la source de données"
                                 /* onKeyDown={handleKeyDown} */
                             />
-                            {type === "GOOGLESHEET" && 
-                                <div className="w-full flex flex-row mt-1 space-x-1">
-                                    <input
-                                        id="range"
-                                        onChange={handleChangeOption}
-                                        value={options.range}
-                                        name="range"
-                                        type="text"
-                                        required
-                                        className="resize-none appearance-none rounded-none relative block h-9 w-1/3 px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                                        placeholder="Plage de données (A1:D6)"
-                                        /* onKeyDown={handleKeyDown} */
-                                    />
-                                </div>
-                            }
                         </div>
                         <div onClick={handleAddDataSource} className={`rounded-md select-none h-9 w-9 font-medium text-center text-sm text-white align-middle border-2 flex items-center justify-center ${isValidSource ? 'cursor-pointer shadow bg-blue-600 hover:bg-blue-500 border-blue-600 hover:border-blue-500' : 'pointer-event-none bg-gray-100 border-gray-100'}`}>
                             {isLoading ? <LoadingSpinner className="h-5 w-5 text-white" /> : isValidSource ? <CheckCircleIcon className="h-6 w-6 text-white" /> : <XCircleIcon className="h-6 w-6 text-gray-300" />}
                         </div>
                     </div>                
                 </div>
+                {dataSources.map((dataSource, index) => {
+                    return <div key={index} className="flex flex-row item-center justify-center align-middle space-x-2 bg-gray-100 p-2 rounded-md w-full">
+                        <div>{dataSource.name}</div>
+                    </div>
+                })}
             </div>
             <div className="max-w-2xl w-full space-y-3">
 

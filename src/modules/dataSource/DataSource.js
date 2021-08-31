@@ -4,9 +4,12 @@ const dataSourceType = {
     API: "API"
 };
 
+const API_KEY_GOOGLE_SHEET = process.env.REACT_APP_GOOGLE_SHEET_API_KEY;
+
 function DataSource() {
     // CONFIG
     this.name = "";
+    this.properties = {};
     this.fetchQuery = "";
     this.type = "";
     this.dataRefreshRate = 60000;
@@ -18,6 +21,7 @@ function DataSource() {
     // MODEL
     this.fieldNames = [];
     this.idFieldName = "";
+    this.ressources = [];
 
     // CONTROLLER
     this.intervalPopulateDynamicFields = undefined;
@@ -30,6 +34,63 @@ function DataSource() {
     this.dynamicFields = [];
 }
 
+DataSource.prototype.load = async function(url) {
+
+    let promises = [];
+
+    // Étape 1 : On détermine le type
+    if (url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
+        this.type = dataSourceType.GOOGLESHEET;
+    } else {
+        this.type = dataSourceType.API;
+    }
+
+    // Étape 2 : On va chercher les informations qu'on peut selon le type
+    switch (this.type) {
+        case dataSourceType.GOOGLESHEET:
+            let id = url.substring(url.indexOf("/d/") + 3, url.lastIndexOf("/"));
+
+            this.properties.spreadsheetId = id;
+
+            this.fetchQuery = `https://sheets.googleapis.com/v4/spreadsheets/${id}`;
+
+            promises.push(fetch(this.fetchQuery + '?alt=json&key=' + API_KEY_GOOGLE_SHEET)
+            .then(handleResponse)
+            .then(data => {
+                this.name = data.properties.title;
+                data.sheets.forEach(sheet => {
+                    this.ressources.push(sheet.properties.title);
+                });
+                this.valid = true;
+
+                return true
+            })
+            .catch(error => {
+                return false
+            }));
+
+            break;
+        case dataSourceType.API:
+            this.fetchQuery = url;
+            break;
+        default:
+            this.fetchQuery = url;
+            break;
+    }
+
+    return await Promise.all(promises).then(initializations => {
+        let valid = true;
+
+        initializations.forEach(initialization => {
+            if (!initialization) {
+                valid = false;
+            }
+        })
+
+        return valid;
+    });
+}
+
 DataSource.prototype.init = function(name, fetchQuery, type, dataRefreshRate) {
     this.name = name;
     this.fetchQuery = fetchQuery;
@@ -39,25 +100,25 @@ DataSource.prototype.init = function(name, fetchQuery, type, dataRefreshRate) {
     this.loadData();
 }
 
-DataSource.prototype.initType = function() {
-    if (this.parameters.url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
+DataSource.prototype.getType = function() {
+    if (this.url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
         this.type = dataSourceType.GOOGLESHEET;
     } else {
         this.type = dataSourceType.API;
     }
 }
 
-DataSource.prototype.initFetchQuery = function() {
+DataSource.prototype.getFetchQuery = function() {
     switch (this.type) {
         case dataSourceType.GOOGLESHEET:
-            let id = this.parameters.url.substring(this.parameters.url.indexOf("/d/") + 3, this.parameters.url.lastIndexOf("/"));
+            let id = this.url.substring(this.url.indexOf("/d/") + 3, this.url.lastIndexOf("/"));
             this.fetchQuery = `https://spreadsheets.google.com/feeds/list/${id}/3/public/values?alt=json`;
             break;
         case dataSourceType.API:
-            this.fetchQuery = this.parameters.url;
+            this.fetchQuery = this.url;
             break;
         default:
-            this.fetchQuery = this.parameters.url;
+            this.fetchQuery = this.url;
             break;
     }
 }

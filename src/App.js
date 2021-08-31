@@ -1,21 +1,199 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import './App.css';
-import { CreationTool, BirthdayTool, DataSourceTool } from './modules';
+import { CreationTool, DataSourceTool } from './modules';
 import { DatabaseIcon, PhotographIcon } from '@heroicons/react/outline'
 
 function App() {
 
   const [currentTool, setCurrentTool] = useState("CreationTool");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [password, setPassword] = useState([]);
+
+  const handleChangePassword = (e, index) => {
+    const { target } = e;
+    const { value } = target;
+    e.persist();
+
+    let newPassword = [...password];
+
+    newPassword.push(value);
+
+    if (newPassword.length === 6) {
+      let authorized = (parseInt(newPassword[0]) * 10 + parseInt(newPassword[1])) + (parseInt(newPassword[2]) * 10 + parseInt(newPassword[3])) + (parseInt(newPassword[4]) * 10 + parseInt(newPassword[5])) === 150;
+
+      if (authorized) {
+        setIsAuthorized(authorized);
+      } else {
+        newPassword = [];
+      }
+    }
+
+    const nextfield = document.querySelector(
+      `input[name=password-${parseInt(newPassword.length) + 1}]`
+    );
+
+    // If found, focus the next field
+    if (nextfield !== null) {
+      nextfield.focus();
+    }
+
+    setPassword(newPassword);
+  };
+
+  const handleOnFocusPassword = (e, current) => {
+    if (current !== (password.length + 1)) {
+      const nextfield = document.querySelector(
+        `input[name=password-${password.length + 1}]`
+      );
+  
+      // If found, focus the next field
+      if (nextfield !== null) {
+        nextfield.focus();
+      }
+    }
+  }
+
+  const handleKeyDownPassword = (e, index) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      let newPassword = [...password];
+
+      if (newPassword.length > 0) {
+        newPassword.splice(newPassword.length - 1, 1);
+      }
+      
+      const nextfield = document.querySelector(
+        `input[name=password-${newPassword.length + 1}]`
+      );
+  
+      // If found, focus the next field
+      if (nextfield !== null) {
+        nextfield.focus();
+      }
+
+      setPassword(newPassword);
+    }
+  }
 
   return (
     <>
-    {/* <BirthdayTool /> */}
-    <div className="z-50 fixed flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
-      <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
-      <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+    {isAuthorized ? 
+    <>
+      <div className="z-50 fixed flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
+        <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+        <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+      </div>
+      <CreationTool isHidden={currentTool !== "CreationTool"} />
+      <DataSourceTool isHidden={currentTool !== "DataSourceTool"} />
+    </>
+    :
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full space-y-4">
+        <div className="flex flex-col items-center justify-center">
+          <h3 className="text-center text-xl font-medium text-gray-900">Création simpifiée</h3>
+          <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900">Netsign.tv</h2>
+          <p className="mt-3 text-center text-sm text-blue-500">
+            Entrez le code d'accès
+          </p>
+        </div>
+        <div className="flex flex-col items-center justify-center space-y-4">
+          <div className="flex flex-row item-center justify-center align-middle space-x-2 bg-gray-100 p-2 rounded-md">
+              <input
+                id="password-1"
+                name="password-1"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 0)}
+                value={password[0] ? password[0] : ''}
+                autoFocus={true}
+                onClick={event => handleOnFocusPassword(event, 1)}
+                onKeyDown={event => handleKeyDownPassword(event, 0)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+              <input
+                id="password-2"
+                name="password-2"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 1)}
+                value={password[1] ? password[1] : ''}
+                onClick={event => handleOnFocusPassword(event, 2)}
+                onKeyDown={event => handleKeyDownPassword(event, 1)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+              <input
+                id="password-3"
+                name="password-3"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 2)}
+                value={password[2] ? password[2] : ''}
+                onClick={event => handleOnFocusPassword(event, 3)}
+
+                onKeyDown={event => handleKeyDownPassword(event, 2)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+              <input
+                id="password-4"
+                name="password-4"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 3)}
+                value={password[3] ? password[3] : ''}
+                onClick={event => handleOnFocusPassword(event, 4)}
+                onKeyDown={event => handleKeyDownPassword(event, 3)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+              <input
+                id="password-5"
+                name="password-5"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 4)}
+                value={password[4] ? password[4] : ''}
+                onClick={event => handleOnFocusPassword(event, 5)}
+                onKeyDown={event => handleKeyDownPassword(event, 4)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+              <input
+                id="password-6"
+                name="password-6"
+                type="password"
+                pattern="[0-9]*" 
+                inputMode="numeric"
+                onChange={event => handleChangePassword(event, 5)}
+                value={password[5] ? password[5] : ''}
+                onClick={event => handleOnFocusPassword(event, 6)}
+                onKeyDown={event => handleKeyDownPassword(event, 5)}
+                required
+                className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder=""
+              />
+          </div>
+          <div className="flex flex-col items-center justify-center">
+            <p className="text-center text-xs text-gray-300">
+              v 1.5.0
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-    <CreationTool isHidden={currentTool !== "CreationTool"} />
-    <DataSourceTool isHidden={currentTool !== "DataSourceTool"} />
+    }
     {/* <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8"> */}
         
