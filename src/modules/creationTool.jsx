@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
 import { ArrowCircleLeftIcon, XCircleIcon, PlusCircleIcon, PlayIcon, ViewGridAddIcon, FingerPrintIcon, CursorClickIcon } from '@heroicons/react/outline'
@@ -55,14 +55,16 @@ const TEXT_ZONE_POSITION_CLASS = {
 };
 
 const TEXT_ZONE_FONT_SIZE = {
-  thumb0: [18.4, 23.2],
-  thumb1: [21.6, 26.4],
-  thumb2: [24.8, 29.6],
-  thumb3: [28, 32.8],
-  thumb4: [31.2, 34.4],
-  thumb5: [34.4, 38.4],
-  thumb6: [37.6, 41.6],
-  thumb7: [40.8, 44.8],
+  0: [18.4, 23.2],
+  1: [21.6, 26.4],
+  2: [24.8, 29.6],
+  3: [28, 32.8],
+  4: [31.2, 34.4],
+  5: [34.4, 38.4],
+  6: [37.6, 41.6],
+  7: [40.8, 44.8],
+  8: [44, 48],
+  9: [47.2, 50.4],
 };
 
 const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
@@ -131,7 +133,7 @@ const CreationTool = ({ isHidden }) => {
 
   const [TEXT_ZONE_BG, setTextZoneBg] = useState(TEXT_ZONE_BG_DEFAULT);
 
-  const [thumbFontSize, setThumbFontSize] = useState("thumb4");
+  const [thumbFontSize, setThumbFontSize] = useState(4);
 
   const thumbPreview = useRef();
 
@@ -585,6 +587,11 @@ const CreationTool = ({ isHidden }) => {
     
   };
 
+  const scrollToRef = (ref) => ref.current.scrollIntoView({behavior: 'smooth'}); /* window.scrollTo(0, ref.current.offsetTop) */
+
+  useEffect(() => {
+      scrollToRef(thumbPreview);
+  }, [thumbBgImage]);
 
   const handleChangeThumbBgImage = (e, index) => {
     e.preventDefault();
@@ -785,6 +792,18 @@ const CreationTool = ({ isHidden }) => {
     setPlayingPreview(play);
   }
 
+  const handleSelectAllText = (e) => {
+    const { target } = e;
+    if (thumbText !== '') {
+      target.select();
+    }
+    
+  }
+
+  useEffect(() => {
+    setThumbPreviewWidth(thumbPreview.current.offsetWidth);
+  }, [thumbPreview]);
+
   const getComputedPixelSize = (pixel) => {
     let computedPixelSize = 0;
     let currentThuumbPreviewWidth = thumbPreviewWidth;
@@ -826,8 +845,9 @@ const CreationTool = ({ isHidden }) => {
                 value={text}
                 name="texte"
                 type="textarea"
+                onClick={handleSelectAllText}
                 required
-                className="resize-none appearance-none rounded-none relative block w-full h-20 max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                className="resize-none select-all appearance-none rounded-none relative block w-full h-20 max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Écrivez le texte qui s'affichera dans la vignette"
                 onKeyDown={handleKeyDown}
               />
@@ -879,7 +899,7 @@ const CreationTool = ({ isHidden }) => {
           {thumbBgImage !== "" && <div className="overflow-hidden"><img src={thumbBgImage} alt="ThumbBg" onLoad={event => {handlePlayingPreview(event, true); setIsLoadingThumbImage(false)}} onAnimationStart={event => handlePlayingPreview(event, true)} onAnimationEnd={event => handlePlayingPreview(event, false)} className={`${playingPreview ? 'zoom-in-zoom-out' : 'zoom-ended'} select-none rounded-md w-full h-full object-center object-cover`} /></div>}
 
           <div className={`flex flex-col w-full h-full p-${TEXT_ZONE_POSITION_SPACE} space-y-${TEXT_ZONE_POSITION_SPACE}`} onMouseLeave={event => handleOutTextZonePosition(event)}>
-            {[1, 4].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+            {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 1)} onMouseOver={event => handleOverTextZonePosition(event, 1)}>{DEV_POSITION_ZONES_NUMBERS[5]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 2)} onMouseOver={event => handleOverTextZonePosition(event, 2)}>{DEV_POSITION_ZONES_NUMBERS[6]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 3)} onMouseOver={event => handleOverTextZonePosition(event, 3)}>{DEV_POSITION_ZONES_NUMBERS[7]}</div>
@@ -887,27 +907,27 @@ const CreationTool = ({ isHidden }) => {
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 5)} onMouseOver={event => handleOverTextZonePosition(event, 5)}>{DEV_POSITION_ZONES_NUMBERS[9]}</div>
             </div>}
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 6)} onMouseOver={event => handleOverTextZonePosition(event, 6)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 6)} onMouseOver={event => handleOverTextZonePosition(event, 6)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 7)} onMouseOver={event => handleOverTextZonePosition(event, 7)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 8)} onMouseOver={event => handleOverTextZonePosition(event, 8)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 9)} onMouseOver={event => handleOverTextZonePosition(event, 9)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 10)} onMouseOver={event => handleOverTextZonePosition(event, 10)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 10)} onMouseOver={event => handleOverTextZonePosition(event, 10)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 11)} onMouseOver={event => handleOverTextZonePosition(event, 11)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 11)} onMouseOver={event => handleOverTextZonePosition(event, 11)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 12)} onMouseOver={event => handleOverTextZonePosition(event, 12)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 13)} onMouseOver={event => handleOverTextZonePosition(event, 13)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 14)} onMouseOver={event => handleOverTextZonePosition(event, 14)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 15)} onMouseOver={event => handleOverTextZonePosition(event, 15)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 15)} onMouseOver={event => handleOverTextZonePosition(event, 15)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
             <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 16)} onMouseOver={event => handleOverTextZonePosition(event, 16)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 16)} onMouseOver={event => handleOverTextZonePosition(event, 16)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>}
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 17)} onMouseOver={event => handleOverTextZonePosition(event, 17)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 18)} onMouseOver={event => handleOverTextZonePosition(event, 18)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 19)} onMouseOver={event => handleOverTextZonePosition(event, 19)}>{DEV_POSITION_ZONES_NUMBERS[36]}</div>
-              {[1, 4].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 20)} onMouseOver={event => handleOverTextZonePosition(event, 20)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
+              {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 20)} onMouseOver={event => handleOverTextZonePosition(event, 20)}>{DEV_POSITION_ZONES_NUMBERS[37]}</div>}
             </div>
-            {[1, 4].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
+            {[1, 4, 2, 3, 5, 6].includes(thumbTemplate) && <div className={`flex flex-auto flex-row space-x-${TEXT_ZONE_POSITION_SPACE}`}>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 21)} onMouseOver={event => handleOverTextZonePosition(event, 21)}>{DEV_POSITION_ZONES_NUMBERS[33]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 22)} onMouseOver={event => handleOverTextZonePosition(event, 22)}>{DEV_POSITION_ZONES_NUMBERS[34]}</div>
               <div className={`flex-auto h-full ${TEXT_ZONE_BG}`} onClick={event => handleClickTextZonePosition(event, 23)} onMouseOver={event => handleOverTextZonePosition(event, 23)}>{DEV_POSITION_ZONES_NUMBERS[35]}</div>
@@ -918,7 +938,7 @@ const CreationTool = ({ isHidden }) => {
 
           {thumbPreview && thumbPreviewTextClass.containerClass && thumbTextZoneAllowPreview && <div className={`pointer-events-none flex w-full h-full ${thumbPreviewTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-800 bg-opacity-15'}  ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
             <div className={`min-w-min pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`} style={{maxWidth: `${parseInt(textMaxWidth) + 2}%`, 
-            margin: `${getComputedPixelSize(thumbPreviewTextClass.margins[0] - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[0] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbPreviewTextClass.margins[1])}px ${getComputedPixelSize(thumbPreviewTextClass.margins[2] - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[2] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbPreviewTextClass.margins[3])}px`
+            margin: `${getComputedPixelSize(thumbPreviewTextClass.margins[0] /* - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[0] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbPreviewTextClass.margins[1])}px ${getComputedPixelSize(thumbPreviewTextClass.margins[2] /* - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[2] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbPreviewTextClass.margins[3])}px`
             }}>
               <div className={`select-none pointer-events-none align-middle font-medium rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
               padding: `${getComputedPixelSize(thumbPreviewTextClass.paddings[0])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[1])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[2])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[3])}px`,
@@ -936,7 +956,7 @@ const CreationTool = ({ isHidden }) => {
 
           {thumbPreview && thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
             <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`, 
-            margin: `${getComputedPixelSize(thumbTextClass.margins[0] - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[0] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbTextClass.margins[1])}px ${getComputedPixelSize(thumbTextClass.margins[2] - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[2] === 60 ? 20 : 0))}px ${getComputedPixelSize(thumbTextClass.margins[3])}px`}}>
+            margin: `${getComputedPixelSize(thumbTextClass.margins[0] /* - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[0] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbTextClass.margins[1])}px ${getComputedPixelSize(thumbTextClass.margins[2] /* - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[2] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbTextClass.margins[3])}px`}}>
               {/* <Resizer onResize={handleResize} sides={["left", "right"]} /> */}
               <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
               padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
@@ -967,44 +987,53 @@ const CreationTool = ({ isHidden }) => {
             <div className="animationProgress shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600"></div>
           </div>
         </div>} */}
-        <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-4">
-          <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-            Taille du texte :
+        <div className="flex flex-col lg:flex-row flex-wrap item-center justify-start align-middle w-full mt-4">
+          <div className="flex flex-row">
+            <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+              Taille du texte :
+            </div>
+            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+              <input type="range" id="fontSize" step={1} name="fontSize" min="0" max="9" onChange={e => setThumbFontSize(e.target.value)} defaultValue={4} />
+            </div>
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb1')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb1" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          
+          {/* <div onClick={event => handleChangeThumbFontSize(event, 1)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 1 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             1
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb2')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb2" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}> {/* text-gray-500 bg-gray-300 hover:bg-gray-200 border-gray-300 hover:border-gray-200 */}
+          <div onClick={event => handleChangeThumbFontSize(event, 2)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 2 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}> 
             2
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb3')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb3" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          <div onClick={event => handleChangeThumbFontSize(event, 3)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 3 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             3
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb4')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb4" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          <div onClick={event => handleChangeThumbFontSize(event, 4)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 4 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             4
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb5')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb5" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          <div onClick={event => handleChangeThumbFontSize(event, 5)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 5 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             5
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb6')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb6" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          <div onClick={event => handleChangeThumbFontSize(event, 6)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 6 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             6
           </div>
-          <div onClick={event => handleChangeThumbFontSize(event, 'thumb7')} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
-            (thumbFontSize === "thumb7" ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
+          <div onClick={event => handleChangeThumbFontSize(event, 7)} className={"select-none rounded-md m-0.5 py-0.5 px-2 text-center font-medium text-xs flex items-center justify-center align-middle cursor-pointer border-2 leading-none " + 
+            (thumbFontSize === 7 ? "text-white bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500" : "text-gray-900 border-gray-50 hover:bg-blue-100 hover:border-blue-100")}>
             7
+          </div> */}
+          <div className="flex flex-row">
+            <div className={"select-none rounded-md m-1 lg:pl-6 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+              Largeur du texte :
+            </div>
+            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+              <input type="range" id="textWidth" step={1} name="textWidth" min="0" max="100" onChange={e => setTextMaxWidth(e.target.value)} defaultValue={DEFAULT_TEXT_MAX_WIDTH} />
+            </div>
           </div>
-          <div className={"select-none rounded-md m-1 lg:pl-6 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-            Largeur du texte :
-          </div>
-          <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-            <input type="range" id="textWidth" step={1} name="textWidth" min="0" max="100" onChange={e => setTextMaxWidth(e.target.value)} defaultValue={DEFAULT_TEXT_MAX_WIDTH} />
-          </div>
+          
         </div>
         <div className="container grid grid-cols-3 gap-2 mx-auto mt-4">
           <div onClick={event => handleChangeThumbTemplate(event, 4)} className={`w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 ${thumbTemplate === 4 ? `border-blue-600 shadow ${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'}` : 'border-gray-100 bg-gray-100'} hover:border-blue-400 hover:${thumbBgImage !== "" ? 'bg-gray-200' : 'bg-gray-100'} cursor-pointer`}>

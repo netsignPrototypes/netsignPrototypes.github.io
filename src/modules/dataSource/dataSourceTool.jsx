@@ -76,6 +76,14 @@ const DataSourceTool = ({ isHidden }) => {
         });
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            setIsLoading(true);
+            createDataSource();
+        }
+      }
+
     return (
         <div className={`min-h-screen flex-col lg:flex-row items-start justify-center bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-8 space-y-20 lg:space-y-0 lg:space-x-40 ${isHidden ? 'hidden' : 'flex'}`}>
             <div className="max-w-2xl w-full space-y-3">
@@ -94,7 +102,7 @@ const DataSourceTool = ({ isHidden }) => {
                                 required
                                 className="resize-none appearance-none rounded-none relative block h-9 w-full px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                                 placeholder="Entrez l'url de la source de données"
-                                /* onKeyDown={handleKeyDown} */
+                                onKeyDown={handleKeyDown}
                             />
                         </div>
                         <div onClick={handleAddDataSource} className={`rounded-md select-none h-9 w-9 font-medium text-center text-sm text-white align-middle border-2 flex items-center justify-center ${isValidSource ? 'cursor-pointer shadow bg-blue-600 hover:bg-blue-500 border-blue-600 hover:border-blue-500' : 'pointer-event-none bg-gray-100 border-gray-100'}`}>
@@ -103,7 +111,7 @@ const DataSourceTool = ({ isHidden }) => {
                     </div>                
                 </div>
                 {dataSources.map((dataSource, index) => {
-                    return <div key={index} className="flex flex-row item-center justify-center align-middle space-x-2 bg-gray-100 p-2 rounded-md w-full">
+                    return <div key={index} className="flex flex-row item-center justify-start space-x-2 bg-white p-2 border border-gray-300 shadow-sm rounded-md w-full">
                         <div>{dataSource.name}</div>
                     </div>
                 })}

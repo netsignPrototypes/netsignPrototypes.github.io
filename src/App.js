@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import './App.css';
 import { CreationTool, DataSourceTool } from './modules';
 import { DatabaseIcon, PhotographIcon } from '@heroicons/react/outline'
+import { useMediaQuery } from 'react-responsive';
 
 function App() {
 
@@ -9,10 +10,18 @@ function App() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [password, setPassword] = useState([]);
 
+  const [isWrongPassword, setIsWrongPassword] = useState(false);
+
+  const isMobile = useMediaQuery({ query: `(max-width: 760px)` });
+
   const handleChangePassword = (e, index) => {
     const { target } = e;
     const { value } = target;
     e.persist();
+
+    if (isWrongPassword) {
+      setIsWrongPassword(false);
+    }
 
     let newPassword = [...password];
 
@@ -25,6 +34,7 @@ function App() {
         setIsAuthorized(authorized);
       } else {
         newPassword = [];
+        setIsWrongPassword(true)
       }
     }
 
@@ -41,6 +51,8 @@ function App() {
   };
 
   const handleOnFocusPassword = (e, current) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (current !== (password.length + 1)) {
       const nextfield = document.querySelector(
         `input[name=password-${password.length + 1}]`
@@ -90,14 +102,14 @@ function App() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-4">
         <div className="flex flex-col items-center justify-center">
-          <h3 className="text-center text-xl font-medium text-gray-900">Création simpifiée</h3>
-          <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900">Netsign.tv</h2>
+          <h3 className="text-center text-xl font-medium text-gray-900">Netsign.tv</h3>
+          <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900">Création simplifiée</h2>
           <p className="mt-3 text-center text-sm text-blue-500">
             Entrez le code d'accès
           </p>
         </div>
         <div className="flex flex-col items-center justify-center space-y-4">
-          <div className="flex flex-row item-center justify-center align-middle space-x-2 bg-gray-100 p-2 rounded-md">
+          <div className={`flex flex-row item-center justify-center align-middle space-x-2 bg-gray-100 p-2 rounded-md ${isWrongPassword && 'shake'}`}>
               <input
                 id="password-1"
                 name="password-1"
@@ -106,7 +118,7 @@ function App() {
                 inputMode="numeric"
                 onChange={event => handleChangePassword(event, 0)}
                 value={password[0] ? password[0] : ''}
-                autoFocus={true}
+                autoFocus={!isMobile}
                 onClick={event => handleOnFocusPassword(event, 1)}
                 onKeyDown={event => handleKeyDownPassword(event, 0)}
                 required
@@ -136,7 +148,6 @@ function App() {
                 onChange={event => handleChangePassword(event, 2)}
                 value={password[2] ? password[2] : ''}
                 onClick={event => handleOnFocusPassword(event, 3)}
-
                 onKeyDown={event => handleKeyDownPassword(event, 2)}
                 required
                 className="appearance-none rounded-none relative block text-center w-8 px-1 lg:px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"

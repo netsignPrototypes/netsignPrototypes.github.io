@@ -4,6 +4,8 @@ const dataSourceType = {
     API: "API"
 };
 
+const alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+
 const API_KEY_GOOGLE_SHEET = process.env.REACT_APP_GOOGLE_SHEET_API_KEY;
 
 function DataSource() {
@@ -58,15 +60,92 @@ DataSource.prototype.load = async function(url) {
             .then(handleResponse)
             .then(data => {
                 this.name = data.properties.title;
-                data.sheets.forEach(sheet => {
-                    this.ressources.push(sheet.properties.title);
+                data.sheets.forEach((sheet, index) => {
+                    this.ressources.push({ name: sheet.properties.title, dataSets: []});
+
+                    promises.push(fetch(this.fetchQuery + '/values/' + sheet.properties.title + '?alt=json&key=' + API_KEY_GOOGLE_SHEET)
+                    .then(handleResponse)
+                    .then(data => {
+
+                        // On ajoute un dataSet
+                        this.ressources[index].dataSets.push({ data: [], columns: [], headerRowNo: 1 });
+
+                        // On essaye de trouver les tableaux (range) disponnible dans la feuille
+                        let dataSetIdx = 0;
+                        let dataSetRowIdx = 0;
+                        let dataSetCellIdx = 0;
+
+                        let maxDataSetCellIdx = 0;
+
+                        data.values.forEach((row, rowIdx) => {
+
+                            if (row.length > 0) {
+                               this.ressources[index].dataSets[dataSetIdx].data.push([]);
+                            } else if ((this.ressources[index].dataSets[dataSetIdx].dataRange) && this.ressources[index].dataSets[dataSetIdx].dataRange.length === 2) {
+                                dataSetIdx += 1;
+                                dataSetRowIdx = 0;
+                                dataSetCellIdx = 0;
+
+                                if (!this.ressources[index].dataSets[dataSetIdx]) {
+                                    this.ressources[index].dataSets.push({ data: [], columns: [], headerRowNo: 1 });
+                                }
+                            } 
+                            
+                            row.forEach((cell, cellIdx) => {
+                                if (cell !== '') {
+
+                                    if (!this.ressources[index].dataSets[dataSetIdx].dataRange) {
+                                        this.ressources[index].dataSets[dataSetIdx].dataRange = [`${alphabet[cellIdx]}${rowIdx + 1}`];
+                                    }
+
+                                    if (this.ressources[index].dataSets[dataSetIdx].dataRange.length === 1) {
+                                        this.ressources[index].dataSets[dataSetIdx].columns.push({ name: cell });
+                                    } else if (!this.ressources[index].dataSets[dataSetIdx].columns[dataSetCellIdx].exempleValue) {
+                                        this.ressources[index].dataSets[dataSetIdx].columns[dataSetCellIdx].exempleValue = cell;
+                                    }
+
+                                    if (row.length === cellIdx + 1 && this.ressources[index].dataSets[dataSetIdx].dataRange.length === 1) {
+                                        this.ressources[index].dataSets[dataSetIdx].dataRange.push(`${alphabet[cellIdx]}`);
+                                    }
+
+                                    this.ressources[index].dataSets[dataSetIdx].data[dataSetRowIdx].push(cell);
+                                    dataSetCellIdx += 1;
+
+                                    if (maxDataSetCellIdx < cellIdx) {
+                                        maxDataSetCellIdx = cellIdx;
+                                    }
+
+                                } else if ((this.ressources[index].dataSets[dataSetIdx].dataRange) && this.ressources[index].dataSets[dataSetIdx].dataRange.length === 1) {
+                                    this.ressources[index].dataSets[dataSetIdx].dataRange.push(`${alphabet[cellIdx]}`);
+                                    
+                                    dataSetIdx += 1;
+
+                                    if (!this.ressources[index].dataSets[dataSetIdx]) {
+                                        this.ressources[index].dataSets.push({ data: [], columns: [], headerRowNo: 1 });
+                                    }
+                                }
+                            });
+                            
+                            if (row.length > 0) {
+                               dataSetCellIdx = 0;
+                               dataSetRowIdx += 1;
+                            }
+                            
+                        });
+        
+                        return true;
+                    })
+                    .catch(error => {
+                        return true;
+                    }));
+
                 });
                 this.valid = true;
 
-                return true
+                return true;
             })
             .catch(error => {
-                return false
+                return false;
             }));
 
             break;
