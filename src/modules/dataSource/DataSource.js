@@ -10,6 +10,7 @@ const API_KEY_GOOGLE_SHEET = process.env.REACT_APP_GOOGLE_SHEET_API_KEY;
 
 function DataSource() {
     // CONFIG
+    this.id = 0;
     this.name = "";
     this.properties = {};
     this.fetchQuery = "";
@@ -24,6 +25,7 @@ function DataSource() {
     this.fieldNames = [];
     this.idFieldName = "";
     this.ressources = [];
+    this.dataSets = [];
 
     // CONTROLLER
     this.intervalPopulateDynamicFields = undefined;
@@ -38,7 +40,10 @@ function DataSource() {
 
 DataSource.prototype.load = async function(url) {
 
+    // https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing
+
     let promises = [];
+    let promises2 = [];
 
     // Étape 1 : On détermine le type
     if (url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
@@ -61,9 +66,11 @@ DataSource.prototype.load = async function(url) {
             .then(data => {
                 this.name = data.properties.title;
                 data.sheets.forEach((sheet, index) => {
-                    this.ressources.push({ name: sheet.properties.title, dataSets: []});
+                    this.ressources.push({ name: sheet.properties.title, id: sheet.properties.sheetId, dataSets: []});
 
-                    promises.push(fetch(this.fetchQuery + '/values/' + sheet.properties.title + '?alt=json&key=' + API_KEY_GOOGLE_SHEET)
+                    this.dataSets.push({ name: sheet.properties.title, id: sheet.properties.sheetId, data: []})
+
+                    promises2.push(fetch(this.fetchQuery + '/values/' + sheet.properties.title + '?alt=json&key=' + API_KEY_GOOGLE_SHEET)
                     .then(handleResponse)
                     .then(data => {
 
@@ -165,8 +172,20 @@ DataSource.prototype.load = async function(url) {
                 valid = false;
             }
         })
+        
+        /* return valid; */
 
-        return valid;
+        return Promise.all(promises2).then(initializations => {
+            let valid = true;
+    
+            initializations.forEach(initialization => {
+                if (!initialization) {
+                    valid = false;
+                }
+            })
+    
+            return valid;
+        });
     });
 }
 
@@ -223,6 +242,14 @@ DataSource.prototype.getData = function() {
 
 DataSource.prototype.getName = function() {
     return this.name;
+}
+
+DataSource.prototype.setId = function(id) {
+    this.id = id;
+}
+
+DataSource.prototype.getId = function() {
+    return this.id;
 }
 
 DataSource.prototype.asyncLoadData = async function() {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/outline'
+import { CheckCircleIcon, XCircleIcon, TableIcon, DatabaseIcon } from '@heroicons/react/outline'
 import DataSource from './DataSource';
+import DataSourceManager from './DataSourceManager';
 
 const LoadingSpinner = ({ className }) => {
     return (
@@ -15,12 +16,15 @@ const DATASOURCE_DEFAULT_OPTIONS = {
     GOOGLESHEET: { spreadsheetId: '', range: '' }
 };
 
+const dataSourceManager = new DataSourceManager();
+
 const DataSourceTool = ({ isHidden }) => {
 
     const [url, setUrl] = useState("");
     const [type, setType] = useState("");
     const [options, setOptions] = useState({});
     const [dataSources, setDataSources] = useState([]);
+    const [selectedDataSource, setSelectedDataSource] = useState([]);
 
     const [isLoading, setIsLoading] = useState(false);
     const [isValidSource, setIsValidSource] = useState(false)
@@ -68,9 +72,11 @@ const DataSourceTool = ({ isHidden }) => {
 
         newDataSource.load(url).then(valid => {
             if (valid) {
-                dataSources.push(newDataSource);
+                dataSourceManager.add(newDataSource);
                 console.log(newDataSource);
 
+                setDataSources(dataSourceManager.getDataSources());
+                setUrl('');
                 setIsLoading(false);
             }
         });
@@ -110,14 +116,73 @@ const DataSourceTool = ({ isHidden }) => {
                         </div>
                     </div>                
                 </div>
-                {dataSources.map((dataSource, index) => {
-                    return <div key={index} className="flex flex-row item-center justify-start space-x-2 bg-white p-2 border border-gray-300 shadow-sm rounded-md w-full">
-                        <div>{dataSource.name}</div>
+                <div className="flex flex-row items-start justify-start">
+                    {dataSources.map((dataSource, dSrcIndex) => {
+                        return <div key={dSrcIndex} className={`cursor-pointer flex flex-row items-center py-3 px-4 space-x-4 justify-center rounded-md border shadow-sm ${false ? 'text-white bg-blue-500 hover:bg-blue-400 border-blue-500 hover:border-blue-400' : 'text-gray-900 bg-gray-100 hover:bg-gray-100 border-gray-100 hover:border-gray-100'}`}>
+                            <div className="flex flex-col items-start justify-start space-y-1">
+                                <div className="leading-none font-medium">{dataSource.name}</div>
+                                <div className="leading-none font-light text-xs">{dataSource.type}</div>
+                                <div className="flex flex-row items-start justify-start space-x-2 pt-2">
+                                    {dataSource.ressources.map((ressource, rIndex) => {
+                                        return <div key={rIndex} onClick={() => setSelectedDataSource([dSrcIndex, rIndex])}
+                                                className={`cursor-pointer flex flex-row items-center justify-center py-0.5 px-2 rounded-sm border bg-transparent ${selectedDataSource.length > 0 && selectedDataSource[0] === dSrcIndex && selectedDataSource[1] === rIndex ? 'text-white bg-blue-500 border-blue-500' : 'text-gray-600 border-gray-300 hover:border-blue-500 hover:text-blue-500'}`}>
+                                                    <div className="text-xs">{ressource.name}</div>
+                                                </div>
+                                    })}
+                                </div>
+                            </div>
+                            
+                        </div>
+                    })}
+                    {/* {dataSources.map((dataSource, dSrcIndex) => {
+                        return <div key={dSrcIndex} className="flex flex-row items-center justify-start space-x-4 py-2 px-4 rounded-md w-full">
+                            <div className="font-bold pr-4">{dataSource.name}</div>
+                            {dataSources.length > 0 && dataSource.ressources.map((ressource, rIndex) => {
+                                return <div key={rIndex} className="flex flex-row items-center justify-start space-x-4">
+                                    {ressource.dataSets.map((dataSet, dSetIndex) => {
+                                        return <div key={dSetIndex} onClick={() => setSelectedDataSource([dSrcIndex, rIndex, dSetIndex])} 
+                                        className={`cursor-pointer flex flex-row items-center justify-start space-x-2 py-0.5 px-3 rounded-full border shadow-sm border-gray-200  ${selectedDataSource.length > 0 && selectedDataSource[0] === dSrcIndex && selectedDataSource[1] === rIndex && selectedDataSource[2] === dSetIndex ? 'text-white bg-blue-500 hover:bg-blue-400 border-blue-500 hover:border-blue-400' : 'text-gray-900 bg-gray-200 hover:bg-gray-100 hover:border-gray-200'}`}>
+                                            <TableIcon className="h-6 w-6" />
+                                            <div className="text-sm pr-0.5">{`${ressource.name}!${dataSet.dataRange[0]}:${dataSet.dataRange[1]}`}</div>
+                                        </div>
+                                    })}
+                                </div>
+                            })}
+                        </div>
+                    })} */}
+                </div>
+
+                {/* {selectedDataSource && 
+                    <div className="flex flex-col item-start justify-start space-y-2 bg-gray-100 p-2 rounded-md w-full">
+
                     </div>
-                })}
+                } */}
             </div>
             <div className="max-w-2xl w-full space-y-3">
-
+                <div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
+                    {selectedDataSource && selectedDataSource.length > 0 &&
+                        <div className="flex w-full h-full items-start justify-center p-4">
+                            <div className="table w-full rounded-sm bg-white">
+                                {/* <div className="table-header-group">
+                                    <div className="table-row">
+                                        {dataSources[0].ressources[0].dataSets[0].columns.map(column => {
+                                            return <div className="table-cell">{column.name}</div>
+                                        })}
+                                    </div>
+                                </div> */}
+                                <div className="table-row-group">
+                                    {dataSources[selectedDataSource[0]].ressources[selectedDataSource[1]].dataSets[0].data.map(row => {
+                                        return <div className="table-row">
+                                            {row.map(cell => {
+                                                return <div className="table-cell text-xs">{cell}</div>
+                                            })}
+                                        </div>
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     );
