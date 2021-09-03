@@ -429,7 +429,9 @@ DataSource.prototype.queryObjectsArray = function(data, query) {
             name: 1,
             filters: {},
             format: '',
-            textDescriptions: {}
+            width: 30,
+            textDescriptions: {},
+            display: true
         }
     ]; */
 
@@ -444,7 +446,6 @@ DataSource.prototype.queryObjectsArray = function(data, query) {
         formatedQueryColumn = '';
 
         query.forEach(column => {
-
             formatedQueryColumn = row[column.name];
 
             formatedQueryRow.push(formatedQueryColumn);

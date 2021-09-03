@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { CheckCircleIcon, XCircleIcon, TableIcon, DatabaseIcon } from '@heroicons/react/outline'
 import DataSource from './DataSource';
 import DataSourceManager from './DataSourceManager';
@@ -25,6 +25,14 @@ const DataSourceTool = ({ isHidden }) => {
     const [options, setOptions] = useState({});
     const [dataSources, setDataSources] = useState([]);
     const [selectedDataSource, setSelectedDataSource] = useState([]);
+
+    const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
+    const thumbPreview = useRef();
+
+    const [thumbFontSize, setThumbFontSize] = useState(10);
+    const [thumbTablePadding, setThumbTablePadding] = useState(1);
+    const [thumbTableWidth, setThumbTableWidth] = useState(100);
+    const [totalColumnWidth, setTotalColumnWidth] = useState(0);
 
     const [query, setQuery] = useState([]);
 
@@ -95,9 +103,60 @@ const DataSourceTool = ({ isHidden }) => {
     const handleSelectDataSource = (dataSourceIdx, dataSetId) => {
         setSelectedDataSource([dataSourceIdx, dataSetId]);
 
-        let newQuery = dataSources[dataSourceIdx].getElementByProperty('dataSets', 'id', dataSetId).columns;
+        let newQuery = dataSources[dataSourceIdx].getElementByProperty('dataSets', 'id', dataSetId).columns.map(column => {
+            return {...column, filters: {}, format: '', width: 0, fontSize: 16, textDescriptions: {}, display: true };
+        });
 
         setQuery(newQuery);
+    }
+
+    const handleChangeQueryColumn = (e, colIndex) => {
+        const target = e.target;
+        const value = target.type === 'checkbox' ? target.checked : target.value;
+        const name = target.name;
+        e.persist();
+
+        let newQuery = [...query];
+
+        newQuery[colIndex][name] = value;
+
+        setQuery(newQuery);
+    }
+
+    const sum = (items, prop) => {
+        return items.reduce( function(a, b){
+            return a + parseInt(b[prop]);
+        }, 0);
+    }
+
+    
+
+    /* useEffect(() => {
+        let totalWidth = sum(query, 'width');
+
+        console.log(totalWidth);
+
+        totalWidth = 100 - totalWidth;
+
+        setTotalColumnWidth(totalWidth);
+    }, [query]); */
+
+    useEffect(() => {
+        setThumbPreviewWidth(thumbPreview.current.offsetWidth);
+    }, [thumbPreview]);
+    
+    const getComputedPixelSize = (pixel) => {
+    let computedPixelSize = 0;
+    let currentThuumbPreviewWidth = thumbPreviewWidth;
+
+    if (thumbPreviewWidth === 0) {
+        currentThuumbPreviewWidth = thumbPreview.current.offsetWidth;
+        setThumbPreviewWidth(currentThuumbPreviewWidth);
+    }
+
+    computedPixelSize = currentThuumbPreviewWidth / 672 * pixel;
+
+    return computedPixelSize;
     }
 
     return (
@@ -162,30 +221,98 @@ const DataSourceTool = ({ isHidden }) => {
                     })} */}
                 </div>
 
-                {/* {selectedDataSource && 
+                {query.length > 0 && 
                     <div className="flex flex-col item-start justify-start space-y-2 bg-gray-100 p-2 rounded-md w-full">
-
+                        <div className="table w-full rounded-sm">
+                            <div className="table-header-group">
+                                <div className="table-row">
+                                    <div className="table-cell text-xs font-medium py-1 px-2"></div>
+                                    <div className="table-cell text-xs font-medium py-1 px-2">Titre</div>
+                                    <div className="table-cell text-xs font-medium py-1 px-2 text-center">Afficher</div>
+                                    {/* <div className="table-cell text-xs font-medium py-1 px-2">Taille du texte</div> */}
+                                    <div className="table-cell text-xs font-medium py-1 px-2">Largeur</div>
+                                    {/* <div className="table-cell text-xs font-medium">Style</div> */}
+                                </div>
+                            </div>
+                            <div className="table-row-group">
+                                {query.map((column, index) => {
+                                    return <div className="table-row" key={column.name}>
+                                        <div className="table-cell text-xs py-1 px-1 text-center">{index + 1}</div>
+                                        <div className="table-cell py-1 px-2">
+                                            <input
+                                                id={`title-${index}`}
+                                                onChange={event => handleChangeQueryColumn(event, index)}
+                                                value={column.title}
+                                                name='title'
+                                                type="text"
+                                                autoComplete="off"
+                                                className="resize-none appearance-none rounded-none relative block h-6 w-full px-2 py-1 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                                placeholder="Titre"
+                                            />
+                                        </div>
+                                        <div className="table-cell py-1 px-2 text-center">
+                                            <input type="checkbox" id={`display-${index}`} name="display" checked={column.display} onChange={event => handleChangeQueryColumn(event, index)} className="appearance-none cursor-pointer checked:bg-blue-500 checked:border-transparent" />
+                                        </div>
+                                        {/* <div className="table-cell py-1 px-2">
+                                            <input type="range" className="cursor-pointer" id={`fontSize-${index}`} step={1} name="fontSize" min="4" max="25" onChange={event => handleChangeQueryColumn(event, index)} defaultValue={16} />
+                                        </div> */}
+                                        <div className="table-cell py-1 px-2">
+                                            <input type="range" className="cursor-pointer" id={`width-${index}`} step={1} name="width" min="0" max={100} onChange={event => handleChangeQueryColumn(event, index)} defaultValue={0} />
+                                        </div>
+                                        {/* <div className="table-cell"></div> */}
+                                    </div>
+                                })}
+                            </div>
+                        </div>
                     </div>
-                } */}
+                }
             </div>
-            <div className="max-w-2xl w-full space-y-3">
+            <div className="max-w-2xl w-full space-y-3" ref={thumbPreview}>
                 <div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
                     <div className="w-full h-full gradientBackground"></div>
                     {selectedDataSource && selectedDataSource.length > 0 &&
-                        <div className="flex w-full h-full items-start justify-center p-4">
-                            <div className="table w-full rounded-sm bg-white bg-opacity-90">
+                        <div className="flex flex-col w-full h-full items-start justify-center"
+                            style={{
+                                padding: `${getComputedPixelSize(20)}px ${getComputedPixelSize(25)}px ${getComputedPixelSize(20)}px ${getComputedPixelSize(25)}px`
+                            }}
+                        >
+                            <div className="flex flex-col items-start justify-start">
+                                <h2 className="text-left font-extrabold text-white select-none"
+                                style={{
+                                    fontSize: `${getComputedPixelSize(18)}px`,
+                                    paddingBottom: `${getComputedPixelSize(thumbTablePadding * 2)}px`
+                                }}
+                                >{dataSources[selectedDataSource[0]].dataSets.find(dataSet => dataSet.id === selectedDataSource[1]).name}</h2>
+                            </div>
+                            <div className="table rounded-sm bg-white bg-opacity-90"
+                                style={{ 
+                                    padding: `${getComputedPixelSize(thumbTablePadding < 2 ? 2 : 0)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px`,
+                                    width: `${thumbTableWidth}%`
+                                }}
+                            >
                                 <div className="table-header-group">
                                     <div className="table-row">
-                                        {query.map(column => {
-                                            return <div className="table-cell text-xs font-medium">{column.title}</div>
+                                        {query.filter(column => column.display === true).map(column => {
+                                            return <div className="table-cell font-medium select-none" 
+                                            style={{ 
+                                                padding: `${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                fontSize: `${getComputedPixelSize(thumbFontSize * 1.25)}px`,
+                                                width: (column.width > 0 ? `${column.width}%` : 'auto')
+                                            }}
+                                            >{column.title}</div>
                                         })}
                                     </div>
                                 </div>
                                 <div className="table-row-group">
-                                    {dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1]).map(row => {
+                                    {dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1], query.filter(column => column.display === true)).map(row => {
                                         return <div className="table-row">
                                             {row.map(cell => {
-                                                return <div className="table-cell text-xs">{cell}</div>
+                                                return <div className="table-cell select-none" 
+                                                    style={{ 
+                                                        padding: `${getComputedPixelSize(thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                        fontSize: `${getComputedPixelSize(thumbFontSize)}px`,
+                                                    }}
+                                                >{cell}</div>
                                             })}
                                         </div>
                                     })}
@@ -194,6 +321,38 @@ const DataSourceTool = ({ isHidden }) => {
                         </div>
                     }
                 </div>
+
+                <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
+
+                    <div className="flex flex-col lg:flex-row flex-wrap item-center justify-start align-middle w-full mt-4">
+                        <div className="flex flex-row">
+                            <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                            Taille du texte :
+                            </div>
+                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="fontSize" step={0.10} name="fontSize" min="4" max="25" onChange={e => setThumbFontSize(e.target.value)} defaultValue={10} />
+                            </div>
+                        </div>
+                        <div className="flex flex-row">
+                            <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                            Largeur du tableau :
+                            </div>
+                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="padding" step={1} name="padding" min="0" max="100" onChange={e => setThumbTableWidth(e.target.value)} defaultValue={100} />
+                            </div>
+                        </div>
+                        <div className="flex flex-row">
+                            <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                            Espacement :
+                            </div>
+                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="padding" step={0.25} name="padding" min="0.25" max="10" onChange={e => setThumbTablePadding(e.target.value)} defaultValue={1} />
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
             </div>
         </div>
     );
