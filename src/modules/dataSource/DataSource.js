@@ -66,25 +66,52 @@ DataSource.prototype.load = async function(url) {
             .then(data => {
                 this.name = data.properties.title;
                 data.sheets.forEach((sheet, index) => {
-                    this.ressources.push({ name: sheet.properties.title, id: sheet.properties.sheetId, dataSets: []});
+                    /* this.ressources.push({ name: sheet.properties.title, id: sheet.properties.sheetId, dataSets: []}); */
 
-                    this.dataSets.push({ name: sheet.properties.title, id: sheet.properties.sheetId, data: []})
+                    this.dataSets.push({ name: sheet.properties.title, id: sheet.properties.sheetId, data: [], columns: []});
 
                     promises2.push(fetch(this.fetchQuery + '/values/' + sheet.properties.title + '?alt=json&key=' + API_KEY_GOOGLE_SHEET)
                     .then(handleResponse)
                     .then(data => {
 
                         // On ajoute un dataSet
-                        this.ressources[index].dataSets.push({ data: [], columns: [], headerRowNo: 1 });
+                        /* this.ressources[index].dataSets.push({ data: [], columns: [], headerRowNo: 1 }); */
+
+                        if (data.values.length > 0) {
+                            this.dataSets[index].columns = data.values[0].map((column, index) => {
+                                return { id: index + 1, name: column, title: column, index: index };
+                            });
+                        }
+
+                        data.values.splice(0, 1);
+
+                        data.values.forEach((row, rowIdx) => {
+                            
+                            /* for (let i = 0; i < this.dataSets[index].columns.length; i++) {
+
+                                if (!this.dataSets[index].data[rowIdx]) {
+                                    this.dataSets[index].data.push([]);
+                                }
+
+                                this.dataSets[index].data[rowIdx].push((row[i] ? row[i] : ''));
+                            } */
+                            let rowData = {};
+                            this.dataSets[index].columns.forEach((column, colIdx) => {
+                                rowData[column.name] = row[colIdx] ? row[colIdx] : ''
+                            });
+
+                            this.dataSets[index].data.push(rowData);
+                        });
+                        
 
                         // On essaye de trouver les tableaux (range) disponnible dans la feuille
-                        let dataSetIdx = 0;
+                        /* let dataSetIdx = 0;
                         let dataSetRowIdx = 0;
                         let dataSetCellIdx = 0;
 
-                        let maxDataSetCellIdx = 0;
+                        let maxDataSetCellIdx = 0; */
 
-                        data.values.forEach((row, rowIdx) => {
+                        /* data.values.forEach((row, rowIdx) => {
 
                             if (row.length > 0) {
                                this.ressources[index].dataSets[dataSetIdx].data.push([]);
@@ -138,7 +165,7 @@ DataSource.prototype.load = async function(url) {
                                dataSetRowIdx += 1;
                             }
                             
-                        });
+                        }); */
         
                         return true;
                     })
@@ -317,7 +344,7 @@ function handleTextResponse(response) {
 
 DataSource.prototype.addDynamicField = function(column, id, elementId) {
 
-    if (this.dynamicFields.findIndex(dynamicField => dynamicField.elementId == elementId) == -1) {
+    if (this.dynamicFields.findIndex(dynamicField => dynamicField.elementId === elementId) === -1) {
         this.dynamicFields.push({ column: column, id: id, elementId: elementId });   
     }
     
@@ -325,7 +352,7 @@ DataSource.prototype.addDynamicField = function(column, id, elementId) {
 
 DataSource.prototype.postProcessData = function() {
 
-    if (this.fieldNames.length == 0) {
+    if (this.fieldNames.length === 0) {
         this.retreiveFieldNames(this.data[0]);
     }
     
@@ -377,6 +404,57 @@ DataSource.prototype.formatDataToModel = function(data, model) {
     }
 
     this.formatedData = formatedData;
+}
+
+DataSource.prototype.getElementByProperty = function(element, property, value) {
+    return this[element].find(result => result[property] === value);
+}
+
+DataSource.prototype.queryDataSet = function(dataSetId, query = []) {
+
+    let dataSet = this.getElementByProperty('dataSets', 'id', dataSetId);
+
+    if (query.length === 0) {
+        query = dataSet.columns;
+    }
+
+    return this.queryObjectsArray(dataSet.data, query);
+
+}
+
+DataSource.prototype.queryObjectsArray = function(data, query) {
+
+    /* query = [
+        {
+            name: 1,
+            filters: {},
+            format: '',
+            textDescriptions: {}
+        }
+    ]; */
+
+    let queryResult = [];
+
+    let formatedQueryRow = [];
+    let formatedQueryColumn = '';
+
+    data.forEach(row => {
+
+        formatedQueryRow = [];
+        formatedQueryColumn = '';
+
+        query.forEach(column => {
+
+            formatedQueryColumn = row[column.name];
+
+            formatedQueryRow.push(formatedQueryColumn);
+        });
+
+        queryResult.push(formatedQueryRow);
+
+    });
+
+    return queryResult;
 }
 
 export default DataSource;
