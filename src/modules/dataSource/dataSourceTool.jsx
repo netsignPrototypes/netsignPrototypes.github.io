@@ -33,6 +33,9 @@ const DataSourceTool = ({ isHidden }) => {
     const [thumbTablePadding, setThumbTablePadding] = useState(1);
     const [thumbTableWidth, setThumbTableWidth] = useState(100);
     const [totalColumnWidth, setTotalColumnWidth] = useState(0);
+    const [maxNbRows, setMaxNbRows] = useState(0);
+
+    const [htmlTable, setHtmlTable] = useState(<></>);
 
     const [query, setQuery] = useState([]);
 
@@ -104,7 +107,7 @@ const DataSourceTool = ({ isHidden }) => {
         setSelectedDataSource([dataSourceIdx, dataSetId]);
 
         let newQuery = dataSources[dataSourceIdx].getElementByProperty('dataSets', 'id', dataSetId).columns.map(column => {
-            return {...column, filters: {}, format: '', width: 0, fontSize: 16, textDescriptions: {}, display: true };
+            return {...column, filters: {}, format: '', width: 0, textAlign: 'left', textDescriptions: {}, display: true };
         });
 
         setQuery(newQuery);
@@ -123,13 +126,116 @@ const DataSourceTool = ({ isHidden }) => {
         setQuery(newQuery);
     }
 
+    const handleChangeQueryColumnSpecific = (e, name, value, colIndex) => {
+        e.persist();
+
+        let newQuery = [...query];
+
+        newQuery[colIndex][name] = value;
+
+        setQuery(newQuery);
+    }
+
     const sum = (items, prop) => {
         return items.reduce( function(a, b){
             return a + parseInt(b[prop]);
         }, 0);
     }
 
-    
+    const getMaxNbRows = (previewWidth, fontSize, tablePadding, windowPadding) => {
+
+        let screenHeight = previewWidth / 16 * 9;
+        let minHeaderFontSize = getComputedPixelSize(fontSize * 1.25);
+        let minBannerSpace = 0;
+        let minTablePadding = getComputedPixelSize(tablePadding < 2 ? 2 : 0);
+        let minWindowPadding = getComputedPixelSize(windowPadding);
+        let minCellPadding = getComputedPixelSize(tablePadding / 3);
+        let minCellFontSize = getComputedPixelSize(fontSize);
+
+
+        let newMaxNbRows = Math.floor((screenHeight - minHeaderFontSize - minBannerSpace - (minTablePadding * 2) - (minWindowPadding * 2)) / ((minCellPadding * 2) + minCellFontSize + 1));
+
+        return newMaxNbRows;
+    }
+
+    useEffect(() => {
+
+        let tables = [];
+
+        if (selectedDataSource && selectedDataSource.length > 0) {
+
+            let screenHeight = thumbPreviewWidth / 16 * 9;
+            let minHeaderFontSize = getComputedPixelSize(thumbFontSize * 1.25);
+            let minHeaderPadding = getComputedPixelSize(thumbTablePadding * 1.5);
+            let minBannerSpace = 0;
+            let minTablePadding = 0;
+            let minWindowPadding = getComputedPixelSize(25);
+            let minCellPadding = getComputedPixelSize(thumbTablePadding);
+            let minCellFontSize = getComputedPixelSize(thumbFontSize);
+
+            let newMaxNbRows = Math.floor((screenHeight - minHeaderFontSize - minBannerSpace - (minTablePadding * 2) - (minWindowPadding * 2) - (minHeaderPadding * 2)) / ((minCellPadding * 2) + minCellFontSize));
+
+            for (let i = 0;i < 1; i++) {
+
+                let columns = query.filter(column => column.display === true);
+                let data = dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1], query.filter(column => column.display === true)).slice(newMaxNbRows * i, (newMaxNbRows * i) + newMaxNbRows);
+
+                if (data.length > 0) {
+                    let table = <div className="table rounded-sm overflow-hidden"
+                                style={{ 
+                                    /* padding: `${getComputedPixelSize(thumbTablePadding < 2 ? 2 : 0)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px`, */
+                                    width: `${thumbTableWidth}%`,
+                                    marginLeft: `${i === 0 ? 0 : getComputedPixelSize(10)}px`
+                                }}
+                            >
+                                <div className="table-header-group bg-gray-200 bg-opacity-90">
+                                    <div className="table-row">
+                                        {columns.map(column => {
+                                            return <div className="table-cell align-middle font-medium select-none leading-none truncate" 
+                                            style={{ 
+                                                padding: `${getComputedPixelSize(thumbTablePadding * 1.5)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding * 1.5)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                fontSize: `${getComputedPixelSize(thumbFontSize * 1.25)}px`,
+                                                lineHeight: `${getComputedPixelSize(thumbFontSize * 1.25)}px`,
+                                                width: (column.width > 0 ? `${column.width}%` : 'auto'),
+                                                textAlign: column.textAlign
+                                            }}
+                                            >{column.title}</div>
+                                        })}
+                                    </div>
+                                </div>
+                                <div className="table-row-group bg-white bg-opacity-90"
+                                    style={{ 
+                                        padding: `${getComputedPixelSize(thumbTablePadding)}px 0`,
+                                    }}
+                                >
+                                    {data.map(row => {
+                                        return <div className="table-row">
+                                            {row.map((cell, index) => {
+                                                return <div className="table-cell align-middle select-none leading-none truncate border-t border-gray-300" 
+                                                    style={{ 
+                                                        padding: `${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                        fontSize: `${getComputedPixelSize(thumbFontSize)}px`,
+                                                        lineHeight: `${getComputedPixelSize(thumbFontSize)}px`,
+                                                        textAlign: columns[index].textAlign
+                                                    }}
+                                                >{cell}</div>
+                                            })}
+                                        </div>
+                                    })}
+                                </div>
+                            </div>
+
+                    tables.push(table);
+                }
+                
+            }
+
+            setMaxNbRows(newMaxNbRows);
+        }
+
+        setHtmlTable(tables);
+
+    }, [thumbPreviewWidth, thumbFontSize, thumbTablePadding, dataSources, selectedDataSource, query, thumbTableWidth]);
 
     /* useEffect(() => {
         let totalWidth = sum(query, 'width');
@@ -229,7 +335,7 @@ const DataSourceTool = ({ isHidden }) => {
                                     <div className="table-cell text-xs font-medium py-1 px-2"></div>
                                     <div className="table-cell text-xs font-medium py-1 px-2">Titre</div>
                                     <div className="table-cell text-xs font-medium py-1 px-2 text-center">Afficher</div>
-                                    {/* <div className="table-cell text-xs font-medium py-1 px-2">Taille du texte</div> */}
+                                    <div className="table-cell text-xs font-medium py-1 px-2">Alignement</div>
                                     <div className="table-cell text-xs font-medium py-1 px-2">Largeur</div>
                                     {/* <div className="table-cell text-xs font-medium">Style</div> */}
                                 </div>
@@ -237,8 +343,8 @@ const DataSourceTool = ({ isHidden }) => {
                             <div className="table-row-group">
                                 {query.map((column, index) => {
                                     return <div className="table-row" key={column.name}>
-                                        <div className="table-cell text-xs py-1 px-1 text-center">{index + 1}</div>
-                                        <div className="table-cell py-1 px-2">
+                                        <div className="table-cell text-xs py-1 px-1 text-center align-middle">{index + 1}</div>
+                                        <div className="table-cell py-1 px-2 align-middle">
                                             <input
                                                 id={`title-${index}`}
                                                 onChange={event => handleChangeQueryColumn(event, index)}
@@ -250,14 +356,35 @@ const DataSourceTool = ({ isHidden }) => {
                                                 placeholder="Titre"
                                             />
                                         </div>
-                                        <div className="table-cell py-1 px-2 text-center">
+                                        <div className="table-cell py-1 px-2 text-center align-middle">
                                             <input type="checkbox" id={`display-${index}`} name="display" checked={column.display} onChange={event => handleChangeQueryColumn(event, index)} className="appearance-none cursor-pointer checked:bg-blue-500 checked:border-transparent" />
                                         </div>
-                                        {/* <div className="table-cell py-1 px-2">
-                                            <input type="range" className="cursor-pointer" id={`fontSize-${index}`} step={1} name="fontSize" min="4" max="25" onChange={event => handleChangeQueryColumn(event, index)} defaultValue={16} />
-                                        </div> */}
-                                        <div className="table-cell py-1 px-2">
-                                            <input type="range" className="cursor-pointer" id={`width-${index}`} step={1} name="width" min="0" max={100} onChange={event => handleChangeQueryColumn(event, index)} defaultValue={0} />
+                                        <div className="table-cell py-1 px-2 align-middle">
+                                            <div className="flex flex-row space-x-1">
+                                                <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'left', index)} className="cursor-pointer">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'left' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 4 12 h 8 m -8 6 h 12" />
+                                                    </svg>
+                                                </div>
+                                                <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'center', index)} className="cursor-pointer">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'center' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 8 12 h 8 m -10 6 h 12" />
+                                                    </svg>
+                                                </div>
+                                                <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'right', index)} className="cursor-pointer">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'right' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 12 12 h 8 m -12 6 h 12" />
+                                                    </svg>
+                                                </div>
+
+                                            </div>
+                                            
+                                        </div>
+                                        <div className="table-cell py-1 px-2 align-middle">
+                                            <div className="flex flex-row">
+                                                <input type="range" className="cursor-pointer" id={`width-${index}`} step={1} name="width" min="0" max={100} onChange={event => handleChangeQueryColumn(event, index)} defaultValue={0} />
+                                                <div className="text-xs px-2">{column.width}</div>
+                                            </div>
                                         </div>
                                         {/* <div className="table-cell"></div> */}
                                     </div>
@@ -268,23 +395,24 @@ const DataSourceTool = ({ isHidden }) => {
                 }
             </div>
             <div className="max-w-2xl w-full space-y-3" ref={thumbPreview}>
+                {selectedDataSource && selectedDataSource.length > 0 && <>
                 <div className="w-full aspect-w-16 aspect-h-9 bg-gray-100 rounded-md shadow overflow-hidden">
                     <div className="w-full h-full gradientBackground"></div>
-                    {selectedDataSource && selectedDataSource.length > 0 &&
-                        <div className="flex flex-col w-full h-full items-start justify-center"
+                    
+                        <div className="flex flex-row w-full h-full items-start justify-start"
                             style={{
-                                padding: `${getComputedPixelSize(20)}px ${getComputedPixelSize(25)}px ${getComputedPixelSize(20)}px ${getComputedPixelSize(25)}px`
+                                padding: `${getComputedPixelSize(25)}px ${getComputedPixelSize(25)}px ${getComputedPixelSize(25)}px ${getComputedPixelSize(25)}px`
                             }}
                         >
-                            <div className="flex flex-col items-start justify-start">
+                            {/* <div className="flex flex-col items-start justify-start">
                                 <h2 className="text-left font-extrabold text-white select-none"
                                 style={{
                                     fontSize: `${getComputedPixelSize(18)}px`,
                                     paddingBottom: `${getComputedPixelSize(thumbTablePadding * 2)}px`
                                 }}
                                 >{dataSources[selectedDataSource[0]].dataSets.find(dataSet => dataSet.id === selectedDataSource[1]).name}</h2>
-                            </div>
-                            <div className="table rounded-sm bg-white bg-opacity-90"
+                            </div> */}
+                            {/* <div className="table rounded-sm bg-white bg-opacity-90"
                                 style={{ 
                                     padding: `${getComputedPixelSize(thumbTablePadding < 2 ? 2 : 0)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding < 2 ? 2 : thumbTablePadding / 3)}px`,
                                     width: `${thumbTableWidth}%`
@@ -293,9 +421,9 @@ const DataSourceTool = ({ isHidden }) => {
                                 <div className="table-header-group">
                                     <div className="table-row">
                                         {query.filter(column => column.display === true).map(column => {
-                                            return <div className="table-cell font-medium select-none" 
+                                            return <div className="table-cell font-medium select-none leading-none" 
                                             style={{ 
-                                                padding: `${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                padding: `${getComputedPixelSize(thumbTablePadding * 2)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding * 2)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
                                                 fontSize: `${getComputedPixelSize(thumbFontSize * 1.25)}px`,
                                                 width: (column.width > 0 ? `${column.width}%` : 'auto')
                                             }}
@@ -304,12 +432,12 @@ const DataSourceTool = ({ isHidden }) => {
                                     </div>
                                 </div>
                                 <div className="table-row-group">
-                                    {dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1], query.filter(column => column.display === true)).map(row => {
+                                    {dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1], query.filter(column => column.display === true)).slice(0, maxNbRows).map(row => {
                                         return <div className="table-row">
                                             {row.map(cell => {
-                                                return <div className="table-cell select-none" 
+                                                return <div className="table-cell select-none leading-none" 
                                                     style={{ 
-                                                        padding: `${getComputedPixelSize(thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding / 3)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
+                                                        padding: `${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px ${getComputedPixelSize(thumbTablePadding)}px ${getComputedPixelSize(thumbTablePadding * 3)}px`,
                                                         fontSize: `${getComputedPixelSize(thumbFontSize)}px`,
                                                     }}
                                                 >{cell}</div>
@@ -317,9 +445,15 @@ const DataSourceTool = ({ isHidden }) => {
                                         </div>
                                     })}
                                 </div>
-                            </div>
+                            </div> */}
+
+                            {htmlTable}
+
                         </div>
-                    }
+                </div>
+
+                <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
+                    <div>{`${maxNbRows}/${dataSources[selectedDataSource[0]].queryDataSet(selectedDataSource[1], query.filter(column => column.display === true)).length}`}</div>
                 </div>
 
                 <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
@@ -329,29 +463,40 @@ const DataSourceTool = ({ isHidden }) => {
                             <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
                             Taille du texte :
                             </div>
-                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-                                <input type="range" id="fontSize" step={0.10} name="fontSize" min="4" max="25" onChange={e => setThumbFontSize(e.target.value)} defaultValue={10} />
+                            <div className={"select-none rounded-md m-1 pl-2 pr-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="fontSize" step={0.1} name="fontSize" min="4" max="25" onChange={e => setThumbFontSize(parseFloat(e.target.value))} defaultValue={10} />
+                            </div>
+                            <div className={"select-none w-4 rounded-md m-1 pr-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                {thumbFontSize}
                             </div>
                         </div>
                         <div className="flex flex-row">
                             <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
                             Largeur du tableau :
                             </div>
-                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-                                <input type="range" id="padding" step={1} name="padding" min="0" max="100" onChange={e => setThumbTableWidth(e.target.value)} defaultValue={100} />
+                            <div className={"select-none rounded-md m-1 pl-2 pr-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="padding" step={1} name="padding" min="0" max="100" onChange={e => setThumbTableWidth(parseInt(e.target.value))} defaultValue={100} />
+                            </div>
+                            <div className={"select-none w-4 rounded-md m-1 pr-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                {thumbTableWidth}
                             </div>
                         </div>
                         <div className="flex flex-row">
                             <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
                             Espacement :
                             </div>
-                            <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-                                <input type="range" id="padding" step={0.25} name="padding" min="0.25" max="10" onChange={e => setThumbTablePadding(e.target.value)} defaultValue={1} />
+                            <div className={"select-none rounded-md m-1 pl-2 pr-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                <input type="range" id="padding" step={0.1} name="padding" min="1" max="10" onChange={e => setThumbTablePadding(parseFloat(e.target.value))} defaultValue={1} />
+                            </div>
+                            <div className={"select-none w-4 rounded-md m-1 pr-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
+                                {thumbTablePadding}
                             </div>
                         </div>
                     </div>
                     
                 </div>
+                </>
+                }
 
             </div>
         </div>
