@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CheckCircleIcon, XCircleIcon, TableIcon, DatabaseIcon } from '@heroicons/react/outline'
 import DataSource from './DataSource';
 import DataSourceManager from './DataSourceManager';
+import FcmBd from './FcmBd';
 
 const LoadingSpinner = ({ className }) => {
     return (
@@ -12,17 +13,11 @@ const LoadingSpinner = ({ className }) => {
     );
 }
 
-const DATASOURCE_DEFAULT_OPTIONS = {
-    GOOGLESHEET: { spreadsheetId: '', range: '' }
-};
-
 const dataSourceManager = new DataSourceManager();
 
 const DataSourceTool = ({ isHidden }) => {
 
     const [url, setUrl] = useState("https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing");
-    const [type, setType] = useState("");
-    const [options, setOptions] = useState({});
     const [dataSources, setDataSources] = useState([]);
     const [selectedDataSource, setSelectedDataSource] = useState([]);
 
@@ -40,38 +35,14 @@ const DataSourceTool = ({ isHidden }) => {
     const [query, setQuery] = useState([]);
 
     const [isLoading, setIsLoading] = useState(false);
-    const [isValidSource, setIsValidSource] = useState(true)
+    const [isValidSource, setIsValidSource] = useState(true);
 
     const handleChange = (e) => {
         const { target } = e;
         const { value } = target;
-        e.persist();
-
-        if (value.indexOf("https://docs.google.com/spreadsheets/") > -1) {
-            setType("GOOGLESHEET");
-
-            let newOptions = DATASOURCE_DEFAULT_OPTIONS["GOOGLESHEET"];
-
-            newOptions.spreadsheetId = value.substring(value.indexOf("/d/") + 3, value.lastIndexOf("/"))
-            setOptions(DATASOURCE_DEFAULT_OPTIONS["GOOGLESHEET"]);
-            setIsValidSource(true);
-        } else {
-            setType("");
-            setIsValidSource(false);
-        }
-        
+        e.persist();        
     
         setUrl(value);
-    };
-
-    const handleChangeOption = (e) => {
-        const { target } = e;
-        const { value, name } = target;
-        e.persist();
-
-        const newOptions = { ...options, [name]: value };
-    
-        setOptions(newOptions);
     };
 
     const handleAddDataSource = (e) => {
@@ -81,6 +52,12 @@ const DataSourceTool = ({ isHidden }) => {
     }
 
     const createDataSource = () => {
+
+        /* FcmBd.DataSources.add('TestData', url);
+
+        console.log('getDataSource', FcmBd.DataSources.find('TestData'));
+        console.log('getDataSource', FcmBd.getDataSources()); */
+
         let newDataSource = new DataSource();
 
         newDataSource.load(url).then(valid => {
@@ -173,7 +150,7 @@ const DataSourceTool = ({ isHidden }) => {
             let minCellPadding = getComputedPixelSize(thumbTablePadding);
             let minCellFontSize = getComputedPixelSize(thumbFontSize);
 
-            let newMaxNbRows = Math.floor((screenHeight - minHeaderFontSize - minBannerSpace - (minTablePadding * 2) - (minWindowPadding * 2) - (minHeaderPadding * 2)) / ((minCellPadding * 2) + minCellFontSize));
+            let newMaxNbRows = Math.floor((screenHeight - minHeaderFontSize - minBannerSpace - (minTablePadding * 2) - (minWindowPadding * 2) - (minHeaderPadding * 2)) / ((minCellPadding * 2) + minCellFontSize + 1));
 
             for (let i = 0;i < 1; i++) {
 
@@ -363,17 +340,17 @@ const DataSourceTool = ({ isHidden }) => {
                                             <div className="flex flex-row space-x-1">
                                                 <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'left', index)} className="cursor-pointer">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'left' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 4 12 h 8 m -8 6 h 12" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M 4 6 h 16 M 4 12 h 8 m -8 6 h 12" />
                                                     </svg>
                                                 </div>
                                                 <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'center', index)} className="cursor-pointer">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'center' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 8 12 h 8 m -10 6 h 12" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M 4 6 h 16 M 8 12 h 8 m -10 6 h 12" />
                                                     </svg>
                                                 </div>
                                                 <div onClick={event => handleChangeQueryColumnSpecific(event, 'textAlign', 'right', index)} className="cursor-pointer">
                                                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 ${column.textAlign === 'right' && 'text-blue-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M 4 6 h 16 M 12 12 h 8 m -12 6 h 12" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M 4 6 h 16 M 12 12 h 8 m -12 6 h 12" />
                                                     </svg>
                                                 </div>
 

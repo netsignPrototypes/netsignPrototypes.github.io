@@ -1,0 +1,24 @@
+---------------------------------------------------------------------
+JSON OBJECT TERMS
+---------------------------------------------------------------------
+
+object (obj) = { properties };
+
+properties (props) | property (prop) = { key: value };
+
+array (arr) = [ items ];
+
+value = string | boolean | number | array | object;
+
+
+---------------------------------------------------------------------
+DATASOURCE
+---------------------------------------------------------------------
+
+Permet de conserver les informations de base d'une source et chacun de ses DataSets.
+Garde en mémoire les données de chacun des DataSets et les met à jour quand c'est nécessaire.
+
+On l'utilise donc seulement pour aller chercher les données brutes.
+
+
+    

@@ -1,4 +1,3 @@
-
 const dataSourceType = {
     GOOGLESHEET: "GOOGLESHEET",
     API: "API"
