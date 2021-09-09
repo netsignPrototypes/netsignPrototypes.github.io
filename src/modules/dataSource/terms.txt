@@ -21,4 +21,13 @@ Garde en mémoire les données de chacun des DataSets et les met à jour quand c
 On l'utilise donc seulement pour aller chercher les données brutes.
 
 
-    
+---------------------------------------------------------------------
+QUERY STRUCTURE
+---------------------------------------------------------------------
+
+{
+    select: [''],
+    from: '',
+    where: [{ key: '', operator: '', value: ''}],
+    orderBy: ['']
+}

@@ -190,6 +190,7 @@ const CreationTool = ({ isHidden }) => {
         searchPixaBayData(filteredWordsArray, Result.language, filteredWordsArray, searchWords);
 
         console.log('wordsArray', wordsArray);
+
       } else {
         getCorrespondingImages([], Result.language);
         setSelectedSearchTags([]);
