@@ -56,10 +56,33 @@ const DataSourceTool = ({ isHidden }) => {
         FcmBd.DataSources.add('TestData', url, async (req, res) => {
 
             let find = FcmBd.DataSources.find('TestData');
-            let query = await FcmBd.DataSources.query('TestData', { select: ['nom', 'prenom', 'equipe', 'pause', 'debut', 'fin'], from: 'Simons', orderBy: ['equipe', 'nom', 'prenom'] });
+
+            /* let query = { 
+                select: ['nom', 'prenom', 'equipe', 'pause', 'debut', 'fin'], 
+                from: 'Simons', 
+                orderBy: ['equipe', 'nom', 'prenom'] 
+            }; */
+
+            let query = { 
+                select: {
+                    nom: 1,
+                    prenom: 1,
+                    equipe: 1,
+                    pause: 1,
+                    debut: 1,
+                    fin: 1
+                }, 
+                from: 'Simons',
+                where: { equipe: 121 },
+                orderBy: [{ equipe: 1 }, { nom: -1 }, { prenom: 1 }],
+                limit: 10,
+                skip: 0
+            };
+
+            let queryResult = await FcmBd.DataSources.query('TestData', true, query);
 
             console.log('FcmBd.DataSources.find("TestData")', find);
-            console.log('FcmBd.DataSources.query("TestData")', query);
+            console.log('FcmBd.DataSources.query("TestData")', queryResult);
         });        
 
         let newDataSource = new DataSource();

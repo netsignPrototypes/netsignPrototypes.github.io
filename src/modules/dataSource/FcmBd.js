@@ -47,6 +47,7 @@ const FcmBd = (() => {
             switch (source.type) {
                 case dataSourceType.GOOGLESHEET:
                     let id = url.substring(url.indexOf("/d/") + 3, url.lastIndexOf("/"));
+                    source.name = dataSourceName;
                     source.properties.spreadsheetId = id;
                     source.baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${id}`;
 
@@ -65,15 +66,17 @@ const FcmBd = (() => {
                             let dataStoreRef = `${dataSourceName}_${sheetId}`;
                             let sheetTitle = sheet.properties.title;
 
-                            let dataSet = { ref: sheetTitle, id: sheetId, dataStoreRef: dataStoreRef, columns: {} };
+                            let dataSet = { name: sheetTitle, ref: sheetTitle, baseUrl: '/values/' + sheet.properties.title, id: sheetId, dataStoreRef: dataStoreRef, columns: { refs: [] } };
 
                             source.dataSets.refs.push(sheetTitle);
 
                             dataStores[dataStoreRef] = [];
 
                             if (sheetData.values.length > 0) {
-                                dataSet.columns = sheetData.values[0].map((column, colIdx) => {
-                                    return { id: colIdx + 1, name: column, title: column, index: colIdx };
+                                sheetData.values[0].forEach((column, colIdx) => {
+                                    dataSet.columns.refs.push(column);
+
+                                    dataSet.columns[column] = { id: colIdx + 1, name: column, title: column, index: colIdx };
                                 });
                             }
     
@@ -81,8 +84,8 @@ const FcmBd = (() => {
     
                             sheetData.values.forEach((row, rowIdx) => {
                                 let rowData = {};
-                                dataSet.columns.forEach((column, colIdx) => {
-                                    rowData[column.name] = row[colIdx] ? row[colIdx] : ''
+                                dataSet.columns.refs.forEach((column, colIdx) => {
+                                    rowData[column] = row[colIdx] ? row[colIdx] : ''
                                 });
     
                                 dataStores[dataStoreRef].push(rowData);
@@ -127,7 +130,7 @@ const FcmBd = (() => {
         return dataSources[name];
     }
 
-    _DataSources.query = async function(name, query = {}) {
+    _DataSources.query = async function(name, liveData = false, query = {}) {
 
         const startTime = new Date().getTime();
 
@@ -146,7 +149,7 @@ const FcmBd = (() => {
 
             let dataSet = dataSource.dataSets[query.from];
 
-            if (dataSet.dataLoaded) {
+            if (dataSet.dataLoaded && !liveData) {
                 data = dataStores[dataSet.dataStoreRef];
                 queryResult.datasetNbRows = data.length;
 
@@ -154,16 +157,50 @@ const FcmBd = (() => {
                     data = filter(data, query.where);
                 }
 
-                queryResult.nbRows = data.length;
+                if (query.select && queryResult.returnedNbRows > 0) {
 
-                if (query.select && queryResult.nbRows > 0) {
-                    data = select(data, query.select);
+                    let dataSetColumns = [];
+
+                    let included = Object.values(query.select);
+
+                    let removing = included.includes(0);
+                    let adding = included.includes(1);
+                    
+                    dataSet.columns.refs.forEach(column => {
+
+                        if (removing && adding) {
+                            if (query.select[column] === 1 && query.select[column] === undefined) {
+                                dataSetColumns.push(column);
+                            }
+                        } else if (adding) {
+                            if (query.select[column]) {
+                                dataSetColumns.push(column);
+                            }
+                        } else if (removing) {
+                            if (query.select[column] !== 0 || query.select[column] === undefined) {
+                                dataSetColumns.push(column);
+                            }
+                        }
+                        
+                        
+                    });
+
+                    data = select(data, dataSetColumns);
                 }
 
-                if (query.orderBy && queryResult.nbRows > 0) {
+                if (query.orderBy && queryResult.returnedNbRows > 0) {
                     data = sort(data, query.orderBy);
                 }
 
+                if (query.skip && query.limit) {
+                    data = data.slice(query.skip, query.skip + query.limit);
+                } else if (query.limit) {
+                    data = data.slice(0, query.limit);
+                } else if (query.skip) {
+                    data = data.slice(query.skip);
+                }
+
+                queryResult.returnedNbRows = data.length;
                 queryResult.data = data;
 
                 queryResult.duration = (new Date().getTime() - startTime) / 1000;
@@ -176,9 +213,47 @@ const FcmBd = (() => {
 
             } else {
                 // TODO: Load dataSet data to store (need a function for that) then rerun query() with same param.
-                return await fetchQuery(dataSources[name].baseUrl + dataSourceTypeDefaultParams[dataSources[name].type]);
+                dataSet.dataLoaded = false;
+
+                return await _DataSources.updateStore(dataSource.name, dataSet.name).then(() => _DataSources.query(name, false, query));
             }
         }
+    }
+
+    _DataSources.updateStore = async (dataSourceName, dataSetName) => {
+
+        let dataSource = dataSources[dataSourceName];
+        let dataSet = dataSource.dataSets[dataSetName];
+
+        return await fetchQuery(dataSource.baseUrl + dataSet.baseUrl + dataSourceTypeDefaultParams[dataSource.type]).then(data => {
+            let updatedData = undefined;
+
+            switch (dataSource.type) {
+                case "GOOGLESHEET":
+
+                    updatedData = [];
+
+                    data.values.splice(0, 1);
+    
+                    data.values.forEach((row, rowIdx) => {
+                        let rowData = {};
+                        dataSet.columns.refs.forEach((column, colIdx) => {
+                            rowData[column] = row[colIdx] ? row[colIdx] : ''
+                        });
+
+                        updatedData.push(rowData);
+                    });
+                    break;
+                default:
+                    updatedData = data;
+                break;
+            }
+
+            if (updatedData) {
+                dataStores[dataSet.dataStoreRef] = updatedData;
+                dataSet.dataLoaded = true;
+            }
+        });
     }
 
     // =========================================================
@@ -264,25 +339,30 @@ const FcmBd = (() => {
     
     }
     
-    const match = (objectTocheck, valuesToMatch = []) => {
+    const match = (objectTocheck, filters = {}) => {
         let isMacthing = false;
+
+        let filterArr = Object.entries(filters);
     
-        for (let i = 0; i < valuesToMatch.length; i++) {
-            switch (valuesToMatch[i].operator) {
-                case "=":
-                    isMacthing = objectTocheck[valuesToMatch[i].key] === valuesToMatch[i].value;
+        for (let [key, value] of filterArr) {
+            switch (key) {
+                case "$gt":
+                    isMacthing = objectTocheck[key] > value;
                 break;
-                case ">=":
-                    isMacthing = objectTocheck[valuesToMatch[i].key] >= valuesToMatch[i].value;
+                case "$lt":
+                    isMacthing = objectTocheck[key] < value;
                 break;
-                case "<=":
-                    isMacthing = objectTocheck[valuesToMatch[i].key] <= valuesToMatch[i].value;
+                case "$gte":
+                    isMacthing = objectTocheck[key] >= value;
                 break;
-                case "in":
-                    isMacthing = valuesToMatch[i].value.includes(objectTocheck[valuesToMatch[i].key]);
+                case "$lte":
+                    isMacthing = objectTocheck[key] <= value;
+                break;
+                case "$in":
+                    isMacthing = value.includes(objectTocheck[key]);
                 break;
                 default:
-                    isMacthing = false;
+                    isMacthing = objectTocheck[key] == value;
             }
     
             if (!isMacthing) {
@@ -293,7 +373,7 @@ const FcmBd = (() => {
         return isMacthing;
     }
     
-    const filter = (data = [], filters = []) => {
+    const filter = (data = [], filters = {}) => {
 
         //{key: '', operator: '', value: ''}
     
@@ -311,14 +391,21 @@ const FcmBd = (() => {
     }
     
     const sort = (data = [], keys = []) => {
+
+        let columns = keys.map(key => {
+            return Object.entries(key)[0];
+        });
+
         let sortedData = data.sort((itemA, itemB) => {
             let sorted = 0;
 
-            for (let key of keys) {
+            for (let [key, direction] of columns) {
+                let valueA = direction ? itemA[key] : itemB[key];
+                let valueB = direction ? itemB[key] : itemA[key];
 
-                if (!isNaN(parseFloat(itemA[key]))) {
-                    let valueA = parseFloat(itemA[key]);
-                    let valueB = parseFloat(itemB[key]);
+                if (!isNaN(parseFloat(valueA)) && !isNaN(parseFloat(valueB))) {
+                    valueA = parseFloat(valueA);
+                    valueB = parseFloat(valueB);
 
                     if (valueA < valueB) {
                         sorted = -1;
@@ -329,7 +416,7 @@ const FcmBd = (() => {
                     }
 
                 } else {
-                    sorted = itemA[key].localeCompare(itemA[key]);
+                    sorted = valueA.localeCompare(valueB) * direction;
                 }
 
                 if (sorted !== 0) {
@@ -345,6 +432,7 @@ const FcmBd = (() => {
     }
 
     const select = (data = [], keys = []) => {
+
         let selectedData = data.map(item => {
             let dataRow = {};
             

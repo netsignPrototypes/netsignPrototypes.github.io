@@ -31,3 +31,21 @@ QUERY STRUCTURE
     where: [{ key: '', operator: '', value: ''}],
     orderBy: ['']
 }
+
+https://mongodb.github.io/mongo-java-driver/3.0/builders/filters/
+https://docs.mongodb.com/manual/reference/sql-comparison/
+
+WHERE status = "A" -> { status: "A" }
+
+WHERE status = "A" AND age = 50 -> { status: "A", age: 50 }
+
+WHERE status = "A" OR age = 50 -> { $or: [ { status: "A" } , { age: 50 } ] }
+
+WHERE age > 25 -> { age: { $gt: 25 } }
+WHERE age < 25 -> { age: { $lt: 25 } }
+WHERE age >= 25 -> { age: { $gte: 25 } }
+WHERE age <= 25 -> { age: { $lte: 25 } }
+
+WHERE age > 25 AND age <= 50 -> { age: { $gt: 25, $lte: 50 } }
+
+WHERE user_id like "%bc%" -> db.people.find( { user_id: /bc/ } )
