@@ -47,8 +47,34 @@ const DataSourceTool = ({ isHidden }) => {
 
     const handleAddDataSource = (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        createDataSource();
+
+        if (url) {
+            setIsLoading(true);
+            createDataSource();
+        } else {
+            setIsLoading(true);
+            let query = { 
+                select: {
+                    nom: 1,
+                    prenom: 1,
+                    equipe: 1,
+                    pause: 1,
+                    debut: 1,
+                    fin: 1
+                }, 
+                from: 'Simons',
+                where: { $and: [{ pause: 'A'}, {equipe: 121}] },
+                orderBy: [{ nom: 1 }, { prenom: 1 }],
+                limit: 200,
+                skip: 0
+            };
+
+            FcmBd.DataSources.query('TestData', false, query).then(queryResult => {
+                console.log('FcmBd.DataSources.query("TestData")', queryResult);
+                setIsLoading(false);
+            });
+        }
+        
     }
 
     const createDataSource = () => {
@@ -73,9 +99,9 @@ const DataSourceTool = ({ isHidden }) => {
                     fin: 1
                 }, 
                 from: 'Simons',
-                where: { equipe: 121 },
-                orderBy: [{ equipe: 1 }, { nom: -1 }, { prenom: 1 }],
-                limit: 10,
+                where: { equipe: 9 },
+                orderBy: [{ nom: 1 }, { prenom: 1 }],
+                limit: 200,
                 skip: 0
             };
 

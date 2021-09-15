@@ -41,7 +41,7 @@ const FcmBd = (() => {
 
             let source = {
                 properties: {},
-                type: getType(url)
+                type: getDataSourceType(url)
             }
 
             switch (source.type) {
@@ -92,6 +92,9 @@ const FcmBd = (() => {
                             });
     
                             dataSet.dataLoaded = true;
+                            dataSet.storeRefreshRate = 30000;
+
+                            /* dataSet.intervalUpdateStore = setInterval(function() { _DataSources.updateStore(source.name, dataSet.name); }, dataSet.storeRefreshRate); */
     
                             source.dataSets[sheetTitle] = dataSet;
                         }));
@@ -120,7 +123,7 @@ const FcmBd = (() => {
     }
 
     /**
-     * Retourne les information d'une source de données
+     * Retourne les informations d'une source de données
      * 
      * @param  {string} name    - Nom unique de la source de données.
      * 
@@ -157,7 +160,7 @@ const FcmBd = (() => {
                     data = filter(data, query.where);
                 }
 
-                if (query.select && queryResult.returnedNbRows > 0) {
+                if (query.select && data.length > 0) {
 
                     let dataSetColumns = [];
 
@@ -188,7 +191,7 @@ const FcmBd = (() => {
                     data = select(data, dataSetColumns);
                 }
 
-                if (query.orderBy && queryResult.returnedNbRows > 0) {
+                if (query.orderBy && data.length > 0) {
                     data = sort(data, query.orderBy);
                 }
 
@@ -224,6 +227,8 @@ const FcmBd = (() => {
 
         let dataSource = dataSources[dataSourceName];
         let dataSet = dataSource.dataSets[dataSetName];
+
+        console.log('updateStore', dataSourceName, dataSetName);
 
         return await fetchQuery(dataSource.baseUrl + dataSet.baseUrl + dataSourceTypeDefaultParams[dataSource.type]).then(data => {
             let updatedData = undefined;
@@ -316,13 +321,25 @@ const FcmBd = (() => {
     // UTILS FUNCTIONS
     // =========================================================
 
-    const getType = (url) => {
+    const getDataSourceType = (url) => {
         let type;
         if (url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
             type = dataSourceType.GOOGLESHEET;
         } else {
             type = dataSourceType.API;
         }
+
+        return type;
+    }
+
+    const getDataType = (value) => {
+        let type;
+        
+        if (value === '') {
+            type = 'string';
+        } else if (value === 'true' || value === 'false') {
+            type = 'boolean';
+        } 
 
         return type;
     }
@@ -338,36 +355,87 @@ const FcmBd = (() => {
     const format = (value, dataType, format) => {
     
     }
-    
-    const match = (objectTocheck, filters = {}) => {
-        let isMacthing = false;
 
-        let filterArr = Object.entries(filters);
-    
-        for (let [key, value] of filterArr) {
-            switch (key) {
-                case "$gt":
-                    isMacthing = objectTocheck[key] > value;
-                break;
-                case "$lt":
-                    isMacthing = objectTocheck[key] < value;
-                break;
-                case "$gte":
-                    isMacthing = objectTocheck[key] >= value;
-                break;
-                case "$lte":
-                    isMacthing = objectTocheck[key] <= value;
-                break;
-                case "$in":
-                    isMacthing = value.includes(objectTocheck[key]);
-                break;
-                default:
-                    isMacthing = objectTocheck[key] == value;
+    const readFilter = (objectTocheck, filters, operator = '', keyToCheck = undefined, isMacthing = true) => {
+
+        let filterArr;
+
+        if (filters !== null && typeof filters == "object") {
+
+            if (Array.isArray(filters)) {
+                for (let filter of filters) {
+                    isMacthing = readFilter(objectTocheck, filter, keyToCheck, isMacthing);
+
+                    if (operator === '$and' && !isMacthing) {
+                        break;
+                    } else if (operator === '$or' && isMacthing) {
+                        break;
+                    }
+                }
+            } else {
+                filterArr = Object.entries(filters);
+
+                for (let [key, value] of filterArr) {
+
+                    if (key.includes('$')) {
+                        
+                        if (value !== null && typeof value == "object") {
+                            operator = key;
+                            filters = value;
+                            isMacthing = readFilter(objectTocheck, filters, keyToCheck, isMacthing);
+                        } else {
+                            operator = key;
+                            isMacthing = compare(objectTocheck[keyToCheck], value, operator);
+                        }
+                        
+                    } else if (value !== null && typeof value == "object") {
+                        operator = '';
+                        filters = value;
+                        keyToCheck = key;
+                        isMacthing = readFilter(objectTocheck, filters, keyToCheck, isMacthing);
+                    } else {
+                        if (!keyToCheck) {
+                            keyToCheck = key;
+                        };
+
+                        isMacthing = compare(objectTocheck[keyToCheck], value, operator);
+
+                        operator = '';
+                    }
+
+                    if (!isMacthing) {
+                        break;
+                    }
+                }
             }
+
+        }
+
+        return isMacthing;
+
+    }
+
+    const compare = (valueToCheck, valueToMatch, operator = "") => {
+        let isMacthing = false;
     
-            if (!isMacthing) {
-                break;
-            }
+        switch (operator) {
+            case "$gt":
+                isMacthing = Number(valueToCheck) > valueToMatch;
+            break;
+            case "$lt":
+                isMacthing = Number(valueToCheck) < valueToMatch;
+            break;
+            case "$gte":
+                isMacthing = Number(valueToCheck) >= valueToMatch;
+            break;
+            case "$lte":
+                isMacthing = Number(valueToCheck) <= valueToMatch;
+            break;
+            case "$in":
+                isMacthing = valueToMatch.includes(valueToCheck);
+            break;
+            default:
+                isMacthing = valueToCheck == valueToMatch;
         }
         
         return isMacthing;
@@ -375,16 +443,8 @@ const FcmBd = (() => {
     
     const filter = (data = [], filters = {}) => {
 
-        //{key: '', operator: '', value: ''}
-    
-        /* for (let i = 0; i < filters.length; i++) {
-            filteredData = filteredData.filter(item => {
-                return match(item, filters[i]);
-            });
-        } */
-
         let filteredData = data.filter(item => {
-            return match(item, filters);
+            return readFilter(item, filters);
         });
         
         return filteredData;

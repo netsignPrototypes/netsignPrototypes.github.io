@@ -25,12 +25,21 @@ On l'utilise donc seulement pour aller chercher les données brutes.
 QUERY STRUCTURE
 ---------------------------------------------------------------------
 
-{
-    select: [''],
-    from: '',
-    where: [{ key: '', operator: '', value: ''}],
-    orderBy: ['']
-}
+{ 
+    select: {
+        nom: 1,
+        prenom: 1,
+        equipe: 1,
+        pause: 1,
+        debut: 1,
+        fin: 1
+    }, 
+    from: 'Simons',
+    where: { equipe: 121 },
+    orderBy: [{ equipe: 1 }, { nom: -1 }, { prenom: 1 }],
+    limit: 10,
+    skip: 0
+};
 
 https://mongodb.github.io/mongo-java-driver/3.0/builders/filters/
 https://docs.mongodb.com/manual/reference/sql-comparison/
@@ -49,3 +58,18 @@ WHERE age <= 25 -> { age: { $lte: 25 } }
 WHERE age > 25 AND age <= 50 -> { age: { $gt: 25, $lte: 50 } }
 
 WHERE user_id like "%bc%" -> db.people.find( { user_id: /bc/ } )
+
+---------------------------------------------------------------------
+DATA TABLE STRUCTURE
+---------------------------------------------------------------------
+
+[
+    {
+        Header: "#",
+        accessor: "id",
+        style: {
+            width: '7%',
+            textAlign: 'center',
+        },
+    }
+]
