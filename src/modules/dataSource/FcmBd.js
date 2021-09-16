@@ -76,7 +76,7 @@ const FcmBd = (() => {
                                 sheetData.values[0].forEach((column, colIdx) => {
                                     dataSet.columns.refs.push(column);
 
-                                    dataSet.columns[column] = { id: colIdx + 1, name: column, title: column, index: colIdx };
+                                    dataSet.columns[column] = { id: colIdx + 1, name: column, title: column, index: colIdx, dataType: getDataType(sheetData.values[1][colIdx]) };
                                 });
                             }
     
@@ -117,7 +117,7 @@ const FcmBd = (() => {
             dataSources.refs.push(dataSourceName);
 
             return callback(null, dataSources[dataSourceName]);
-        } catch (e) {
+        } catch (err) {
             return false;
         }
     }
@@ -131,6 +131,20 @@ const FcmBd = (() => {
      */
     _DataSources.find = function(name) {
         return dataSources[name];
+    }
+
+    _DataSources.list = function(dataSourceName = undefined, dataSetName = undefined) {
+        let list;
+
+        if (!dataSourceName) {
+            list = dataSources.refs;
+        } else if (dataSourceName && !dataSetName) {
+            list = dataSources[dataSourceName].dataSets.refs;
+        } else if (dataSourceName && dataSetName) {
+            list = dataSources[dataSourceName].dataSets[dataSetName].columns.refs;
+        }
+
+        return  list;
     }
 
     _DataSources.query = async function(name, liveData = false, query = {}) {
@@ -157,7 +171,7 @@ const FcmBd = (() => {
                 queryResult.datasetNbRows = data.length;
 
                 if (query.where) {
-                    data = filter(data, query.where);
+                    data = filter(data, query.where, dataSet.columns);
                 }
 
                 if (query.select && data.length > 0) {
@@ -192,7 +206,7 @@ const FcmBd = (() => {
                 }
 
                 if (query.orderBy && data.length > 0) {
-                    data = sort(data, query.orderBy);
+                    data = orderBy(data, query.orderBy);
                 }
 
                 if (query.skip && query.limit) {
@@ -333,30 +347,22 @@ const FcmBd = (() => {
     }
 
     const getDataType = (value) => {
-        let type;
+        let type = 'string';
         
         if (value === '') {
             type = 'string';
         } else if (value === 'true' || value === 'false') {
             type = 'boolean';
-        } 
+        } else if (Date.parse(value) && (value.includes('-') || value.includes(':'))) {
+            type = 'date';
+        } else if (!isNaN(parseFloat(value))) {
+            type = 'number';
+        }
 
         return type;
     }
 
-    const addIndexes = (data = [], keys = []) => {
-
-    }
-    
-    const searchOne = (data = [], filters = [{key: '', values: []}]) => {
-    
-    }
-    
-    const format = (value, dataType, format) => {
-    
-    }
-
-    const readFilter = (objectTocheck, filters, operator = '', keyToCheck = undefined, isMacthing = true) => {
+    const readFilter = (objectTocheck, filters, dataSetColumns, operator = '', keyToCheck = undefined, isMacthing = true) => {
 
         let filterArr;
 
@@ -364,7 +370,7 @@ const FcmBd = (() => {
 
             if (Array.isArray(filters)) {
                 for (let filter of filters) {
-                    isMacthing = readFilter(objectTocheck, filter, keyToCheck, isMacthing);
+                    isMacthing = readFilter(objectTocheck, filter, dataSetColumns, keyToCheck, isMacthing);
 
                     if (operator === '$and' && !isMacthing) {
                         break;
@@ -382,23 +388,23 @@ const FcmBd = (() => {
                         if (value !== null && typeof value == "object") {
                             operator = key;
                             filters = value;
-                            isMacthing = readFilter(objectTocheck, filters, keyToCheck, isMacthing);
+                            isMacthing = readFilter(objectTocheck, filters, dataSetColumns, keyToCheck, isMacthing);
                         } else {
                             operator = key;
-                            isMacthing = compare(objectTocheck[keyToCheck], value, operator);
+                            isMacthing = compare(convertToDataType(objectTocheck[keyToCheck], dataSetColumns[keyToCheck].dataType), convertToDataType(value, dataSetColumns[keyToCheck].dataType), operator);
                         }
                         
                     } else if (value !== null && typeof value == "object") {
                         operator = '';
                         filters = value;
                         keyToCheck = key;
-                        isMacthing = readFilter(objectTocheck, filters, keyToCheck, isMacthing);
+                        isMacthing = readFilter(objectTocheck, filters, dataSetColumns, keyToCheck, isMacthing);
                     } else {
                         if (!keyToCheck) {
                             keyToCheck = key;
                         };
 
-                        isMacthing = compare(objectTocheck[keyToCheck], value, operator);
+                        isMacthing = compare(convertToDataType(objectTocheck[keyToCheck], dataSetColumns[keyToCheck].dataType), convertToDataType(value, dataSetColumns[keyToCheck].dataType), operator);
 
                         operator = '';
                     }
@@ -420,37 +426,64 @@ const FcmBd = (() => {
     
         switch (operator) {
             case "$gt":
-                isMacthing = Number(valueToCheck) > valueToMatch;
+                isMacthing = valueToCheck > valueToMatch;
             break;
             case "$lt":
-                isMacthing = Number(valueToCheck) < valueToMatch;
+                isMacthing = valueToCheck < valueToMatch;
             break;
             case "$gte":
-                isMacthing = Number(valueToCheck) >= valueToMatch;
+                isMacthing = valueToCheck >= valueToMatch;
             break;
             case "$lte":
-                isMacthing = Number(valueToCheck) <= valueToMatch;
+                isMacthing = valueToCheck <= valueToMatch;
+            break;
+            case "$ne":
+                isMacthing = valueToCheck !== valueToMatch;
             break;
             case "$in":
                 isMacthing = valueToMatch.includes(valueToCheck);
             break;
             default:
-                isMacthing = valueToCheck == valueToMatch;
+                isMacthing = valueToCheck === valueToMatch;
         }
         
         return isMacthing;
     }
+
+    const convertToDataType = (valueToConvert, dataType) => {
+
+        let convertedValue;
+
+        switch (dataType) {
+            case "string":
+                convertedValue = String(valueToConvert);
+            break;
+            case "number":
+                convertedValue = Number(valueToConvert);
+            break;
+            case "boolean":
+                convertedValue = Boolean(valueToConvert);
+            break;
+            case "date":
+                convertedValue = Date(valueToConvert).getTime();
+            break;
+            default:
+                
+        }
+
+        return convertedValue;
+    }
     
-    const filter = (data = [], filters = {}) => {
+    const filter = (data = [], filters = {}, dataSetColumns = {}) => {
 
         let filteredData = data.filter(item => {
-            return readFilter(item, filters);
+            return readFilter(item, filters, dataSetColumns);
         });
         
         return filteredData;
     }
     
-    const sort = (data = [], keys = []) => {
+    const orderBy = (data = [], keys = []) => {
 
         let columns = keys.map(key => {
             return Object.entries(key)[0];
