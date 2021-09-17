@@ -206,7 +206,7 @@ const FcmBd = (() => {
                 }
 
                 if (query.orderBy && data.length > 0) {
-                    data = orderBy(data, query.orderBy);
+                    data = orderBy(data, query.orderBy, dataSet.columns);
                 }
 
                 if (query.skip && query.limit) {
@@ -370,7 +370,7 @@ const FcmBd = (() => {
 
             if (Array.isArray(filters)) {
                 for (let filter of filters) {
-                    isMacthing = readFilter(objectTocheck, filter, dataSetColumns, keyToCheck, isMacthing);
+                    isMacthing = readFilter(objectTocheck, filter, dataSetColumns, operator, keyToCheck, isMacthing);
 
                     if (operator === '$and' && !isMacthing) {
                         break;
@@ -388,7 +388,7 @@ const FcmBd = (() => {
                         if (value !== null && typeof value == "object") {
                             operator = key;
                             filters = value;
-                            isMacthing = readFilter(objectTocheck, filters, dataSetColumns, keyToCheck, isMacthing);
+                            isMacthing = readFilter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
                         } else {
                             operator = key;
                             isMacthing = compare(convertToDataType(objectTocheck[keyToCheck], dataSetColumns[keyToCheck].dataType), convertToDataType(value, dataSetColumns[keyToCheck].dataType), operator);
@@ -398,7 +398,7 @@ const FcmBd = (() => {
                         operator = '';
                         filters = value;
                         keyToCheck = key;
-                        isMacthing = readFilter(objectTocheck, filters, dataSetColumns, keyToCheck, isMacthing);
+                        isMacthing = readFilter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
                     } else {
                         if (!keyToCheck) {
                             keyToCheck = key;
@@ -420,6 +420,14 @@ const FcmBd = (() => {
         return isMacthing;
 
     }
+
+    /* const resolveExpression = () => {
+
+    }
+
+    const compute = () => {
+
+    } */
 
     const compare = (valueToCheck, valueToMatch, operator = "") => {
         let isMacthing = false;
@@ -443,6 +451,9 @@ const FcmBd = (() => {
             case "$in":
                 isMacthing = valueToMatch.includes(valueToCheck);
             break;
+            case "$sameMonthAndDay":
+                isMacthing = (valueToCheck.getUTCMonth() + 1 === valueToMatch.getUTCMonth() + 1) && (valueToCheck.getUTCDate() === valueToMatch.getUTCDate());
+            break;
             default:
                 isMacthing = valueToCheck === valueToMatch;
         }
@@ -465,7 +476,11 @@ const FcmBd = (() => {
                 convertedValue = Boolean(valueToConvert);
             break;
             case "date":
-                convertedValue = Date(valueToConvert).getTime();
+                let newDate = new Date(valueToConvert);
+
+                convertedValue = newDate;
+
+                /* convertedValue = newDate.getTime(); */
             break;
             default:
                 
@@ -483,7 +498,7 @@ const FcmBd = (() => {
         return filteredData;
     }
     
-    const orderBy = (data = [], keys = []) => {
+    const orderBy = (data = [], keys = [], dataSetColumns = {}) => {
 
         let columns = keys.map(key => {
             return Object.entries(key)[0];
@@ -496,9 +511,9 @@ const FcmBd = (() => {
                 let valueA = direction ? itemA[key] : itemB[key];
                 let valueB = direction ? itemB[key] : itemA[key];
 
-                if (!isNaN(parseFloat(valueA)) && !isNaN(parseFloat(valueB))) {
-                    valueA = parseFloat(valueA);
-                    valueB = parseFloat(valueB);
+                if (dataSetColumns[key].dataType === "number" || dataSetColumns[key].dataType === "date") {
+                    valueA = convertToDataType(valueA, dataSetColumns[key].dataType);
+                    valueB = convertToDataType(valueB, dataSetColumns[key].dataType);
 
                     if (valueA < valueB) {
                         sorted = -1;

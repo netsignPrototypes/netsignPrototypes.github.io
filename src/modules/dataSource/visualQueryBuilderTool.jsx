@@ -99,21 +99,55 @@ const VisualQueryBuilderTool = ({ isHidden }) => {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleChange = (e) => {
+    const handleChangeColumns = (e) => {
         const { target } = e;
         const { value } = target;
-        e.persist();        
+        e.persist();
+        setColumns(value);    
     };
 
-    const handleExecuteQuery = (e) => {
-        FcmBd.DataSources.query(dataSource, false, query).then(result => setQueryResult(result));
-    }
+    const handleChangeWhere = (e) => {
+        const { target } = e;
+        const { value } = target;
+        e.persist();
+        setWhere(value);    
+    };
 
-    useEffect(() => {
-        if (dataSet && columns) {
-            setQuery(buildQuery(dataSet, columns, where, orderBy, limit, skip));
+    const handleChangeOrderBy = (e) => {
+        const { target } = e;
+        const { value } = target;
+        e.persist();
+        setOrderBy(value);    
+    };
+
+    const handleChangeLimit = (e) => {
+        const { target } = e;
+        const { value } = target;
+        e.persist();
+        setLimit(value);    
+    };
+
+    const handleChangeSkip = (e) => {
+        const { target } = e;
+        const { value } = target;
+        e.persist();
+        setSkip(value);    
+    };
+
+    /* const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            let newQuery = buildQuery(dataSet, columns, where, orderBy, limit, skip);
+            setQuery(newQuery);
+            FcmBd.DataSources.query(dataSource, false, newQuery).then(result => setQueryResult(result));
         }
-    }, [dataSet, columns, where, orderBy, limit, skip]);
+      } */
+
+    const handleExecuteQuery = (e) => {
+        let newQuery = buildQuery(dataSet, columns, where, orderBy, limit, skip);
+        setQuery(newQuery);
+        FcmBd.DataSources.query(dataSource, false, newQuery).then(result => setQueryResult(result));
+    }
 
     useEffect(() => {
         if (dataSet) {
@@ -123,44 +157,55 @@ const VisualQueryBuilderTool = ({ isHidden }) => {
                 select[column] = 1;
             })
 
-            setColumns(select);   
+            let newColums = JSON.stringify(select).replaceAll(",",", ").replaceAll(":",": ").replaceAll("{","{ ").replaceAll("}"," }");
+
+            setColumns(newColums);
+
+            let newQuery = buildQuery(dataSet, newColums);
+            
+            setQuery(newQuery);
+
+            FcmBd.DataSources.query(dataSource, false, newQuery).then(result => setQueryResult(result));
         }
     }, [dataSource, dataSet]);
 
-    useEffect(() => {
-        if (query && !queryResult) {
-            FcmBd.DataSources.query(dataSource, false, query).then(result => setQueryResult(result));
-        }
-    }, [dataSource, query]);
-
-    const buildQuery = (from, select, filtre, ordre, limite, depart) => {
+    const buildQuery = (from, select, filtre = undefined, ordre = undefined, limite = undefined, depart = undefined) => {
         let query = {};
 
         if (from) {
             query.from = from;
         }
 
-        if (select) {
-            query.select = select;
+        if (isJsonString(select)) {
+            query.select = JSON.parse(select);
         }
 
-        if (filtre) {
+        if (isJsonString(filtre)) {
             query.where = JSON.parse(filtre);
         }
 
-        if (ordre) {
+        if (isJsonString(ordre)) {
             query.orderBy = JSON.parse(ordre);
         }
 
-        if (limite) {
-            query.limit = limite;
+        if (limite !== "" && limite !== undefined) {
+            query.limit = parseFloat(limite);
         }
 
-        if (depart) {
-            query.skip = depart;
+        if (depart !== "" && depart !== undefined) {
+            query.skip = parseFloat(depart);
         }
 
         return query;
+    }
+
+    const isJsonString = (str) => {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
     }
 
     return (
@@ -186,19 +231,82 @@ const VisualQueryBuilderTool = ({ isHidden }) => {
                                         </div>
                                     </dd>
                                 </div>
-                                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt className="select-none text-sm font-medium text-gray-500">Colonnes</dt>
-                                    <dd className="select-none mt-1 text-xs text-gray-900 sm:mt-0 sm:col-span-2"><pre>{columns && JSON.stringify(columns, null, 4)}</pre></dd>
+                                    <dd className="select-none mt-1 text-xs text-gray-900 sm:mt-0 sm:col-span-2">{/* <pre>{columns && JSON.stringify(columns, null, 4)}</pre> */}
+                                        <textarea
+                                            id="columns"
+                                            onChange={handleChangeColumns}
+                                            value={columns}
+                                            name="columns"
+                                            type="textarea"
+                                            required
+                                            className="resize-none select-all appearance-none rounded-none relative block w-full h-16 max-h-16 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-xs"
+                                            placeholder="Colonnes à afficher"
+                                        />
+                                    </dd>
                                 </div>
-                                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                                     <dt className="select-none text-sm font-medium text-gray-500">Filtres</dt>
-                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"></dd>
+                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                        <textarea
+                                            id="where"
+                                            onChange={handleChangeWhere}
+                                            value={where}
+                                            name="where"
+                                            type="textarea"
+                                            required
+                                            className="resize-none select-all appearance-none rounded-none relative block w-full h-16 max-h-16 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-xs"
+                                            placeholder="Condition d'affichage"
+                                        />
+                                    </dd>
                                 </div>
-                                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                    <dt className="select-none text-sm font-medium text-gray-500">Ordre</dt>
-                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"></dd>
+                                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt className="select-none text-sm font-medium text-gray-500">Tri</dt>
+                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                        <textarea
+                                            id="orderBy"
+                                            onChange={handleChangeOrderBy}
+                                            value={orderBy}
+                                            name="orderBy"
+                                            type="textarea"
+                                            required
+                                            className="resize-none select-all appearance-none rounded-none relative block w-full h-16 max-h-16 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-xs"
+                                            placeholder="Tri"
+                                        />
+                                    </dd>
                                 </div>
-                                <div className="px-4 py-5 sm:px-6 justify-end">
+                                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt className="select-none text-sm font-medium text-gray-500">Limite</dt>
+                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                        <input
+                                            id="limit"
+                                            onChange={handleChangeLimit}
+                                            value={limit}
+                                            name="limit"
+                                            type="number"
+                                            required
+                                            className="resize-none appearance-none rounded-none relative block h-9 w-full px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                            placeholder="Nombre maximum de lignes retournées"
+                                        />
+                                    </dd>
+                                </div>
+                                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                                    <dt className="select-none text-sm font-medium text-gray-500">Saut</dt>
+                                    <dd className="select-none mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                        <input
+                                            id="skip"
+                                            onChange={handleChangeSkip}
+                                            value={skip}
+                                            name="skip"
+                                            type="number"
+                                            required
+                                            className="resize-none appearance-none rounded-none relative block h-9 w-full px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                                            placeholder="Ligne de départ"
+                                        />
+                                    </dd>
+                                </div>
+                                <div className="px-4 py-5 sm:px-6 justify-end flex border-t border-gray-200">
                                     <div onClick={handleExecuteQuery} className="w-1/5 rounded-md select-none font-medium py-1 px-2 text-center text-sm text-white shadow align-middle bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500 flex items-center justify-center">
                                         {isLoading ? <LoadingSpinner className="h-5 w-5 text-white" /> : 'Exécuter'}
                                     </div>
@@ -228,16 +336,16 @@ const VisualQueryBuilderTool = ({ isHidden }) => {
                 <div className="table rounded-lg overflow-hidden w-full shadow">
                     <div className="table-header-group bg-gray-900 bg-opacity-90">
                         <div className="table-row">
-                            {Object.keys(columns).map(column => {
-                                return <div className="py-2 px-2 table-cell text-sm align-middle text-white font-medium select-none leading-none truncate">{column}</div>
+                            {Object.keys(query.select).map(column => {
+                                return <div key={`${column}_header`} className="py-2 px-2 table-cell text-sm align-middle text-white font-medium select-none leading-none truncate">{column}</div>
                             })}
                         </div>
                     </div>
                     {queryResult && queryResult.data && queryResult.data.length > 0 && <div className="table-row-group bg-white bg-opacity-90">
                         {queryResult.data.map((row, rowIdx) => {
                             return <div key={`row_${rowIdx}`} className="table-row">
-                                {Object.keys(columns).map((cell, colIdx) => {
-                                    return <div key={`${cell}_${colIdx}`} className="py-1 px-2 table-cell text-xs align-middle select-none leading-none truncate border-t border-gray-300">{row[cell]}</div>
+                                {Object.keys(query.select).map((cell, colIdx) => {
+                                    return <div key={`${cell}_${colIdx + 1}`} className="py-1 px-2 table-cell text-xs align-middle select-none leading-none truncate border-t border-gray-300">{row[cell]}</div>
                                 })}
                             </div>
                         })}
