@@ -54,6 +54,11 @@ const TEXT_ZONE_POSITION_CLASS = {
 	25: {containerClass: 'items-end justify-end', zoneClass: 'ml-10 mt-10 max-w-60 rounded-tl-sm', textClass: 'pb-8 pr-8 pt-4 pl-5', margins: [40, 0, 0, 40], paddings: [16, 32, 32, 20]}
 };
 
+const TEXT_SHADOWS = {
+  black: "0 0px 2px rgba(0,0,0,0.50), 0 0px 15px rgba(0,0,0,0.25)",
+  white: "0 0px 2px rgba(255,255,255,0.50), 0 0px 15px rgba(255,255,255,0.25)",
+};
+
 const TEXT_ZONE_FONT_SIZE = {
   0: [18.4, 23.2],
   1: [21.6, 26.4],
@@ -65,6 +70,7 @@ const TEXT_ZONE_FONT_SIZE = {
   7: [40.8, 44.8],
   8: [44, 48],
   9: [47.2, 50.4],
+  10: [50.4, 53.6],
 };
 
 const LibraryMediaContainer = ({ src, alt, onClick, hoverOptions }) => {
@@ -941,13 +947,13 @@ const CreationTool = ({ isHidden }) => {
             <div className={`min-w-min pointer-events-none ${thumbPreviewTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-40'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-60'} ${'border-3 border-blue-600 border-opacity-75'} rounded`} style={{maxWidth: `${parseInt(textMaxWidth) + 2}%`, 
             margin: `${getComputedPixelSize(thumbPreviewTextClass.margins[0] /* - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[0] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbPreviewTextClass.margins[1])}px ${getComputedPixelSize(thumbPreviewTextClass.margins[2] /* - (![1, 4].includes(thumbTemplate) && thumbPreviewTextClass.margins[2] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbPreviewTextClass.margins[3])}px`
             }}>
-              <div className={`select-none pointer-events-none align-middle font-medium rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
+              <div className={`select-none pointer-events-none align-middle font-medium rounded ${thumbPreviewTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": TEXT_SHADOWS.white, 
               padding: `${getComputedPixelSize(thumbPreviewTextClass.paddings[0])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[1])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[2])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[3])}px`,
               fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
               lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
               } 
               : 
-              {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", 
+              {"textShadow": TEXT_SHADOWS.black, 
               padding: `${getComputedPixelSize(thumbPreviewTextClass.paddings[0])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[1])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[2])}px ${getComputedPixelSize(thumbPreviewTextClass.paddings[3])}px`,
               fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
               lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
@@ -959,13 +965,13 @@ const CreationTool = ({ isHidden }) => {
             <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`, 
             margin: `${getComputedPixelSize(thumbTextClass.margins[0] /* - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[0] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbTextClass.margins[1])}px ${getComputedPixelSize(thumbTextClass.margins[2] /* - (![1, 4].includes(thumbTemplate) && thumbTextClass.margins[2] === 60 ? 20 : 0) */)}px ${getComputedPixelSize(thumbTextClass.margins[3])}px`}}>
               {/* <Resizer onResize={handleResize} sides={["left", "right"]} /> */}
-              <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", 
+              <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": TEXT_SHADOWS.white, 
               padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
               fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
               lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
               } 
               : 
-              {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", 
+              {"textShadow": TEXT_SHADOWS.black, 
               padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
               fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
               lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
@@ -994,7 +1000,7 @@ const CreationTool = ({ isHidden }) => {
               Taille du texte :
             </div>
             <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle border-2 text-gray-600 bg-gray-50 border-gray-50"}>
-              <input type="range" id="fontSize" step={1} name="fontSize" min="0" max="9" onChange={e => setThumbFontSize(e.target.value)} defaultValue={4} />
+              <input type="range" id="fontSize" step={1} name="fontSize" min="0" max="10" onChange={e => setThumbFontSize(e.target.value)} defaultValue={4} />
             </div>
           </div>
           
@@ -1042,7 +1048,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-50 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
@@ -1052,7 +1058,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(0,0,0,0.56), 0 0px 10px rgba(0,0,0,0.5)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": TEXT_SHADOWS.black, fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1063,7 +1069,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
+                <div className="py-2 px-24 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.black, fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": TEXT_SHADOWS.black, fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1073,7 +1079,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow justify-center items-center">
               <div className="w-full rounded-t-md"></div>
               <div className="justify-center items-center text-center align-middle flex flex-row bg-gray-900 bg-opacity-75 rounded-sm">
-                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": "0 0px 5px rgba(0,0,0,0.28), 0 0px 15px rgba(0,0,0,0.25)", fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
+                <div className="pt-1 pb-1 px-2 lg:px-4 text-center text-white align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.black, fontSize: `${getComputedPixelSize(30)}px`} : {"textShadow": TEXT_SHADOWS.black, fontSize: `${getComputedPixelSize(30)}px`}}>Abc</div>
               </div>
               <div className="w-full rounded-b-md"></div>
             </div>
@@ -1083,7 +1089,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 3px rgba(255,255,255,0.56), 0 0px 10px rgba(255,255,255,0.50)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>
@@ -1094,7 +1100,7 @@ const CreationTool = ({ isHidden }) => {
             <div className="flex flex-col w-full h-full shadow">
               <div className="w-full flex-auto rounded-t-md"></div>
               <div className="w-full flex-auto justify-center items-center text-center align-middle flex flex-row">
-                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": "0 0px 5px rgba(255,255,255,0.28), 0 0px 15px rgba(255,255,255,0.25)", fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
+                <div className="py-2 px-24 text-center text-gray-900 align-middle font-medium select-none" style={isMobile ? {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(35)}px`} : {"textShadow": TEXT_SHADOWS.white, fontSize: `${getComputedPixelSize(35)}px`}}>Abc</div>
               </div>
               <div className="w-full flex-auto rounded-b-md"></div>
             </div>

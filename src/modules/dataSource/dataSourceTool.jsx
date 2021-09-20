@@ -45,6 +45,10 @@ const DataSourceTool = ({ isHidden }) => {
         setUrl(value);
     };
 
+    useEffect(() => {
+        FcmBd.DataSources.add('TestData', "https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing", async (req, res) => {});
+    }, [])
+
     const handleAddDataSource = (e) => {
         e.preventDefault();
 
@@ -79,9 +83,9 @@ const DataSourceTool = ({ isHidden }) => {
 
     const createDataSource = () => {
 
-        FcmBd.DataSources.add('TestData', url, async (req, res) => {
+        FcmBd.DataSources.add('TestData2', url, async (req, res) => {
 
-            let find = FcmBd.DataSources.find('TestData');
+            let find = FcmBd.DataSources.find('TestData2');
 
             /* let query = { 
                 select: ['nom', 'prenom', 'equipe', 'pause', 'debut', 'fin'], 
@@ -105,7 +109,7 @@ const DataSourceTool = ({ isHidden }) => {
                 skip: 0
             };
 
-            let queryResult = await FcmBd.DataSources.query('TestData', true, query);
+            let queryResult = await FcmBd.DataSources.query('TestData2', true, query);
 
             console.log('FcmBd.DataSources.find("TestData")', find);
             console.log('FcmBd.DataSources.query("TestData")', queryResult);

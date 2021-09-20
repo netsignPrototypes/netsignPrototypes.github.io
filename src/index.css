@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css?family=Indie+Flower');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap');
 
 /* .zoom-in-zoom-out {
     animation: zoom-in-zoom-out 24s linear infinite;
@@ -159,4 +162,25 @@
 	100% {
 		background-position: 0% 50%;
 	}
+}
+
+.font-indieflower {
+    font-family: 'Indie Flower', cursive;
+}
+
+.font-permanentmarker {
+    font-family: 'Permanent Marker', cursive;
+}
+
+.font-kalam {
+    font-family: 'Kalam', cursive;
+}
+
+.white-glassmorphism {
+    background: rgba(26, 14, 14, 0);
+    /* box-shadow: 0 8px 32px 0 rgba( 0, 0, 0, 0.37 ); */
+    backdrop-filter: blur( 3px );
+    -webkit-backdrop-filter: blur( 3px );
+    /* border-radius: 10px; */
+    /* border: 1px solid rgba( 255, 255, 255, 0.18 ); */
 }
