@@ -1,8 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react'
 import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
-import { ArrowCircleLeftIcon, XCircleIcon, PlusCircleIcon, PlayIcon, ViewGridAddIcon, FingerPrintIcon, CursorClickIcon } from '@heroicons/react/outline'
+import { ArrowCircleLeftIcon, XCircleIcon, PlusCircleIcon, PlayIcon, ViewGridAddIcon, FingerPrintIcon, CursorClickIcon, CameraIcon } from '@heroicons/react/outline'
 import Resizer from './resizer';
+
+import { saveAs } from 'file-saver';
+
+import ReactDOMServer from 'react-dom/server';
+import * as htmlToImage from 'html-to-image';
 
 import { useMediaQuery } from 'react-responsive';
 
@@ -55,9 +60,14 @@ const TEXT_ZONE_POSITION_CLASS = {
 };
 
 const TEXT_SHADOWS = {
-  black: "0 0px 2px rgba(0,0,0,0.50), 0 0px 15px rgba(0,0,0,0.25)",
-  white: "0 0px 2px rgba(255,255,255,0.50), 0 0px 15px rgba(255,255,255,0.25)",
+  black: "0px 0px 2px rgba(0,0,0,0.70)",
+  white: "0 0px 2px rgba(255,255,255,0.50)",
 };
+
+/* {
+  black: "0 0px 1px rgba(0,0,0,0.50), 0 0px 15px rgba(0,0,0,0.25)",
+  white: "0 0px 2px rgba(255,255,255,0.50), 0 0px 15px rgba(255,255,255,0.25)",
+}; */
 
 const TEXT_ZONE_FONT_SIZE = {
   0: [18.4, 23.2],
@@ -825,6 +835,15 @@ const CreationTool = ({ isHidden }) => {
     return computedPixelSize;
   }
 
+  const getComputedPixelSizeSpec = (pixel, size) => {
+    let computedPixelSize = 0;
+    let currentThuumbPreviewWidth = size;
+
+    computedPixelSize = currentThuumbPreviewWidth / 672 * pixel;
+
+    return computedPixelSize;
+  }
+
   /* const handleResize = (movementX, movementY) => {
 
     let currentMaxWidth = {...textMaxWidth};
@@ -833,6 +852,86 @@ const CreationTool = ({ isHidden }) => {
 
     console.log(handleResize, movementX);
   }; */
+
+  const handleSaveAsImage = async () => {
+
+    let container = document.createElement("div");
+    container.classList.add("overflow-hidden");
+    container.classList.add("fixed");
+
+    let preview = document.createElement("div");
+
+    let html = renderScreenShot()
+
+    preview.innerHTML = ReactDOMServer.renderToStaticMarkup(html);
+
+    document.body.appendChild(container);
+
+    container.appendChild(preview);
+
+    /* htmlToImage.toPng(preview)
+    .then(function (dataUrl) {
+
+        let link = document.createElement("a");
+        link.download = "thumb.png";
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        document.body.removeChild(container);
+    })
+    .catch(function (error) {
+        console.error('oops, something went wrong!', error);
+    }); */
+
+    let blob = await htmlToImage.toBlob(preview);
+
+    saveAs(blob, "thumb.png");
+    document.body.removeChild(container);
+
+  }
+
+    const renderScreenShot = () => {
+        return <div className="aspect-w-16 aspect-h-9 bg-gray-100 overflow-hidden" style={{ width: "1920px", height: "1080px" }} ref={thumbPreview}>
+                <div className="overflow-hidden"><img src={thumbBgImage} alt="ThumbBg" className={`select-none w-full h-full object-center object-cover`} /></div>
+
+                {thumbPreview && thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`}>
+                  <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass.replaceAll("sm", "md")} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`, 
+                  margin: `${getComputedPixelSizeSpec(thumbTextClass.margins[0], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.margins[1], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.margins[2], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.margins[3], 1920)}px`}}>
+                    <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": TEXT_SHADOWS.white, 
+                    padding: `${getComputedPixelSizeSpec(thumbTextClass.paddings[0], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[1], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[2], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[3], 1920)}px`,
+                    fontSize: `${getComputedPixelSizeSpec(TEXT_ZONE_FONT_SIZE[thumbFontSize][0], 1920)}px`,
+                    lineHeight: `${getComputedPixelSizeSpec(TEXT_ZONE_FONT_SIZE[thumbFontSize][1], 1920)}px`
+                    } 
+                    : 
+                    {"textShadow": TEXT_SHADOWS.black, 
+                    padding: `${getComputedPixelSizeSpec(thumbTextClass.paddings[0], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[1], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[2], 1920)}px ${getComputedPixelSizeSpec(thumbTextClass.paddings[3], 1920)}px`,
+                    fontSize: `${getComputedPixelSizeSpec(TEXT_ZONE_FONT_SIZE[thumbFontSize][0], 1920)}px`,
+                    lineHeight: `${getComputedPixelSizeSpec(TEXT_ZONE_FONT_SIZE[thumbFontSize][1], 1920)}px`
+                    }}>{thumbText}</div>
+                  </div>
+                </div>}
+
+          {/* {thumbPreview && thumbTextClass.containerClass && !thumbPreviewTextClass.containerClass && <div className={`pointer-events-none flex w-full h-full ${thumbTextClass.containerClass} ${thumbTemplate === 3 && 'bg-gray-900 bg-opacity-15'} ${thumbTemplate === 6 && 'bg-gray-50 bg-opacity-20'}`} style={{ transform: `scale(${1920 / thumbPreviewWidth}, ${1920 / thumbPreviewWidth})`}}> 
+            <div className={`min-w-min pointer-events-none ${thumbTextClass.zoneClass} ${thumbTemplate === 1 && 'bg-gray-900 bg-opacity-50'} ${thumbTemplate === 4 && 'bg-gray-50 bg-opacity-70'}`} style={{maxWidth: `${textMaxWidth}%`, 
+            margin: `${getComputedPixelSize(thumbTextClass.margins[0])}px ${getComputedPixelSize(thumbTextClass.margins[1])}px ${getComputedPixelSize(thumbTextClass.margins[2])}px ${getComputedPixelSize(thumbTextClass.margins[3])}px`}}>
+              <div className={`select-none pointer-events-none font-medium ${thumbTextClass.textClass} ${thumbTemplate >= 4 ? 'text-gray-900' : 'text-white'}`} style={thumbTemplate >= 4 ? {"textShadow": TEXT_SHADOWS.white, 
+              padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              } 
+              : 
+              {"textShadow": TEXT_SHADOWS.black, 
+              padding: `${getComputedPixelSize(thumbTextClass.paddings[0])}px ${getComputedPixelSize(thumbTextClass.paddings[1])}px ${getComputedPixelSize(thumbTextClass.paddings[2])}px ${getComputedPixelSize(thumbTextClass.paddings[3])}px`,
+              fontSize: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][0])}px`,
+              lineHeight: `${getComputedPixelSize(TEXT_ZONE_FONT_SIZE[thumbFontSize][1])}px`
+              }}>{thumbText}</div>
+            </div>
+          </div>} */}
+
+        </div>
+    }
 
   return (
     <div className={`min-h-screen flex-col lg:flex-row items-start justify-center bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-8 space-y-8 lg:space-y-0 lg:space-x-40 ${isHidden ? 'hidden' : 'flex'}`}>
@@ -983,8 +1082,9 @@ const CreationTool = ({ isHidden }) => {
 
         </div>
         <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
-          {thumbBgImage !== "" && !playingPreview && <div className="relative w-full">
-            <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-0 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />
+          {thumbBgImage !== "" && <div className="relative w-full">
+            {!playingPreview && <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-12 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />}
+            <CameraIcon onClick={handleSaveAsImage} className="absolute right-1 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer"/>
           </div>}
           <div className="flex flex-row w-full mt-0 items-center ml-1">{isMobile ? <FingerPrintIcon className="h-4 w-4 text-green-500 mr-1" /> : <CursorClickIcon className="h-4 w-4 text-green-500 mr-1" />}<div className="select-none text-green-500 text-xs text-center">Cliquez dans la vignette pour déplacer le texte</div></div>
         </div>
