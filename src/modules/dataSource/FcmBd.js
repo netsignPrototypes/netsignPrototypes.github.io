@@ -4,6 +4,14 @@
  */
 const FcmBd = (() => {
 
+    /* ===================
+     CONSTANT DECLARATION
+    =================== */
+
+    const _DataSources = {};
+    const dataSources = { refs: [] };
+    const dataStores = {};
+
     const API_KEY_GOOGLE_SHEET = process.env.REACT_APP_GOOGLE_SHEET_API_KEY;
 
     const dataSourceType = {
@@ -16,17 +24,165 @@ const FcmBd = (() => {
         API: '',
     };
 
-    // =========================================================
-    // DATASOURCES OBJECT AND FUNCTIONS
-    // =========================================================
+    const defaultDataSourceModel = {
+        id: 0,
+        ref: '',
+        type: '',
+        name: '',
+        title: '',
+        baseUrl: '',
+        properties: {},
+        dataSets: {
+            refs: [],
+        }
+    }
 
-    const _DataSources = {};
+    const defaultDataSetModel = {
+        id: 0,
+        ref: '',
+        type: '',
+        name: '',
+        title: '',
+        baseUrl: '',
+        dataLoaded: true,
+        storeRefreshRate: 3600000,
+        dataStoreRef: '',
+        columns: {
+            refs: [],
+        },
+    }
 
-    const dataSources = {
-        refs: []
-    };
+    const defaultColumnModel = {
+        id: 0,
+        ref: '',
+        dataType: '',
+        name: '',
+        title: '',
+        index: 0,
+    }
 
-    const dataStores = {};
+    /* ====================
+     DATASOURCES FUNCTIONS
+    ==================== */
+
+    _DataSources.add = (dataSourceName, dataSourceModel = {}) => {
+
+        try {
+            const dataSource = dataSources[dataSourceName];
+
+            if (!dataSource) {
+                dataSourceModel = {...JSON.parse(JSON.stringify(defaultDataSourceModel)), ...dataSourceModel};
+                addItemAndRef(dataSources, dataSources.refs, dataSourceName, dataSourceModel);
+            } else {
+                // TODO: Si une dataSource avec le même nom existe déjà.
+                throw new Error(`Une source de données nommée '${dataSourceName}' existe déjà.`);
+            }
+        } catch (err) {
+            console.error('FcmBd.DataSources.add() : ' + err.message);
+        }
+        
+    }
+
+    _DataSources.addDataSet = (dataSourceName, dataSetName, dataSetModel = {}) => {
+
+        try {
+
+            validateRequest(dataSourceName);
+
+            const dataSource = dataSources[dataSourceName];
+
+            const dataSets = dataSource.dataSets;
+
+            if (!dataSets[dataSetName]) {
+                dataSetModel = {...JSON.parse(JSON.stringify(defaultDataSetModel)), ...dataSetModel};
+                addItemAndRef(dataSets, dataSets.refs, dataSetName, dataSetModel);
+
+                if (!dataStores[dataSetModel.dataStoreRef]) {
+                    dataStores[dataSetModel.dataStoreRef] = [];
+                } else {
+                    // TODO: Si un dataStore avec le même nom existe déjà.
+                    throw new Error(`Un stockage de données nommé '${dataSetModel.dataStoreRef}' existe déjà.`);
+                }
+                
+            } else {
+                // TODO: Si un dataSet avec le même nom existe déjà.
+                throw new Error(`Un ensemble de données nommé '${dataSetName}' existe déjà dans '${dataSourceName}'.`);
+            }
+
+        } catch (err) {
+            console.error('FcmBd.DataSources.addDataSet() : ' + err.message);
+        }
+    }
+
+    _DataSources.addDataSetColumn = (dataSourceName, dataSetName, columnName, columnModel = {}) => {
+
+        try {
+
+            validateRequest(dataSourceName, dataSetName);
+
+            const dataSource = dataSources[dataSourceName];
+
+            const dataSet = dataSource.dataSets[dataSetName];
+
+            const columns = dataSet.columns;
+
+            if (!columns[columnName]) {
+                columnModel = {...JSON.parse(JSON.stringify(defaultColumnModel)), ...columnModel}
+                addItemAndRef(columns, columns.refs, columnName, columnModel);
+            } else {
+                // TODO: Si une colonne avec le même nom existe déjà.
+                throw new Error(`Une colonne nommée '${columnName}' existe déjà dans '${dataSetName}'.`);
+            }
+
+        } catch (err) {
+            console.error('FcmBd.DataSources.addDataSetColumn() : ' + err.message);
+        }
+    }
+
+    _DataSources.remove = (dataSourceName) => {
+        try {
+            validateRequest(dataSourceName);
+
+            removeItemAndRef(dataSources, dataSources.refs, dataSourceName);
+
+        } catch (err) {
+            console.error('FcmBd.DataSources.remove() : ' + err.message);
+        }
+    }
+
+    _DataSources.removeDataSet = (dataSourceName, dataSetName) => {
+
+        try {
+            validateRequest(dataSourceName, dataSetName);
+
+            const dataSource = dataSources[dataSourceName];
+
+            const dataSet = dataSource.dataSets[dataSetName];
+
+            delete dataStores[dataSet.dataStoreRef];
+
+            removeItemAndRef(dataSource.dataSets, dataSource.dataSets.refs, dataSetName);
+
+        } catch (err) {
+            console.error('FcmBd.DataSources.removeDataSet() : ' + err.message);
+        }
+    }
+
+    _DataSources.removeDataSetColumn = (dataSourceName, dataSetName, columnName) => {
+
+        try {
+            validateRequest(dataSourceName, dataSetName, columnName);
+
+            const dataSource = dataSources[dataSourceName];
+
+            const dataSet = dataSource.dataSets[dataSetName];
+
+            removeItemAndRef(dataSet.columns, dataSet.columns.refs, columnName);
+
+        } catch (err) {
+            console.error('FcmBd.DataSources.removeDataSetColumn() : ' + err.message);
+        }
+    }
 
     /**
      * Ajouter une source de données
@@ -35,28 +191,33 @@ const FcmBd = (() => {
      * @param  {string}     url     - L'url pour accéder à la source de données.
      * @param  {string}     [type]  - Type de source de données.
      */
-    _DataSources.add = async function(dataSourceName, url, callback) {
+    _DataSources.create = async function(dataSourceName, url, callback) {
 
         try {
 
-            let source = {
-                properties: {},
-                type: getDataSourceType(url)
+            if (dataSources[dataSourceName]) {
+                throw new Error(`Une source de données nommée '${dataSourceName}' existe déjà.`);
             }
+
+            let dataSourceModel = {
+                id: dataSources.refs.length + 1,
+                type: getDataSourceType(url),
+                name: dataSourceName,
+            }
+
+            _DataSources.add(dataSourceName, dataSourceModel);
+
+            let source = dataSources[dataSourceName];
 
             switch (source.type) {
                 case dataSourceType.GOOGLESHEET:
                     let id = url.substring(url.indexOf("/d/") + 3, url.lastIndexOf("/"));
-                    source.name = dataSourceName;
                     source.properties.spreadsheetId = id;
                     source.baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${id}`;
 
                     const spreadsheet = await fetchQuery(source.baseUrl + dataSourceTypeDefaultParams[source.type]);
 
-                    source.properties.title = spreadsheet.properties.title;
-                    source.dataSets = {
-                        refs: []
-                    };
+                    source.title = spreadsheet.properties.title;
 
                     let dataSets = [];
 
@@ -64,19 +225,33 @@ const FcmBd = (() => {
                         dataSets.push(fetchQuery(source.baseUrl + '/values/' + sheet.properties.title + dataSourceTypeDefaultParams[source.type]).then(sheetData => {
                             let sheetId = sheet.properties.sheetId;
                             let dataStoreRef = `${dataSourceName}_${sheetId}`;
-                            let sheetTitle = sheet.properties.title;
+                            let dataSetName = sheet.properties.title;
 
-                            let dataSet = { name: sheetTitle, ref: sheetTitle, baseUrl: '/values/' + sheet.properties.title, id: sheetId, dataStoreRef: dataStoreRef, columns: { refs: [] } };
+                            let dataSetModel = { 
+                                id: sheetId,
+                                type: 'JSON',
+                                name: dataSetName,
+                                title: dataSetName,
+                                baseUrl: '/values/' + dataSetName,
+                                dataStoreRef: dataStoreRef
+                            };
 
-                            source.dataSets.refs.push(sheetTitle);
-
-                            dataStores[dataStoreRef] = [];
+                            _DataSources.addDataSet(dataSourceName, dataSetName, dataSetModel);
+                            
+                            let dataSet = source.dataSets[dataSetName];
 
                             if (sheetData.values.length > 0) {
-                                sheetData.values[0].forEach((column, colIdx) => {
-                                    dataSet.columns.refs.push(column);
+                                sheetData.values[0].forEach((columnName, colIdx) => {
 
-                                    dataSet.columns[column] = { id: colIdx + 1, name: column, title: column, index: colIdx, dataType: getDataType(sheetData.values[1][colIdx]) };
+                                    let columnModel = { 
+                                        id: colIdx + 1,
+                                        dataType: getDataType(sheetData.values[1][colIdx]),
+                                        name: columnName,
+                                        title: columnName,
+                                        index: colIdx
+                                    };
+
+                                    _DataSources.addDataSetColumn(dataSourceName, dataSetName, columnName, columnModel);
                                 });
                             }
     
@@ -95,8 +270,6 @@ const FcmBd = (() => {
                             dataSet.storeRefreshRate = 30000;
 
                             /* dataSet.intervalUpdateStore = setInterval(function() { _DataSources.updateStore(source.name, dataSet.name); }, dataSet.storeRefreshRate); */
-    
-                            source.dataSets[sheetTitle] = dataSet;
                         }));
                     };
 
@@ -118,7 +291,7 @@ const FcmBd = (() => {
 
             return callback(null, dataSources[dataSourceName]);
         } catch (err) {
-            return false;
+            console.error('FcmBd.DataSources.create() : ' + err.message);
         }
     }
 
@@ -147,94 +320,101 @@ const FcmBd = (() => {
         return  list;
     }
 
-    _DataSources.query = async function(name, liveData = false, query = {}) {
+    _DataSources.query = async function(dataSourceName, liveData = false, query = {}) {
 
-        const startTime = new Date().getTime();
+        try {
+            validateRequest(dataSourceName, query.from);
 
-        let queryResult = {
-            datasetNbRows: 0,
-            returnedNbRows: 0,
-            duration: 0,
-            data: []
-        };
+            const startTime = new Date().getTime();
 
-        let data = [];
+            let queryResult = {
+                datasetNbRows: 0,
+                returnedNbRows: 0,
+                duration: 0,
+                data: []
+            };
 
-        let dataSource = dataSources[name];
+            let data = [];
 
-        if (dataSource) {
+            let dataSource = dataSources[dataSourceName];
 
-            let dataSet = dataSource.dataSets[query.from];
+            if (dataSource) {
 
-            if (dataSet.dataLoaded && !liveData) {
-                data = dataStores[dataSet.dataStoreRef];
-                queryResult.datasetNbRows = data.length;
+                let dataSet = dataSource.dataSets[query.from];
 
-                if (query.where) {
-                    data = filter(data, query.where, dataSet.columns);
-                }
+                if (dataSet.dataLoaded && !liveData) {
+                    data = dataStores[dataSet.dataStoreRef];
+                    queryResult.datasetNbRows = data.length;
 
-                if (query.select && data.length > 0) {
+                    if (query.where) {
+                        data = filter(data, query.where, dataSet.columns);
+                    }
 
-                    let dataSetColumns = [];
+                    if (query.select && data.length > 0) {
 
-                    let included = Object.values(query.select);
+                        let dataSetColumns = [];
 
-                    let removing = included.includes(0);
-                    let adding = included.includes(1);
-                    
-                    dataSet.columns.refs.forEach(column => {
+                        let included = Object.values(query.select);
 
-                        if (removing && adding) {
-                            if (query.select[column] === 1 && query.select[column] === undefined) {
-                                dataSetColumns.push(column);
-                            }
-                        } else if (adding) {
-                            if (query.select[column]) {
-                                dataSetColumns.push(column);
-                            }
-                        } else if (removing) {
-                            if (query.select[column] !== 0 || query.select[column] === undefined) {
-                                dataSetColumns.push(column);
-                            }
-                        }
+                        let removing = included.includes(0);
+                        let adding = included.includes(1);
                         
-                        
-                    });
+                        dataSet.columns.refs.forEach(column => {
 
-                    data = select(data, dataSetColumns);
+                            if (removing && adding) {
+                                if (query.select[column] === 1 && query.select[column] === undefined) {
+                                    dataSetColumns.push(column);
+                                }
+                            } else if (adding) {
+                                if (query.select[column]) {
+                                    dataSetColumns.push(column);
+                                }
+                            } else if (removing) {
+                                if (query.select[column] !== 0 || query.select[column] === undefined) {
+                                    dataSetColumns.push(column);
+                                }
+                            }
+                            
+                            
+                        });
+
+                        data = select(data, dataSetColumns);
+                    }
+
+                    if (query.orderBy && data.length > 0) {
+                        data = orderBy(data, query.orderBy, dataSet.columns);
+                    }
+
+                    if (query.skip && query.limit) {
+                        data = data.slice(query.skip, query.skip + query.limit);
+                    } else if (query.limit) {
+                        data = data.slice(0, query.limit);
+                    } else if (query.skip) {
+                        data = data.slice(query.skip);
+                    }
+
+                    queryResult.returnedNbRows = data.length;
+                    queryResult.data = data;
+
+                    queryResult.duration = (new Date().getTime() - startTime) / 1000;
+
+                    if (queryResult.duration === 0) {
+                        queryResult.duration = 0.0001
+                    }
+
+                    return queryResult;
+
+                } else {
+                    // TODO: Load dataSet data to store (need a function for that) then rerun query() with same param.
+                    dataSet.dataLoaded = false;
+
+                    return await _DataSources.updateStore(dataSource.name, dataSet.name).then(() => _DataSources.query(dataSourceName, false, query));
                 }
-
-                if (query.orderBy && data.length > 0) {
-                    data = orderBy(data, query.orderBy, dataSet.columns);
-                }
-
-                if (query.skip && query.limit) {
-                    data = data.slice(query.skip, query.skip + query.limit);
-                } else if (query.limit) {
-                    data = data.slice(0, query.limit);
-                } else if (query.skip) {
-                    data = data.slice(query.skip);
-                }
-
-                queryResult.returnedNbRows = data.length;
-                queryResult.data = data;
-
-                queryResult.duration = (new Date().getTime() - startTime) / 1000;
-
-                if (queryResult.duration === 0) {
-                    queryResult.duration = 0.0001
-                }
-
-                return queryResult;
-
-            } else {
-                // TODO: Load dataSet data to store (need a function for that) then rerun query() with same param.
-                dataSet.dataLoaded = false;
-
-                return await _DataSources.updateStore(dataSource.name, dataSet.name).then(() => _DataSources.query(name, false, query));
             }
+        } catch (err) {
+            console.error('FcmBd.DataSources.query() : ' + err.message);
         }
+
     }
 
     _DataSources.updateStore = async (dataSourceName, dataSetName) => {
@@ -275,9 +455,9 @@ const FcmBd = (() => {
         });
     }
 
-    // =========================================================
-    // QUERY & DATA FETCHING FUNCTIONS
-    // =========================================================
+    /* ==============================
+     QUERY & DATA FETCHING FUNCTIONS
+    ============================== */
 
     const fetchQuery = async (url) => {
         try {
@@ -331,9 +511,40 @@ const FcmBd = (() => {
           })
     }
 
-    // =========================================================
-    // UTILS FUNCTIONS
-    // =========================================================
+    /* ====================================
+     VALIDATION & ERROR HANDLING FUNCTIONS
+    ==================================== */
+
+    const validateRequest = (dataSourceName, dataSetName = null, columnName = null) => {
+
+        const dataSource = dataSources[dataSourceName];
+
+        if (!dataSource) {
+            throw new Error(`La source de données '${dataSourceName}' n'existe pas.`);
+        } else if (dataSetName && !dataSource.dataSets[dataSetName]) {
+            throw new Error(`L'ensemble de données '${dataSetName}' n'existe pas dans '${dataSourceName}'.`);
+        } else if (columnName && !dataSource.dataSets[dataSetName].columns[columnName]) {
+            throw new Error(`La colonne '${columnName}' n'existe pas dans '${dataSetName}'.`);
+        }
+    }
+
+    /* ==============
+     UTILS FUNCTIONS
+    ============== */
+
+    const addItemAndRef = (object, refArr, ref, item) => {
+        item.ref = ref;
+        object[ref] = item;
+        refArr.push(ref);
+    }
+
+    const removeItemAndRef = (object, refArr, ref) => {
+        delete object[ref];
+        const index = refArr.indexOf(ref);
+        if (index > -1) {
+            refArr.splice(index, 1);
+        }
+    }
 
     const getDataSourceType = (url) => {
         let type;

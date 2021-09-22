@@ -9,7 +9,7 @@ import { saveAs } from 'file-saver';
 const BIRTHDAY_IMG_BACKGROUNDS = [
     { img: "https://images.unsplash.com/photo-1523755130311-9eadea3a0861?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3800&q=80", textColor: "gray-900", textShadow: "0 0px 2px rgba(255,255,255,0.70)", maxNameCol: 6 },
     { img: "https://images.unsplash.com/photo-1523757956233-94a86ff74ea5?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3800&q=80", textColor: "gray-900", textShadow: "0 0px 2px rgba(255,255,255,0.70)", maxNameCol: 3 },
-    { img: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=3800&q=80", textColor: "white", textShadow: "0px 0px 2px rgba(0,0,0,0.70)", maxNameCol: 3},
+    { img: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=3800&q=80", textColor: "gray-900", textShadow: "0 0px 2px rgba(255,255,255,0.70)", maxNameCol: 3},
     { img: "https://images.unsplash.com/photo-1513151233558-d860c5398176?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=3500&q=80", textColor: "white", textShadow: "0px 0px 2px rgba(0,0,0,0.70)", maxNameCol: 6 },
     { img: "https://images.unsplash.com/photo-1559456751-057ed03f3143?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=5000&q=80", textColor: "white", textShadow: "0px 0px 2px rgba(0,0,0,0.70)", maxNameCol: 6 },
     { img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=6400&q=80", textColor: "white", textShadow: "0px 0px 2px rgba(0,0,0,0.70)", maxNameCol: 6 },
@@ -30,7 +30,7 @@ const BIRTHDAY_TITLES = [
     "Joyeux anniversaire!",
     "Bonne fête!",
     "Bon anniversaire!",
-    "Nos fêtés!"
+    "Nos fêtés de la journée!"
 ];
 
 const BirthdayTool = ({ isHidden }) => {
@@ -56,6 +56,8 @@ const BirthdayTool = ({ isHidden }) => {
             where: { "date": { "$sameMonthAndDay": date }},
             orderBy: [{ nom: 1 }, { prenom: 1 }]
         };
+
+        console.log(FcmBd.DataSources.find('TestData'));
 
         FcmBd.DataSources.query('TestData', false, query).then(results => {
             incrBgImgIdx();
