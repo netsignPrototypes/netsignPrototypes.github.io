@@ -1083,10 +1083,10 @@ const CreationTool = ({ isHidden }) => {
         </div>
         <div className="flex flex-row flex-wrap item-center justify-start align-middle w-full mt-2">
           {thumbBgImage !== "" && <div className="relative w-full">
-            {!playingPreview && <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-12 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />}
-            <CameraIcon onClick={handleSaveAsImage} className="absolute right-1 top-0 h-8 w-8 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer"/>
+            {!playingPreview && <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="absolute right-10 top-0 h-7 w-7 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer" />}
+            <CameraIcon onClick={handleSaveAsImage} className="absolute right-1 top-0 h-7 w-7 -mt-1 text-blue-600 hover:text-blue-500 cursor-pointer"/>
           </div>}
-          <div className="flex flex-row w-full mt-0 items-center ml-1">{isMobile ? <FingerPrintIcon className="h-4 w-4 text-green-500 mr-1" /> : <CursorClickIcon className="h-4 w-4 text-green-500 mr-1" />}<div className="select-none text-green-500 text-xs text-center">Cliquez dans la vignette pour déplacer le texte</div></div>
+          <div className="flex flex-row w-3/4 md:w-full mt-0 items-center ml-1">{isMobile ? <FingerPrintIcon className="h-4 w-4 text-green-500 mr-1 md:self-center self-start" /> : <CursorClickIcon className="h-4 w-4 text-green-500 mr-1" />}<div className="select-none text-green-500 text-xs text-left md:text-center">Cliquez dans la vignette pour déplacer le texte</div></div>
         </div>
         
         {/* {thumbBgImage !== "" && <div className="relative pt-1">

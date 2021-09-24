@@ -46,6 +46,7 @@ const DataSourceTool = ({ isHidden }) => {
     };
 
     useEffect(() => {
+        /* FcmBd.DataSources.init('RXBK03'); */
         FcmBd.DataSources.create('TestData', "https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing", async (req, res) => {});
     }, [])
 
@@ -83,7 +84,7 @@ const DataSourceTool = ({ isHidden }) => {
 
     const createDataSource = () => {
 
-        FcmBd.DataSources.create('TestData', url, async (req, res) => {
+        FcmBd.DataSources.create('TestData2', url, async (req, res) => {
 
             let find = FcmBd.DataSources.find('TestData2');
 

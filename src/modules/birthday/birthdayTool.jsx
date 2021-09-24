@@ -109,6 +109,10 @@ const BirthdayTool = ({ isHidden }) => {
             FcmBd.DataSources.query('TestData', false, query).then(results => {
                 setBirthdays(results.data);
             });
+
+            /* FcmBd.DataSources.executeStoredQuery("HoraireSimonsEquipeA").then(results => {
+                console.log('FcmBd.DataSources.executeStoredQuery("HoraireSimonsEquipeA")', results);
+            }) */
         }
     }, [isHidden]);
 
@@ -185,6 +189,13 @@ const BirthdayTool = ({ isHidden }) => {
         }); */
     }
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            handleLoadBirthdays();
+        }
+    }
+
     const renderScreenShot = () => {
         return <div className="aspect-w-16 aspect-h-9 bg-gray-100 overflow-hidden" style={{ width: "1920px", height: "1080px" }} ref={thumbPreview}>
         <div className="overflow-hidden"><img src={BIRTHDAY_IMG_BACKGROUNDS[bgImgIdx].img} alt="ThumbBg" className={`select-none w-full h-full object-center object-cover`} /></div>
@@ -209,7 +220,7 @@ const BirthdayTool = ({ isHidden }) => {
             <div className="w-full flex space-y-4 lg:space-y-0 flex-col lg:flex-row items-center lg:justify-between">
                 <h2 className="ml-2 text-left text-3xl font-extrabold text-gray-900 select-none">Fêtes automatisées</h2>
                 <div className="flex flex-row space-x-4 h-full items-center">
-                    <input id="date" type="date" value={date} onChange={event => setDate(event.target.value)} onBlur={handleLoadBirthdays}  className="h-8 form-input appearance-none rounded-none relative block max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" />
+                    <input id="date" type="date" value={date} onKeyDown={handleKeyDown} onChange={event => setDate(event.target.value)} /* onBlur={handleLoadBirthdays} */  className="h-8 form-input appearance-none rounded-none relative block max-h-20 px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-md focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm" />
                     <CameraIcon onClick={handleSaveAsImage} className="text-blue-600 hover:text-blue-500 cursor-pointer h-7 w-7"/>
                 </div>
             </div>
