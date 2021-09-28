@@ -12,8 +12,9 @@ const FcmBd = (() => {
     const dataSources = { refs: [] };
     const dataStores = {};
     const queries = { refs: [] };
+    const tableModels = { refs: [] };
 
-    const API_KEY_GOOGLE_SHEET = process.env.REACT_APP_GOOGLE_SHEET_API_KEY;
+    const config = {};
 
     const dataSourceType = {
         GOOGLESHEET: "GOOGLESHEET",
@@ -21,7 +22,7 @@ const FcmBd = (() => {
     };
 
     const dataSourceTypeDefaultParams = {
-        GOOGLESHEET: '?alt=json&key=' + API_KEY_GOOGLE_SHEET,
+        GOOGLESHEET: '',
         API: '',
     };
 
@@ -59,12 +60,23 @@ const FcmBd = (() => {
         index: 0,
     }
 
+    /* =========
+     FCMBD INIT
+    ========= */
+
+    const init = ({ GOOGLESHEETAPIKEY }) => {
+        if (GOOGLESHEETAPIKEY) {
+           config.GOOGLESHEETAPIKEY = GOOGLESHEETAPIKEY;
+           dataSourceTypeDefaultParams.GOOGLESHEET = '?alt=json&key=' + GOOGLESHEETAPIKEY;
+        }
+    }
+
     /* ===============
      DATASOURCES INIT
     =============== */
 
-    _DataSources.init = (key) => {
-        fetchQuery(`http://app.netsign.test/ExternalAjax/router/getDataSource?s=${key}`).then(data => {
+    _DataSources.init = async (url) => {
+        return await fetchQuery(url).then(data => {
             let initData = deepParse(data);
 
             if (initData) {
@@ -77,6 +89,12 @@ const FcmBd = (() => {
                 if (initData.queries) {
                     initData.queries.forEach(query => {
                         addItemAndRef(queries, queries.refs, query.ref, query);
+                    });
+                }
+
+                if (initData.tableModels) {
+                    initData.tableModels.forEach(tableModel => {
+                        addItemAndRef(tableModels, tableModels.refs, tableModel.ref, tableModel);
                     });
                 }
             }
@@ -125,6 +143,8 @@ const FcmBd = (() => {
                     // TODO: Si un dataStore avec le même nom existe déjà.
                     throw new Error(`Un stockage de données nommé '${dataSetModel.dataStoreRef}' existe déjà.`);
                 }
+
+                setUpdateStoreInterval(dataSourceRef, dataSetRef);
                 
             } else {
                 // TODO: Si un dataSet avec le même nom existe déjà.
@@ -180,6 +200,8 @@ const FcmBd = (() => {
             const dataSource = dataSources[dataSourceRef];
 
             const dataSet = dataSource.dataSets[dataSetRef];
+
+            clearUpdateStoreInterval(dataSourceRef, dataSetRef);
 
             delete dataStores[dataSet.dataStoreRef];
 
@@ -288,8 +310,6 @@ const FcmBd = (() => {
                             });
     
                             dataSet.dataLoaded = true;
-
-                            /* dataSet.intervalUpdateStore = setInterval(function() { _DataSources.updateStore(source.name, dataSet.name); }, dataSet.storeRefreshRate); */
                         }));
                     };
 
@@ -364,12 +384,16 @@ const FcmBd = (() => {
         return  list;
     }
 
-    _DataSources.executeStoredQuery = async (queryRef) => {
+    _DataSources.executeStoredQuery = async (queryRef, queryModifier = undefined) => {
 
         try {
             let query = queries[queryRef];
 
             if (query) {
+                if (queryModifier) {
+                    query = {...query, ...queryModifier};
+                }
+
                 return _DataSources.query(query.dataSourceRef, query.liveData, query);
             } else {
                 throw new Error(`La requête '${queryRef}' n'existe pas.`);
@@ -380,12 +404,35 @@ const FcmBd = (() => {
         
     }
 
+    _DataSources.getStoredQueryTableModel = (queryRef) => {
+        try {
+            const query = queries[queryRef];
+            if (query) {
+                if (query.tableModel) {
+                    const tableModel = tableModels[query.tableModel];
+        
+                    if (tableModel) {
+                        return tableModel;
+                    } else {
+                        throw new Error(`Le modèle de tableau '${query.tableModel}' n'existe pas.`);
+                    }
+                } else {
+                    throw new Error(`Aucun modèle de tableau n'existe pour la requête '${queryRef}'.`);
+                }
+            } else {
+                throw new Error(`La requête '${queryRef}' n'existe pas.`);
+            }
+        } catch (err) {
+            console.error('FcmBd.DataSources.executeStoredQuery() : ' + err.message);
+        }
+    }
+
     _DataSources.query = async (dataSourceRef, liveData = false, query = {}) => {
 
         try {
             validateRequest(dataSourceRef, query.from);
 
-            const startTime = new Date().getTime();
+            const startTime = getNowTimeStamp();
 
             let queryResult = {
                 datasetNbRows: 0,
@@ -396,11 +443,11 @@ const FcmBd = (() => {
 
             let data = [];
 
-            let dataSource = dataSources[dataSourceRef];
+            const dataSource = dataSources[dataSourceRef];
 
             if (dataSource) {
 
-                let dataSet = dataSource.dataSets[query.from];
+                const dataSet = dataSource.dataSets[query.from];
 
                 if (dataSet.dataLoaded && !liveData) {
                     data = dataStores[dataSet.dataStoreRef];
@@ -411,34 +458,7 @@ const FcmBd = (() => {
                     }
 
                     if (query.select && data.length > 0) {
-
-                        let dataSetColumns = [];
-
-                        let included = Object.values(query.select);
-
-                        let removing = included.includes(0);
-                        let adding = included.includes(1);
-                        
-                        dataSet.columns.refs.forEach(column => {
-
-                            if (removing && adding) {
-                                if (query.select[column] === 1 && query.select[column] === undefined) {
-                                    dataSetColumns.push(column);
-                                }
-                            } else if (adding) {
-                                if (query.select[column]) {
-                                    dataSetColumns.push(column);
-                                }
-                            } else if (removing) {
-                                if (query.select[column] !== 0 || query.select[column] === undefined) {
-                                    dataSetColumns.push(column);
-                                }
-                            }
-                            
-                            
-                        });
-
-                        data = select(data, dataSetColumns);
+                        data = select(data, query.select);
                     }
 
                     if (query.orderBy && data.length > 0) {
@@ -453,10 +473,18 @@ const FcmBd = (() => {
                         data = data.slice(query.skip);
                     }
 
+                    if (query.tableModel) {
+                        let tableModel = tableModels[query.tableModel];
+
+                        if (tableModel) {
+                            queryResult.tableModel = tableModel;
+                        }
+                    }
+
                     queryResult.returnedNbRows = data.length;
                     queryResult.data = data;
 
-                    queryResult.duration = (new Date().getTime() - startTime) / 1000;
+                    queryResult.duration = (getNowTimeStamp() - startTime) / 1000;
 
                     if (queryResult.duration === 0) {
                         queryResult.duration = 0.0001
@@ -468,7 +496,7 @@ const FcmBd = (() => {
                     // TODO: Load dataSet data to store (need a function for that) then rerun query() with same param.
                     dataSet.dataLoaded = false;
 
-                    return await _DataSources.updateStore(dataSource.ref, dataSet.ref).then(() => _DataSources.query(dataSourceRef, false, query));
+                    return await updateStore(dataSource.ref, dataSet.ref).then(() => _DataSources.query(dataSourceRef, false, query));
                 }
             }
         } catch (err) {
@@ -477,12 +505,32 @@ const FcmBd = (() => {
 
     }
 
-    _DataSources.updateStore = async (dataSourceRef, dataSetRef) => {
+    _DataSources.checkStoredQueryResultUpdated = (queryRef, lastUpdateTime) => {
+        try {
+            const query = queries[queryRef];
+            if (query) {
 
-        let dataSource = dataSources[dataSourceRef];
-        let dataSet = dataSource.dataSets[dataSetRef];
+                const dataSource = dataSources[query.dataSourceRef];
+                const dataSet = dataSource.dataSets[query.from];
+        
+                return dataSet.lastUpdateTime > lastUpdateTime;
 
-        console.log('updateStore', dataSourceRef, dataSetRef);
+            } else {
+                throw new Error(`La requête '${queryRef}' n'existe pas.`);
+            }
+        } catch (err) {
+            console.error('FcmBd.DataSources.executeStoredQuery() : ' + err.message);
+        }
+    }
+
+    /* ==============================
+     DATA STORE MANAGEMENT FUNCTIONS
+    ============================== */
+
+    const updateStore = async (dataSourceRef, dataSetRef) => {
+
+        const dataSource = dataSources[dataSourceRef];
+        const dataSet = dataSource.dataSets[dataSetRef];
 
         return await fetchQuery(dataSource.baseUrl + dataSet.baseUrl + dataSourceTypeDefaultParams[dataSource.type]).then(data => {
             let updatedData = undefined;
@@ -511,13 +559,56 @@ const FcmBd = (() => {
             if (updatedData) {
                 dataStores[dataSet.dataStoreRef] = updatedData;
                 dataSet.dataLoaded = true;
+                dataSet.lastUpdateTime = getNowTimeStamp();
             }
         });
     }
 
-    /* ==============================
-     QUERY & DATA FETCHING FUNCTIONS
-    ============================== */
+    const setUpdateStoreInterval = (dataSourceRef, dataSetRef) => {
+
+        const dataSource = dataSources[dataSourceRef];
+        const dataSet = dataSource.dataSets[dataSetRef];
+
+        if (!dataSet.updateStoreInterval && dataSet.storeRefreshRate) {
+            dataSet.updateStoreInterval = setInterval(function() { updateStore(dataSourceRef, dataSetRef); }, dataSet.storeRefreshRate < 1000 ? 1000 : dataSet.storeRefreshRate);
+        }
+    }
+
+    const clearUpdateStoreInterval = (dataSourceRef, dataSetRef) => {
+        
+        const dataSource = dataSources[dataSourceRef];
+        const dataSet = dataSource.dataSets[dataSetRef];
+
+        if (dataSet.updateStoreInterval) {
+            clearInterval(dataSet.updateStoreInterval);
+
+            dataSet.updateStoreInterval = undefined;
+        }
+    }
+
+    /* const resetNbUseSinceStoreUpdate = (dataSourceRef, dataSetRef) => {
+        
+        let dataSource = dataSources[dataSourceRef];
+        let dataSet = dataSource.dataSets[dataSetRef];
+
+        dataSet.nbUseSinceStoreUpdate = 0;
+    }
+
+    const incrementNbUseSinceStoreUpdate = (dataSourceRef, dataSetRef) => {
+        
+        let dataSource = dataSources[dataSourceRef];
+        let dataSet = dataSource.dataSets[dataSetRef];
+
+        if (!dataSet.nbUseSinceStoreUpdate && dataSet.nbUseSinceStoreUpdate !== 0) {
+            dataSet.nbUseSinceStoreUpdate = 1;
+        } else {
+            dataSet.nbUseSinceStoreUpdate += 1;
+        }
+    } */
+
+    /* ======================
+     DATA FETCHING FUNCTIONS
+    ====================== */
 
     const fetchQuery = async (url) => {
         try {
@@ -571,67 +662,9 @@ const FcmBd = (() => {
           })
     }
 
-    /* ====================================
-     VALIDATION & ERROR HANDLING FUNCTIONS
-    ==================================== */
-
-    const validateRequest = (dataSourceRef, dataSetRef = null, columnRef = null) => {
-
-        const dataSource = dataSources[dataSourceRef];
-
-        if (!dataSource) {
-            throw new Error(`La source de données '${dataSourceRef}' n'existe pas.`);
-        } else if (dataSetRef && !dataSource.dataSets[dataSetRef]) {
-            throw new Error(`L'ensemble de données '${dataSetRef}' n'existe pas dans '${dataSourceRef}'.`);
-        } else if (columnRef && !dataSource.dataSets[dataSetRef].columns[columnRef]) {
-            throw new Error(`La colonne '${columnRef}' n'existe pas dans '${dataSetRef}'.`);
-        }
-    }
-
     /* ==============
-     UTILS FUNCTIONS
+     QUERY FUNCTIONS
     ============== */
-
-    const addItemAndRef = (object, refArr, ref, item) => {
-        item.ref = ref;
-        object[ref] = item;
-        refArr.push(ref);
-    }
-
-    const removeItemAndRef = (object, refArr, ref) => {
-        delete object[ref];
-        const index = refArr.indexOf(ref);
-        if (index > -1) {
-            refArr.splice(index, 1);
-        }
-    }
-
-    const getDataSourceType = (url) => {
-        let type;
-        if (url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
-            type = dataSourceType.GOOGLESHEET;
-        } else {
-            type = dataSourceType.API;
-        }
-
-        return type;
-    }
-
-    const getDataType = (value) => {
-        let type = 'string';
-        
-        if (value === '') {
-            type = 'string';
-        } else if (value === 'true' || value === 'false') {
-            type = 'boolean';
-        } else if (Date.parse(value) && (value.includes('-') || value.includes(':'))) {
-            type = 'date';
-        } else if (!isNaN(parseFloat(value))) {
-            type = 'number';
-        }
-
-        return type;
-    }
 
     const readFilter = (objectTocheck, filters, dataSetColumns, operator = '', keyToCheck = undefined, isMacthing = true) => {
 
@@ -671,7 +704,7 @@ const FcmBd = (() => {
                         keyToCheck = key;
                         isMacthing = readFilter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
                     } else {
-                        if (!keyToCheck) {
+                        if (!keyToCheck || operator === '') {
                             keyToCheck = key;
                         };
 
@@ -692,13 +725,61 @@ const FcmBd = (() => {
 
     }
 
-    /* const resolveExpression = () => {
+    const resolveExpression = (expr, object) => {
 
+        let result;
+
+        if (expr !== null && typeof expr == "object") {
+            if (Array.isArray(expr)) {
+                result = [];
+
+                expr.forEach((computation, index) => {
+                    result.push(resolveExpression(computation, object));
+                });
+
+            } else {
+                for (let [key, value] of Object.entries(expr)) {
+                    if (key === '$fld') {
+                        result = object[value];
+                    } else if (key.includes('$')) {
+                        result = compute(resolveExpression(value, object), key);
+                    }
+                }
+            }
+        } else {
+            result = expr;
+        }
+
+        return result;
     }
 
-    const compute = () => {
+   /*  if (expr !== null && typeof expr == "object") {
+        if (Array.isArray(expr)) {
+        } else {
+
+        }
+    } else {
 
     } */
+
+    const compute = (value, operator = "") => {
+
+        let computedValue;
+
+        switch (operator) {
+            case "$concat":
+                computedValue = "";
+
+                value.forEach(string => {
+                    computedValue += string;
+                })
+            break;
+            default:
+                computedValue = value;
+        }
+        
+        return computedValue;
+    }
 
     const compare = (valueToCheck, valueToMatch, operator = "") => {
         let isMacthing = false;
@@ -730,34 +811,6 @@ const FcmBd = (() => {
         }
         
         return isMacthing;
-    }
-
-    const convertToDataType = (valueToConvert, dataType) => {
-
-        let convertedValue;
-
-        switch (dataType) {
-            case "string":
-                convertedValue = String(valueToConvert);
-            break;
-            case "number":
-                convertedValue = Number(valueToConvert);
-            break;
-            case "boolean":
-                convertedValue = Boolean(valueToConvert);
-            break;
-            case "date":
-                let newDate = new Date(valueToConvert);
-
-                convertedValue = newDate;
-
-                /* convertedValue = newDate.getTime(); */
-            break;
-            default:
-                
-        }
-
-        return convertedValue;
     }
     
     const filter = (data = [], filters = {}, dataSetColumns = {}) => {
@@ -810,19 +863,120 @@ const FcmBd = (() => {
         return sortedData;
     }
 
-    const select = (data = [], keys = []) => {
+    const select = (data = [], select = {}) => {
+
+        let selects = Object.entries(select);
 
         let selectedData = data.map(item => {
             let dataRow = {};
-            
-            keys.forEach(key => {
-                dataRow[key] = item[key];
-            });
+
+            for (let [key, value] of selects) {
+                if (value !== null && typeof value == "object") {
+                    dataRow[key] = resolveExpression(value, item);
+                } else {
+                    dataRow[key] = item[key];
+                }
+            }
 
             return dataRow;
         })
 
         return selectedData;
+    }
+
+    /* ====================================
+     VALIDATION & ERROR HANDLING FUNCTIONS
+    ==================================== */
+
+    const validateRequest = (dataSourceRef, dataSetRef = null, columnRef = null) => {
+
+        const dataSource = dataSources[dataSourceRef];
+
+        if (!dataSource) {
+            throw new Error(`La source de données '${dataSourceRef}' n'existe pas.`);
+        } else if (dataSetRef && !dataSource.dataSets[dataSetRef]) {
+            throw new Error(`L'ensemble de données '${dataSetRef}' n'existe pas dans '${dataSourceRef}'.`);
+        } else if (columnRef && !dataSource.dataSets[dataSetRef].columns[columnRef]) {
+            throw new Error(`La colonne '${columnRef}' n'existe pas dans '${dataSetRef}'.`);
+        }
+    }
+
+    /* ==============
+     UTILS FUNCTIONS
+    ============== */
+
+    const getNowTimeStamp = () => {
+        let nowTimeStamp = new Date();
+        return nowTimeStamp.getTime();
+    }
+
+    const addItemAndRef = (object, refArr, ref, item) => {
+        item.ref = ref;
+        object[ref] = item;
+        refArr.push(ref);
+    }
+
+    const removeItemAndRef = (object, refArr, ref) => {
+        delete object[ref];
+        const index = refArr.indexOf(ref);
+        if (index > -1) {
+            refArr.splice(index, 1);
+        }
+    }
+
+    const getDataSourceType = (url) => {
+        let type;
+        if (url.indexOf("https://docs.google.com/spreadsheets/") > -1) {
+            type = dataSourceType.GOOGLESHEET;
+        } else {
+            type = dataSourceType.API;
+        }
+
+        return type;
+    }
+
+    const getDataType = (value) => {
+        let type = 'string';
+        
+        if (value === '') {
+            type = 'string';
+        } else if (value === 'true' || value === 'false') {
+            type = 'boolean';
+        } else if (Date.parse(value) && (value.includes('-') || value.includes(':'))) {
+            type = 'date';
+        } else if (!isNaN(parseFloat(value))) {
+            type = 'number';
+        }
+
+        return type;
+    }
+
+    const convertToDataType = (valueToConvert, dataType) => {
+
+        let convertedValue;
+
+        switch (dataType) {
+            case "string":
+                convertedValue = String(valueToConvert);
+            break;
+            case "number":
+                convertedValue = Number(valueToConvert);
+            break;
+            case "boolean":
+                convertedValue = Boolean(valueToConvert);
+            break;
+            case "date":
+                let newDate = new Date(valueToConvert);
+
+                convertedValue = newDate;
+
+                /* convertedValue = newDate.getTime(); */
+            break;
+            default:
+                
+        }
+
+        return convertedValue;
     }
 
     const deepCopy = (inObject) => {
@@ -877,7 +1031,8 @@ const FcmBd = (() => {
     }
 
     return {
-        DataSources: _DataSources
+        DataSources: _DataSources,
+        init: init,
     }
 })();
 
