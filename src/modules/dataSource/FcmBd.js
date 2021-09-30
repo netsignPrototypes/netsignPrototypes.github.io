@@ -14,7 +14,12 @@ const FcmBd = (() => {
     const queries = { refs: [] };
     const tableModels = { refs: [] };
 
-    const config = {};
+    const config = {
+        GOOGLESHEET_API_KEY: '',
+        DATASOURCE_CONFIG_FETCH_URL: '',
+        DATASOURCE_CONFIG_REFRESH_RATE: 3600000,
+        DATASOURCE_CONFIG_INTERVAL: undefined,
+    };
 
     const dataSourceType = {
         GOOGLESHEET: "GOOGLESHEET",
@@ -64,11 +69,23 @@ const FcmBd = (() => {
      FCMBD INIT
     ========= */
 
-    const init = ({ GOOGLESHEETAPIKEY }) => {
-        if (GOOGLESHEETAPIKEY) {
-           config.GOOGLESHEETAPIKEY = GOOGLESHEETAPIKEY;
-           dataSourceTypeDefaultParams.GOOGLESHEET = '?alt=json&key=' + GOOGLESHEETAPIKEY;
+    const init = async (configModifier) => {
+
+        Object.assign(config, {...configModifier});
+
+        if (configModifier.GOOGLESHEET_API_KEY) {
+           dataSourceTypeDefaultParams.GOOGLESHEET = '?alt=json&key=' + config.GOOGLESHEET_API_KEY;
         }
+
+        if (configModifier.DATASOURCE_CONFIG_FETCH_URL) {
+
+            await _DataSources.init(config.DATASOURCE_CONFIG_FETCH_URL);
+
+            /* config.DATASOURCE_CONFIG_INTERVAL = setInterval(function() { _DataSources.init(config.DATASOURCE_CONFIG_FETCH_URL); }, config.DATASOURCE_CONFIG_REFRESH_RATE < 360000 ? 360000 : config.DATASOURCE_CONFIG_REFRESH_RATE); */         
+        }
+
+        return true;
+        
     }
 
     /* ===============
@@ -454,7 +471,7 @@ const FcmBd = (() => {
                     queryResult.datasetNbRows = data.length;
 
                     if (query.where) {
-                        data = filter(data, query.where, dataSet.columns);
+                        data = where(data, query.where, dataSet.columns);
                     }
 
                     if (query.select && data.length > 0) {
@@ -552,14 +569,35 @@ const FcmBd = (() => {
                     });
                     break;
                 default:
-                    updatedData = data;
+                    switch (dataSet.type) {
+                        case "CSV":
+                            updatedData = [];
+
+                            data.forEach((row, rowIdx) => {
+                                let rowData = {};
+                                dataSet.columns.refs.forEach((column, colIdx) => {
+                                    rowData[column] = row[colIdx] ? row[colIdx] : ''
+                                });
+        
+                                updatedData.push(rowData);
+                            });
+
+                        break;
+                        default:
+                            updatedData = data;
+                    }
                 break;
             }
 
             if (updatedData) {
-                dataStores[dataSet.dataStoreRef] = updatedData;
+
+                if (dataStores[dataSet.dataStoreRef] && JSON.stringify(dataStores[dataSet.dataStoreRef]) !== JSON.stringify(updatedData)) {
+                    dataStores[dataSet.dataStoreRef] = updatedData;
+                    dataSet.lastUpdateTime = getNowTimeStamp();
+                }
+                
                 dataSet.dataLoaded = true;
-                dataSet.lastUpdateTime = getNowTimeStamp();
+
             }
         });
     }
@@ -627,6 +665,8 @@ const FcmBd = (() => {
           return handleJSONResponse(response)
         } else if (contentType.includes('text/html')) {
           return handleTextResponse(response)
+        } else if (contentType.includes('text/csv')) {
+            return handleCSVResponse(response)
         } else {
           // Other response types as necessary. I haven't found a need for them yet though.
           throw new Error(`Sorry, content-type ${contentType} not supported`)
@@ -662,11 +702,26 @@ const FcmBd = (() => {
           })
     }
 
+    const handleCSVResponse = (response) => {
+        return response.text()
+          .then(text => {
+            if (response.ok) {
+              return parseCSV(text)
+            } else {
+              return Promise.reject({
+                status: response.status,
+                statusText: response.statusText,
+                err: text
+              })
+            }
+          })
+    }
+
     /* ==============
      QUERY FUNCTIONS
     ============== */
 
-    const readFilter = (objectTocheck, filters, dataSetColumns, operator = '', keyToCheck = undefined, isMacthing = true) => {
+    const filter = (objectTocheck, filters, dataSetColumns, operator = '', keyToCheck = undefined, isMacthing = true) => {
 
         let filterArr;
 
@@ -674,7 +729,7 @@ const FcmBd = (() => {
 
             if (Array.isArray(filters)) {
                 for (let filter of filters) {
-                    isMacthing = readFilter(objectTocheck, filter, dataSetColumns, operator, keyToCheck, isMacthing);
+                    isMacthing = filter(objectTocheck, filter, dataSetColumns, operator, keyToCheck, isMacthing);
 
                     if (operator === '$and' && !isMacthing) {
                         break;
@@ -692,7 +747,7 @@ const FcmBd = (() => {
                         if (value !== null && typeof value == "object") {
                             operator = key;
                             filters = value;
-                            isMacthing = readFilter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
+                            isMacthing = filter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
                         } else {
                             operator = key;
                             isMacthing = compare(convertToDataType(objectTocheck[keyToCheck], dataSetColumns[keyToCheck].dataType), convertToDataType(value, dataSetColumns[keyToCheck].dataType), operator);
@@ -702,7 +757,7 @@ const FcmBd = (() => {
                         operator = '';
                         filters = value;
                         keyToCheck = key;
-                        isMacthing = readFilter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
+                        isMacthing = filter(objectTocheck, filters, dataSetColumns, operator, keyToCheck, isMacthing);
                     } else {
                         if (!keyToCheck || operator === '') {
                             keyToCheck = key;
@@ -725,7 +780,7 @@ const FcmBd = (() => {
 
     }
 
-    const resolveExpression = (expr, object) => {
+    const expression = (expr, object) => {
 
         let result;
 
@@ -734,23 +789,52 @@ const FcmBd = (() => {
                 result = [];
 
                 expr.forEach((computation, index) => {
-                    result.push(resolveExpression(computation, object));
+                    result.push(expression(computation, object));
                 });
 
             } else {
                 for (let [key, value] of Object.entries(expr)) {
-                    if (key === '$fld') {
-                        result = object[value];
-                    } else if (key.includes('$')) {
-                        result = compute(resolveExpression(value, object), key);
+                    if (key.includes('$')) {
+                        if (["$first", "$last"].includes(key)) {
+                            result = aggregate(expr, object);
+                        } else {
+                            result = compute(expression(value, object), key);
+                        }
                     }
                 }
             }
         } else {
-            result = expr;
+            if (typeof expr == "string" && expr.startsWith('$')) {
+                result = object[expr.substring(1)];
+
+                if (result === undefined) {
+                    result = expr;
+                }
+            } else {
+                result = expr;
+            }
         }
 
         return result;
+    }
+
+    const aggregate = (expr, array) => {
+        let aggrationResult;
+
+        for (let [operator, value] of Object.entries(expr)) {
+            switch (operator) {
+                case "$first":
+                    aggrationResult = expression(value, array[0]);
+                break;
+                case "$last":
+                    aggrationResult = expression(value, array[array.length - 1]);
+                break;
+                default:
+                    aggrationResult = expression(expr, array);
+            }
+        }
+        
+        return aggrationResult;
     }
 
    /*  if (expr !== null && typeof expr == "object") {
@@ -773,6 +857,27 @@ const FcmBd = (() => {
                 value.forEach(string => {
                     computedValue += string;
                 })
+            break;
+            case "$lower":
+                if (typeof value == "string") {
+                    computedValue = value.toLowerCase();
+                } else {
+                    computedValue = value;
+                }
+            break;
+            case "$upper":
+                if (typeof value == "string") {
+                    computedValue = value.toUpperCase();
+                } else {
+                    computedValue = value;
+                }
+            break;
+            case "$substr":
+                if (typeof value[0] == "string") {
+                    computedValue = value[0].substring(value[1], value[2]);
+                } else {
+                    computedValue = value;
+                }
             break;
             default:
                 computedValue = value;
@@ -813,10 +918,10 @@ const FcmBd = (() => {
         return isMacthing;
     }
     
-    const filter = (data = [], filters = {}, dataSetColumns = {}) => {
+    const where = (data = [], filters = {}, dataSetColumns = {}) => {
 
         let filteredData = data.filter(item => {
-            return readFilter(item, filters, dataSetColumns);
+            return filter(item, filters, dataSetColumns);
         });
         
         return filteredData;
@@ -872,7 +977,7 @@ const FcmBd = (() => {
 
             for (let [key, value] of selects) {
                 if (value !== null && typeof value == "object") {
-                    dataRow[key] = resolveExpression(value, item);
+                    dataRow[key] = expression(value, item);
                 } else {
                     dataRow[key] = item[key];
                 }
@@ -1030,9 +1135,153 @@ const FcmBd = (() => {
         }
     }
 
+    /**
+     * Parse takes a string of CSV data and converts it to a 2 dimensional array
+     *
+     * options
+     * - typed - infer types [false]
+     *
+     * @static
+     * @param {string} csv the CSV string to parse
+     * @param {Object} [options] an object containing the options
+     * @param {Function} [reviver] a custom function to modify the values
+     * @returns {Array} a 2 dimensional array of `[entries][values]`
+     */
+     const parseCSV = (csv, options, reviver = v => v) => {
+        const ctx = Object.create(null);
+        ctx.options = options || {};
+        ctx.reviver = reviver;
+        ctx.value = '';
+        ctx.entry = [];
+        ctx.output = [];
+        ctx.col = 1;
+        ctx.row = 1;
+    
+        const lexer = /"|,|\r\n|\n|\r|[^",\r\n]+/y;
+        const isNewline = /^(\r\n|\n|\r)$/;
+    
+        let matches = [];
+        let match = '';
+        let state = 0;
+    
+        while ((matches = lexer.exec(csv)) !== null) {
+            match = matches[0];
+        
+            switch (state) {
+                case 0: // start of entry
+                switch (true) {
+                    case match === '"':
+                    state = 3;
+                    break;
+                    case match === ',':
+                    state = 0;
+                    valueEnd(ctx);
+                    break;
+                    case isNewline.test(match):
+                    state = 0;
+                    valueEnd(ctx);
+                    entryEnd(ctx);
+                    break;
+                    default:
+                    ctx.value += match;
+                    state = 2;
+                    break;
+                }
+                break;
+                case 2: // un-delimited input
+                switch (true) {
+                    case match === ',':
+                    state = 0;
+                    valueEnd(ctx);
+                    break;
+                    case isNewline.test(match):
+                    state = 0;
+                    valueEnd(ctx);
+                    entryEnd(ctx);
+                    break;
+                    default:
+                    state = 4;
+                    throw Error(`CSVError: Illegal state [row:${ctx.row}, col:${ctx.col}]`);
+                }
+                break;
+                case 3: // delimited input
+                switch (true) {
+                    case match === '"':
+                    state = 4;
+                    break;
+                    default:
+                    state = 3;
+                    ctx.value += match;
+                    break;
+                }
+                break;
+                case 4: // escaped or closing delimiter
+                switch (true) {
+                    case match === '"':
+                    state = 3;
+                    ctx.value += match;
+                    break;
+                    case match === ',':
+                    state = 0;
+                    valueEnd(ctx);
+                    break;
+                    case isNewline.test(match):
+                    state = 0;
+                    valueEnd(ctx);
+                    entryEnd(ctx);
+                    break;
+                    default:
+                    throw Error(`CSVError: Illegal state [row:${ctx.row}, col:${ctx.col}]`);
+                }
+                break;
+                default:
+                    throw Error(`CSVError: Illegal state [row:${ctx.row}, col:${ctx.col}]`);
+            }
+        }
+    
+        // flush the last value
+        if (ctx.entry.length !== 0) {
+            valueEnd(ctx);
+            entryEnd(ctx);
+        }
+    
+        return ctx.output;
+    }
+
+    const valueEnd = (ctx) => {
+        const value = ctx.options.typed ? inferType(ctx.value) : ctx.value;
+        ctx.entry.push(ctx.reviver(value, ctx.row, ctx.col));
+        ctx.value = '';
+        ctx.col++;
+    }
+    
+    const entryEnd = (ctx) => {
+        ctx.output.push(ctx.entry);
+        ctx.entry = [];
+        ctx.row++;
+        ctx.col = 1;
+    }
+
+    const inferType = (value) => {
+        const isNumber = /.\./;
+    
+        switch (true) {
+        case value === 'true':
+        case value === 'false':
+            return value === 'true';
+        case isNumber.test(value):
+            return parseFloat(value);
+        case isFinite(value):
+            return parseInt(value);
+        default:
+            return value;
+        }
+    }
+
     return {
         DataSources: _DataSources,
         init: init,
+        expression: expression,
     }
 })();
 

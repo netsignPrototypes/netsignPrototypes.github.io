@@ -49,6 +49,13 @@ const DataSourceTool = ({ isHidden }) => {
         /* FcmBd.DataSources.init('RXBK03'); */
         FcmBd.init({ GOOGLESHEETAPIKEY: process.env.REACT_APP_GOOGLE_SHEET_API_KEY });
         FcmBd.DataSources.create('TestData', "https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing", async (req, res) => {});
+
+        /* try {
+            FcmBd.DataSources.init('http://dev.app.netsign.tv/ExternalAjax/router/getDataSource?s=4eb0194ddf4d6c7a72dca4fd3149e92e').then(result => console.log("find SimonsTestData", FcmBd.DataSources.find('SimonsTestData')));
+        } catch (e) {
+
+        } */
+
     }, [])
 
     const handleAddDataSource = (e) => {
