@@ -88,6 +88,30 @@ const FcmBd = (() => {
         
     }
 
+    _DataSources.initModelObject = (model) => {
+        let initData = deepParse(model);
+
+        if (initData) {
+            if (initData.dataSources) {
+                initData.dataSources.forEach(source => {
+                    _DataSources.createFromJson(source);
+                });
+            }
+
+            if (initData.queries) {
+                initData.queries.forEach(query => {
+                    addItemAndRef(queries, queries.refs, query.ref, query);
+                });
+            }
+
+            if (initData.tableModels) {
+                initData.tableModels.forEach(tableModel => {
+                    addItemAndRef(tableModels, tableModels.refs, tableModel.ref, tableModel);
+                });
+            }
+        }
+    }
+
     /* ===============
      DATASOURCES INIT
     =============== */
