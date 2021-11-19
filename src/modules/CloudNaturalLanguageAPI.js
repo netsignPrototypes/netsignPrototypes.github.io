@@ -427,7 +427,7 @@ class CloudNaturalLanguageAPI {
               newWord = '';
             } */
 
-            text = this.replaceWord(text, token.text.content, newWord, token.text.beginOffset - (originalTextLength - text.length));
+            text = this.replaceWord(text, token.text.content, newWord + " ", token.text.beginOffset - (originalTextLength - text.length));
             /* text += `${newWord} `; */
 
           });

@@ -1,24 +1,49 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { Fragment, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import FcmBd from './dataSource/FcmBd';
 import * as htmlToImage from 'html-to-image';
-import { PlayIcon, ViewGridAddIcon, PencilIcon, XIcon, ChevronRightIcon, ChevronDownIcon, StopIcon, TableIcon} from '@heroicons/react/outline'
+import { PlayIcon, ViewGridAddIcon, PencilIcon, XIcon, ChevronRightIcon, ChevronDownIcon, StopIcon, TableIcon, UploadIcon, ColorSwatchIcon, PhotographIcon, PlusIcon, MinusIcon} from '@heroicons/react/outline'
 import { gsap } from "gsap";
 import ContentEditable from "react-contenteditable";
 import { useMediaQuery } from 'react-responsive';
+
+import { Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, SelectorIcon } from '@heroicons/react/solid'
+
 
 import CloudNaturalLanguageAPI from './CloudNaturalLanguageAPI';
 import PixaBayAPI from './PixaBayAPI'
 
 import { saveAs } from 'file-saver';
 
-const PL_DATA = [
-    { img: "https://images.unsplash.com/photo-1517054612019-1bf855127c43?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1940&q=80", title: "Yosemite", titleColor: "#a54a5e", category: "Parc national", desc: "Le parc national de Yosemite se trouve dans les montagnes de la Sierra Nevada, en Californie.", desc2: "Il est renommé pour ses séquoias géants centenaires et pour Tunnel View, point de vue emblématique sur la chute vertigineuse du Voile de la Mariée, et les falaises granitiques d'El Capitan et du Half Dome." },
-    { img: "https://images.unsplash.com/photo-1604542246637-7994c14147bd?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1964&q=80", title: "Sequoia", titleColor: "#86836c", category: "Parc national", desc: "Le parc national de Sequoia se trouve dans les montagnes du sud de la Sierra Nevada, en Californie.", desc2: "Il est connu pour ses énormes séquoias, notamment le General Sherman qui domine la Giant Forest." },
-    { img: "https://images.unsplash.com/photo-1598382569575-b13e69afc96c?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1974&q=80", title: "La vallée de la Mort", titleColor: "#c7a685", category: "Parc national", desc: "Le parc national de la vallée de la Mort chevauche la frontière entre l'est de la Californie et le Nevada.", desc2: "Il est notamment connu pour le Titus Canyon, qui comprend une ville fantôme et des formations rocheuses colorées, ainsi que pour les salines du bassin de Badwater, le point le plus bas de l'Amérique du Nord." },
-    { img: "https://images.unsplash.com/photo-1516302350523-4c29d47b89e0?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80", title: "Grand Canyon", titleColor: "#c27351", category: "Parc national", desc: "Le Grand Canyon, situé en Arizona, est une formation naturelle caractérisée par des couches de roche rouge visibles sur ses versants, révélant des millions d'années d'histoire géologique dans une coupe transversale.", desc2: "Le canyon, extrêmement imposant, s'étend sur environ 16 km de largeur et 446 km de longueur, avec une profondeur moyenne de 1 600 m." },
-    { img: "https://images.unsplash.com/photo-1529439322271-42931c09bce1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80", title: "Yellowstone", titleColor: "#ffb106", category: "Parc national", desc: "Le parc national de Yellowstone est une zone de loisirs sauvage d'environ 9000 km² surplombant un site géothermique volcanique.", desc2: "Principalement situé dans le Wyoming, le parc s'étend également sur des parties du Montana et de l'Idaho." }
+import ImageUploading from 'react-images-uploading';
+import { ColorExtractor } from 'react-color-extractor'
+import ReactQuill from 'react-quill';
+
+const DATASETS = ['Parcs nationaux', 'Divertissement', 'Activités du jour']
+
+const PL_DATA_PARC = [
+    { img: "https://images.unsplash.com/photo-1517054612019-1bf855127c43?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1940&q=80", title: "Yosemite", color: "#a54a5e", category: "Parc national", desc: "Le parc national de Yosemite se trouve dans les montagnes de la Sierra Nevada, en Californie.", desc2: "Il est renommé pour ses séquoias géants centenaires et pour Tunnel View, point de vue emblématique sur la chute vertigineuse du Voile de la Mariée, et les falaises granitiques d'El Capitan et du Half Dome." },
+    { img: "https://images.unsplash.com/photo-1604542246637-7994c14147bd?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1964&q=80", title: "Sequoia", color: "#86836c", category: "Parc national", desc: "Le parc national de Sequoia se trouve dans les montagnes du sud de la Sierra Nevada, en Californie.", desc2: "Il est connu pour ses énormes séquoias, notamment le General Sherman qui domine la Giant Forest." },
+    { img: "https://images.unsplash.com/photo-1598382569575-b13e69afc96c?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1974&q=80", title: "La vallée de la Mort", color: "#c7a685", category: "Parc national", desc: "Le parc national de la vallée de la Mort chevauche la frontière entre l'est de la Californie et le Nevada.", desc2: "Il est notamment connu pour le Titus Canyon, qui comprend une ville fantôme et des formations rocheuses colorées, ainsi que pour les salines du bassin de Badwater, le point le plus bas de l'Amérique du Nord." },
+    { img: "https://images.unsplash.com/photo-1516302350523-4c29d47b89e0?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80", title: "Grand Canyon", color: "#c27351", category: "Parc national", desc: "Le Grand Canyon, situé en Arizona, est une formation naturelle caractérisée par des couches de roche rouge visibles sur ses versants, révélant des millions d'années d'histoire géologique.", desc2: "Le canyon, extrêmement imposant, s'étend sur environ 16 km de largeur et 446 km de longueur, avec une profondeur moyenne de 1 600 m." },
+    { img: "https://images.unsplash.com/photo-1529439322271-42931c09bce1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80", title: "Yellowstone", color: "#ffb106", category: "Parc national", desc: "Le parc national de Yellowstone est une zone de loisirs sauvage d'environ 9000 km² surplombant un site géothermique volcanique.", desc2: "Principalement situé dans le Wyoming, le parc s'étend également sur des parties du Montana et de l'Idaho." }
 ]
+
+const PL_DATA_CAPSULE = [
+    { img: "./coverimages40282636.jpg", title: "Visitez la maison Boho-Chic de Zöe Kravitz", color: "", category: "", desc: "L'actrice Zöe Kravitz s'offre une maison cachée dans les bois à Pound Ridge, New York. Visite guidée.", desc2: "" },
+    { img: "./1.jpeg", title: "La maison", color: "", category: "Visitez la maison Boho-Chic de Zöe Kravitz", desc: "L'ancienne cidrerie des années 1700 a été convertie en maison. Elle est camouflée derrière la végétation.", desc2: "" },
+    { img: "./2.jpeg", title: "Séjour", color: "", category: "Visitez la maison Boho-Chic de Zöe Kravitz", desc: "En pénétrant dans la maison par les deux portes massives, nous découvrons le séjour et sa grande cheminée.", desc2: "" },
+    { img: "./3.jpeg", title: "Cuisine", color: "", category: "Visitez la maison Boho-Chic de Zöe Kravitz", desc: "La cuisine allie modernisme et rusticité. Un grand îlot en longueur offre une vaste surface de travail.", desc2: "" },
+    { img: "./4.jpeg", title: "Salle à manger", color: "", category: "Visitez la maison Boho-Chic de Zöe Kravitz", desc: "À côté de la cuisine se trouve la salle à manger. Six personnes peuvent y prendre le repas.", desc2: "" }
+]
+
+const PL_DATA_RPA = [
+    {"img":"https://pixabay.com/get/gb4e78b42d1a7ae4895e8afd6eb4383bcd1d257fcc19452da4c3bf6db7829d5fda76cd4f9ef3cce45164325321d3b0dc6a989bcf0d8bd88d8536e4b46b4a468d8_1280.jpg","title":"Bingo","color":"","category":"Activités du jour","desc":"De 10h à 12h dans le salon principal.","desc2":""},
+    {"img":"https://pixabay.com/get/gd841164b25ef60966a433b7a09ec2e0a347a5dbdff77d98efc559768f504547662b2349f75486e1f377513b57611eff2_1280.jpg","title":"Quilles","color":"","category":"Activités du jour","desc":"De 10h à 12h.","desc2":""},
+    {"img":"https://pixabay.com/get/gaf9d4587d763e378f5cce1822c248dccc24b56f0f3ce4db11e9eadd28c694176d3dfd10ba6b6ac1d4808c2e8c4e11ae045599ea1495abca67af2357b8322a167_1280.jpg","title":"Pétanque","color":"","category":"Activités du jour","desc":"De 13h à 15h dans la cour arrière.","desc2":""},
+    {"img":"https://pixabay.com/get/g6134af014173d94dbdb68f32010a48a0ab12b7decd1e31c4499aed731545035a53835a16046209dc565203284767f3a4_1280.jpg","title":"Natation","color":"#1491b9","category":"Activités du jour","desc":"De 13h à 16h.","desc2":""},
+    {"img":"https://pixabay.com/get/ge4ea4c9b897264e24f2d70ad4af234a82b144ed1917de16aa4dc235621f9967a61982e61ea39d1cd6ae1c4e84c178b953a2ab3491ba0031a46eed19c12e1aa80_1280.jpg","title":"Cinéma","color":"","category":"Activités du jour","desc":"Titanic ce soir à 19h.","desc2":""}]
 
 const CreationFromDataTool = ({ isHidden }) => {
 
@@ -29,15 +54,18 @@ const CreationFromDataTool = ({ isHidden }) => {
     const thumbPreview = useRef(null);
     const smallThumbPreview = useRef(null);
 
-    const [currentSlide, setCurrentSlide] = useState(PL_DATA.length - 1);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [currentPlayingSlide, setCurrentPlayingSlide] = useState(-1);
 
-    const [plData, setPlData] = useState(PL_DATA);
+    const [plData, setPlData] = useState(PL_DATA_PARC);
 
     const [textZoneWidth, setTextZoneWidth] = useState(40);
     const defaultEditingInput = { input: "", idx: -1 };
     const [editingInput, setEditingInput] = useState(defaultEditingInput);
 
     const [showDataTable, setShowDataTable] = useState(false);
+
+    const [selectedDataSet, setSelectedDataSet] = useState(DATASETS[0]);
 
     const titleRef = useRef();
     const imgRef = useRef();
@@ -58,7 +86,7 @@ const CreationFromDataTool = ({ isHidden }) => {
         setPlayingPreview(play);
     }
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (!isHidden) {
             
         }
@@ -150,14 +178,17 @@ const CreationFromDataTool = ({ isHidden }) => {
                     
                 ]
 
+                tlNew.call(() => setCurrentPlayingSlide(0))
+
                 plData.forEach((slide, slideIdx) => {
-                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-1`, animations[slideIdx].layer1In.from, animations[slideIdx].layer1In.to, `slide-${slideIdx+1}-in`/* , slideIdx * 5 */)
-                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-2`, animations[slideIdx].layer2In.from, animations[slideIdx].layer2In.to, `slide-${slideIdx+1}-in`/* , slideIdx * 5 */)
-                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-2 #progress`, { width: "0%" }, { width: "85%", ease: "linear", duration: 7 }, `slide-${slideIdx+1}-in`/* , slideIdx * 5 + 1 */)
+                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-1`, animations[slideIdx].layer1In.from, animations[slideIdx].layer1In.to, `slide-${slideIdx+1}-in`)
+                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-2`, animations[slideIdx].layer2In.from, animations[slideIdx].layer2In.to, `slide-${slideIdx+1}-in`)
+                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-1 #img-1 img`, { scale: 1, rotation: 0.01 }, { scale: 1.10, rotation: 0, ease: "linear", duration: 7 }, `slide-${slideIdx+1}-in`)
+                    tlNew.fromTo(`#thumbPreview #slide-${slideIdx+1} #layer-2 #progress`, { width: "0%" }, { width: "85%", ease: "linear", duration: 7 }, `slide-${slideIdx+1}-in`).call(() => setCurrentPlayingSlide(slideIdx+1))
 
                     if (slideIdx + 1 < plData.length) {
-                        tlNew.to(`#thumbPreview #slide-${slideIdx+1} #layer-1`, animations[slideIdx].layer1Out, `slide-${slideIdx+2}-in`/* , (slideIdx + 1) * 5 */)
-                        tlNew.to(`#thumbPreview #slide-${slideIdx+1} #layer-2`, animations[slideIdx].layer2Out, `slide-${slideIdx+2}-in`/* , (slideIdx + 1) * 5 */)
+                        tlNew.to(`#thumbPreview #slide-${slideIdx+1} #layer-1`, animations[slideIdx].layer1Out, `slide-${slideIdx+2}-in`)
+                        tlNew.to(`#thumbPreview #slide-${slideIdx+1} #layer-2`, animations[slideIdx].layer2Out, `slide-${slideIdx+2}-in`)
                     }
                     
                 });
@@ -193,6 +224,10 @@ const CreationFromDataTool = ({ isHidden }) => {
     }, [playingPreview]);
 
     useEffect(() => {
+        /* if (thumbPreview.current && smallThumbPreview.current && currentSlide === null) {
+            resetAllSlides();
+            transitionSlide(0);
+        }  */
         if (thumbPreview.current) {
            setThumbPreviewWidth(thumbPreview.current.offsetWidth);
         }
@@ -202,8 +237,9 @@ const CreationFromDataTool = ({ isHidden }) => {
     }, [screenSize]);
 
     const previewDone = (timeline) => {
-
-        transitionSlide(-1, plData.length - 1);
+        setCurrentPlayingSlide(-1);
+        changeCurrentSlide(currentSlide);
+        /* transitionSlide(-1, plData.length - 1); */
     }
 
     const resetAllSlides = () => {
@@ -212,6 +248,24 @@ const CreationFromDataTool = ({ isHidden }) => {
             gsap.set(`#thumbPreview #slide-${slideIdx+1} #layer-2`, { width: "100%", opacity: 1, xPercent: 0, yPercent: 100, rotation: 0 })
             gsap.set(`#thumbPreview #slide-${slideIdx+1} #layer-2 #progress`, { width: "85%" })            
         });
+    }
+
+    const changeCurrentSlide = (slideIdx) => {
+        if (slideIdx !== currentSlide || playingPreview) {
+            if (tl && tl.isActive()) {
+                tl.progress(1);
+            }
+
+            setPlayingPreview(false);
+
+            plData.forEach((slide, slideIdx) => {
+                gsap.set(`#thumbPreview #slide-${slideIdx+1} #layer-1`, { width: "100%", opacity: 1, clearProps: 'transform' })
+                gsap.set(`#thumbPreview #slide-${slideIdx+1} #layer-2`, { width: "100%", opacity: 1, clearProps: 'transform' })
+                gsap.set(`#thumbPreview #slide-${slideIdx+1} #layer-2 #progress`, { width: "85%" })            
+            });
+
+            setCurrentSlide(slideIdx)
+        }
     }
 
     const transitionSlide = (slideIn = -1, slideOut = -1) => {
@@ -430,9 +484,9 @@ const CreationFromDataTool = ({ isHidden }) => {
 
         if (slideIn !== slideOut) {
             tlSwitch.fromTo(`#thumbPreview #slide-${slideOut+1} #layer-1`, {  }, { ...transitions[transitionIdx].slideOut.layer1.to}, `transition`)
-            tlSwitch.set(`#thumbPreview #slide-${slideOut+1} #layer-1`, {  })
+            tlSwitch.set(`#thumbPreview #slide-${slideOut+1} #layer-1`, { rotation: 0 })
             tlSwitch.fromTo(`#thumbPreview #slide-${slideOut+1} #layer-2`, {  }, { ...transitions[transitionIdx].slideOut.layer2.to}, `transition`)
-            tlSwitch.set(`#thumbPreview #slide-${slideOut+1} #layer-2`, {  })
+            tlSwitch.set(`#thumbPreview #slide-${slideOut+1} #layer-2`, { rotation: 0 })
         }
         
 
@@ -616,6 +670,24 @@ const CreationFromDataTool = ({ isHidden }) => {
         setPlData(newPlData);
     }
 
+    const handleChangeDataSet = (dataSet) => {
+
+        if (dataSet !== selectedDataSet) {
+            setSelectedDataSet(dataSet);
+
+            switch (dataSet) {
+                case DATASETS[1]:
+                    setPlData(PL_DATA_CAPSULE);
+                break;
+                case DATASETS[2]:
+                    setPlData(PL_DATA_RPA);
+                break;
+                default:
+                    setPlData(PL_DATA_PARC);
+            }
+        }
+    }
+
 
     return (
         <>
@@ -631,7 +703,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                         <tr>
                         <th
                             scope="col"
-                            className="px-6 pb-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                            className="pl-4 pr-2 pb-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             #
                         </th>
@@ -667,10 +739,10 @@ const CreationFromDataTool = ({ isHidden }) => {
                     <tbody className="divide-y divide-gray-200 overflow-auto">
                         {plData.map((data, index) => (
                         <tr key={`slide_${index}_table`}>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-500">
+                            <td className="pl-4 pr-2 py-4 whitespace-nowrap text-gray-500 align-top">
                                 {index + 1}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap w-2/12 align-top">
                                 <ContentEditable
                                     tagName="p"
                                     html={data.category}
@@ -691,7 +763,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                                     }}
                                 />
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
+                            <td className="px-6 py-4 whitespace-nowrap w-2/12 align-top">
                                 <ContentEditable
                                     tagName="p"
                                     html={data.title}
@@ -712,7 +784,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                                     }}
                                 />
                             </td>
-                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-500">
+                            <td className="px-6 py-4 whitespace-normal text-sm text-gray-500 w-5/12 align-top">
                                 <ContentEditable
                                     tagName="p"
                                     html={data.desc}
@@ -733,12 +805,13 @@ const CreationFromDataTool = ({ isHidden }) => {
                                     }}
                                 />
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap w-1/4">
+                            <td className="px-6 py-4 flex align-top">
                                     <Img src={data.img} 
                                         onChange={media => {
                                             handleChangeText('img', media, index);
                                         }}
                                         imgClassName="object-contain"
+                                        controlsOnly={data.img === ""}
                                         alt={data.title} 
                                         disabled={playingPreview}
                                         id={`img-1`}
@@ -760,20 +833,24 @@ const CreationFromDataTool = ({ isHidden }) => {
         </div>}
 
         <div className={`min-h-screen flex-col items-start justify-start bg-gray-900 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-4 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
-            <div className="w-full flex space-y-0 flex-row items-center justify-end">
+            <div className="w-full flex flex-col-reverse space-x-0 lg:flex-row lg:space-x-6 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-end">
                 {/* <h2 className="ml-2 text-left text-3xl md:text-xl font-extrabold text-white select-none">Création à partir de données</h2> */}
-                {!playingPreview && <div className="flex flex-row mr-6">
-                    <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-white bg-transparent border-transparent"}>
-                    Format :
+                {/* {!playingPreview && <div className="flex flex-row mr-6 items-center">
+                    
+                </div>} */}
+                <div className="flex flex-row space-x-4 h-full w-full items-center justify-end mt-4 md:mt-0 lg:mt-0">
+                {!playingPreview && <><div className="flex flex-row items-center">
+                        <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-white bg-transparent border-transparent"}>
+                        Disposition
+                        </div>
+                        <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-gray-600 bg-transparent border-transparent"}>
+                        <input type="range" id="textZoneWidth" step={5} name="fontSize" min="35" max="65" onChange={e => setTextZoneWidth(Number(e.target.value))} defaultValue={40} />
+                        </div>
                     </div>
-                    <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-gray-600 bg-transparent border-transparent"}>
-                    <input type="range" id="textZoneWidth" step={5} name="fontSize" min="35" max="65" onChange={e => setTextZoneWidth(Number(e.target.value))} defaultValue={40} />
-                    </div>
-                    <TableIcon onClick={() => setShowDataTable(!showDataTable)} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7 ml-6" />
-                </div>}
-                <div className="flex flex-row space-x-4 h-full items-center">
+                    <TableIcon onClick={() => setShowDataTable(!showDataTable)} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7 ml-4 lg:ml-6" /> </>}
                     {playingPreview ? <StopIcon onClick={event => handlePlayingPreview(event, false)} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" /> : <PlayIcon onClick={event => handlePlayingPreview(event, true)} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" />}
                 </div>
+                <ListeDeroulante disabled={playingPreview} preSelect={selectedDataSet} list={DATASETS} onChange={handleChangeDataSet} />
             </div>
             {!isHidden && <div className="flex flex-col lg:flex-row w-full pointer-events-none">
                 
@@ -783,23 +860,25 @@ const CreationFromDataTool = ({ isHidden }) => {
                         {thumbPreview.current && thumbPreviewWidth > 0 && 
 
                         plData.map((slide, slideIdx) => {
-                            return <Slide id={`slide-${slideIdx + 1}`}>
+                            return <Slide id={`slide-${slideIdx + 1}`} className={currentSlide === slideIdx || playingPreview ? "" : "hidden" }>
                                 
                                 <Layer id={`layer-1`}>
-                                    <Img src={slide.img} 
-                                        onChange={media => {
-                                            handleChangeText('img', media, slideIdx);
-                                        }} 
-                                        alt={slide.title} 
-                                        disabled={playingPreview}
-                                        id={`img-1`} 
-                                        style={{ width: `${100 - textZoneWidth}%` }} 
-                                        preSearchText={`${slide.title}. ${slide.desc}`} />
+                                        <Img src={slide.img}
+                                            onChange={media => {
+                                                handleChangeText('img', media, slideIdx);
+                                            }} 
+                                            alt={slide.title} 
+                                            disabled={playingPreview}
+                                            id={`img-1`} 
+                                            style={{ width: `${100 - textZoneWidth}%` }} 
+                                            preSearchText={`${slide.title}. ${slide.desc}`} />
+
+                                        <ColorExtractor src={slide.img} getColors={colors => {if (slide.colors || !slide.color) {handleChangeText('color', colors[0], slideIdx)} handleChangeText('colors', colors, slideIdx); }} maxColors={256}></ColorExtractor>
                                 </Layer>
 
                                 <Layer id={`layer-2`} className="justify-end">
                                     <div className="flex pointer-events-auto bg-white h-full items-center" style={{ width: `${textZoneWidth}%`, padding: `${getComputedPixelSize(36)}px`}}>
-                                        <div className="pointer-events-auto" style={{ padding: `${getComputedPixelSize(36)}px`}} >
+                                        <div className="pointer-events-auto w-full" style={{ padding: `${getComputedPixelSize(36)}px`}} >
                                             <Text id={`text-1`} style={{ marginBottom: `${getComputedPixelSize(12)}px` }} editingInput={editingInput.input === 'category' && editingInput.idx === slideIdx}>
                                                 <ContentEditable
                                                     tagName="h2"
@@ -825,12 +904,12 @@ const CreationFromDataTool = ({ isHidden }) => {
                                                     }}
                                                 />
                                             </Text>
-                                            <Text id={`text-2`} style={{ marginTop: `${getComputedPixelSize(12)}px`, marginBottom: `${getComputedPixelSize(12)}px` }} editingInput={editingInput.input === 'title' && editingInput.idx === slideIdx}>
+                                            <Text id={`text-2`} colors={slide.colors} color={slide.color} onChange={(field, value) => handleChangeText(field, value, slideIdx)} style={{ marginTop: `${getComputedPixelSize(12)}px`, marginBottom: `${getComputedPixelSize(12)}px` }} editingInput={editingInput.input === 'title' && editingInput.idx === slideIdx}>
                                                 <ContentEditable
                                                     tagName="h1"
                                                     html={slide.title}
                                                     className="focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-bold max-w-full break-normal whitespace-normal" 
-                                                    style={{ fontSize: `${getComputedPixelSize(84)}px`, lineHeight: `${getComputedPixelSize(97)}px`, color: slide.titleColor }}
+                                                    style={{ fontSize: `${getComputedPixelSize(84)}px`, lineHeight: `${getComputedPixelSize(97)}px`, color: slide.color }}
                                                     onPaste={(e) => {
                                                         e.preventDefault();
                                                         const text = e.clipboardData.getData("text");
@@ -875,7 +954,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                                                     }}
                                                 />
                                             </Text>
-                                            <div id="progress" className="" style={{ width: "75%", height: `${getComputedPixelSize(6)}px`, marginTop: `${getComputedPixelSize(24)}px`, backgroundColor: slide.titleColor }}></div>
+                                            <div id="progress" className="" style={{ width: "75%", height: `${getComputedPixelSize(6)}px`, marginTop: `${getComputedPixelSize(24)}px`, backgroundColor: slide.color === "" ? "black" : slide.color }}></div>
                                         </div>
                                     </div>
                                 </Layer>
@@ -897,9 +976,7 @@ const CreationFromDataTool = ({ isHidden }) => {
 
                 {
                     plData.map((slide, slideIdx) => {
-                        return <div className={`w-full aspect-w-16 aspect-h-9 bg-white overflow-hidden rounded ${slideIdx === currentSlide ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900' : 'hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 hover:ring-offset-gray-900'}`} ref={smallThumbPreview}>
-
-                        
+                        return <div className={`w-full aspect-w-16 aspect-h-9 bg-white overflow-hidden rounded ${slideIdx === currentPlayingSlide ? 'ring-2 ring-red-700 ring-offset-2 ring-offset-gray-900' : ''} ${slideIdx === currentSlide && currentPlayingSlide === -1 ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900' : 'hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 hover:ring-offset-gray-900'}`} ref={smallThumbPreview}>
 
                         {smallThumbPreview.current && smallThumbPreviewWidth > 0 && 
 
@@ -919,7 +996,7 @@ const CreationFromDataTool = ({ isHidden }) => {
 
                                 <Layer id={`layer-2`} className="justify-end">
                                     <div className="flex pointer-events-none bg-white h-full items-center" style={{ width: `${textZoneWidth}%`, padding: `${getSmallComputedPixelSize(36)}px`}}>
-                                        <div className="pointer-events-none" style={{ padding: `${getSmallComputedPixelSize(36)}px`}} >
+                                        <div className="pointer-events-none w-full" style={{ padding: `${getSmallComputedPixelSize(36)}px`}} >
                                             <Text id={`text-1`} style={{ marginBottom: `${getSmallComputedPixelSize(12)}px` }} disabled={true} editingInput={editingInput.input === 'category' && editingInput.idx === slideIdx}>
                                                 <ContentEditable
                                                     tagName="h2"
@@ -945,7 +1022,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                                                     tagName="h1"
                                                     html={slide.title}
                                                     className="focus:placeholder-transparent focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-bold max-w-full break-normal whitespace-normal select-none" 
-                                                    style={{ fontSize: `${getSmallComputedPixelSize(84)}px`, lineHeight: `${getSmallComputedPixelSize(97)}px`, color: slide.titleColor }}
+                                                    style={{ fontSize: `${getSmallComputedPixelSize(84)}px`, lineHeight: `${getSmallComputedPixelSize(97)}px`, color: slide.color }}
                                                     onPaste={(e) => {
                                                         e.preventDefault();
                                                         const text = e.clipboardData.getData("text");
@@ -980,7 +1057,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                                                     }}
                                                 />
                                             </Text>
-                                            <div id="progress" className="" style={{ width: "75%", height: `${getSmallComputedPixelSize(6)}px`, marginTop: `${getSmallComputedPixelSize(24)}px`, backgroundColor: slide.titleColor }}></div>
+                                            <div id="progress" className="" style={{ width: "75%", height: `${getSmallComputedPixelSize(6)}px`, marginTop: `${getSmallComputedPixelSize(24)}px`, backgroundColor: slide.color === "" ? "black" : slide.color }}></div>
                                         </div>
                                     </div>
                                 </Layer>
@@ -988,7 +1065,7 @@ const CreationFromDataTool = ({ isHidden }) => {
                             </Slide>
                         }
                         
-                            <div className="pointer-events-auto flex w-full h-full items-center justify-center cursor-pointer" onClick={() => transitionSlide(slideIdx)}></div>
+                            <div className="pointer-events-auto flex w-full h-full items-center justify-center cursor-pointer" onClick={() => changeCurrentSlide(slideIdx)}></div>
 
                         </div>
                         })
@@ -1124,7 +1201,7 @@ const Library = props => {
 
         <div className={`pointer-events-auto relative flex flex-col lg:max-w-2xl w-full h-full items-start justify-start bg-gray-100 rounded`}>
             {isLoading && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
-            <XIcon onClick={() => props.setShowLibrary(false)} className="absolute top-2 right-2 text-gray-700 hover:text-gray-600 cursor-pointer h-4 w-4 lg:h-6 lg:w-6" />
+            <XIcon onClick={() => props.setShowLibrary(false)} className="absolute top-2 right-2 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" />
             <TagSearchBar className="mb-2 pt-3 pl-3 pr-8" onChange={getCorrespondingImages} tags={tags} selectedTags={selectedTags} />
             <MediaGrid className="rounded-sm mb-3 pl-3 mr-3" isLoading={isLoadingMedias} setSrc={props.setSrc} medias={medias} />
         </div>
@@ -1243,7 +1320,7 @@ const TagSearchBar = props => {
 
     return <div className={`flex flex-col flex-wrap items-start justify-start align-middle py-1 rounded-md w-full ${props.className ? props.className : ""}`}>
         <div className="flex flex-row flex-wrap items-center justify-start align-middle">
-            {(isMobile || true) && (showAll ? <ChevronDownIcon onClick={() => setShowAll(false)} className="m-0.5 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" /> : <ChevronRightIcon onClick={() => setShowAll(true)} className="m-0.5 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" /> )}
+            {(isMobile || true) && (showAll ? <MinusIcon onClick={() => setShowAll(false)} className="m-0.5 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" /> : <PlusIcon onClick={() => setShowAll(true)} className="m-0.5 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" /> )}
             {((isMobile || true) && !showAll) ? 
             selectedTags.map((tag, index) => {
                 return <ToggleButton key={`selected-${tag}`} label={tag} value={tag} selected={true} />
@@ -1374,7 +1451,7 @@ const MediaGrid = props => {
     }
 
     return (
-        <div className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 mx-auto max-h-full overflow-auto ${props.className}`}>
+        <div className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 max-h-full overflow-auto ${props.className}`}>
             {medias.map((media, index) => {
                 return <MediaContainer key={media.id} alt={media.tags} metadata={media} onClick={handleOnClickMedia} src={media.previewURL} /* hoverOptions={checkAsSimilarMedias(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarMedias(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} */ />
             })}
@@ -1386,8 +1463,8 @@ const MediaGrid = props => {
 
 
 
-const Slide = ({ children, id }) => {
-    return <div id={id} className="pointer-events-none h-full w-full">
+const Slide = ({ children, id, className }) => {
+    return <div id={id} className={"pointer-events-none h-full w-full " + className}>
         {children}
     </div>
 }
@@ -1410,6 +1487,7 @@ const Img = props => {
   
     // DATA STATES
     const [src, setSrc] = useState(props.src)
+    const [images, setImages] = useState([]);
 
     // UI LOGIC STATES
     const [isLoading, setIsLoading] = useState(true);
@@ -1431,21 +1509,53 @@ const Img = props => {
 
     const handleOnChange = (media) => {
         setShowLibrary(false);
+        setIsLoading(true);
         props.onChange(media);
     }
 
-    return <div id={id} onMouseOver={() => setIsMouseOver(!props.disabled && true)} onMouseLeave={() => setIsMouseOver(!props.disabled && false)} className={`relative pointer-events-auto bg-white h-full overflow-hidden ${props.className ? props.className : ''}`} style={props.style}>
-        {isLoading && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
-        <img onLoad={() => setIsLoading(false)} src={src} alt={props.alt} className={`select-none w-full h-full object-center object-cover bg-white ${props.imgClassName && props.imgClassName}`} />
-        {isMouseOver && !showLibrary && <div className="absolute top-0 left-0 w-full h-full flex flex-row items-center justify-center bg-gray-800 bg-opacity-30"><ViewGridAddIcon onClick={event => handleSwitchImg(event)} className="text-white hover:text-white cursor-pointer h-12 w-12" /></div>}
-        {<Library modal={props.modalLibrary} isHidden={showLibrary ? (props.disabled ? true : false) : true} preSearchText={props.preSearchText} setSrc={handleOnChange} setShowLibrary={setShowLibrary} />}
-    </div>
+    const onChange = (imageList, addUpdateIndex) => {
+        // data for submit
+        console.log(imageList, addUpdateIndex);
+        setImages(imageList);
+        setIsMouseOver(false);
+        setIsLoading(true);
+
+        props.onChange(imageList[addUpdateIndex[0]].data_url);
+      };
+
+    return <ImageUploading
+            value={images}
+            onChange={onChange}
+            maxNumber={2}
+            dataURLKey="data_url"
+        >
+            {({
+            imageList,
+            onImageUpload,
+            onImageRemoveAll,
+            onImageUpdate,
+            onImageRemove,
+            isDragging,
+            dragProps
+            }) => (
+            <div id={id} {...dragProps} onMouseOver={() => setIsMouseOver(!props.disabled && true)} onMouseLeave={() => setIsMouseOver(!props.disabled && false)} className={`relative pointer-events-auto bg-white h-full overflow-hidden ${props.className ? props.className : ''}`} style={props.style}>
+                {src && <img onLoad={() => setIsLoading(false)} src={src} alt={props.alt} className={`select-none w-full h-full object-center object-cover bg-white ${props.imgClassName && props.imgClassName}`} />}
+                {src && isLoading && <div className="pointer-events-none absolute top-0 left-0 flex w-full h-full items-center justify-center bg-gray-800 bg-opacity-30"><LoadingSpinner className="text-white h-8 w-8 lg:h-12 lg:w-12" /></div>}
+                {((isMouseOver && !isLoading && !isDragging && !showLibrary && !props.disabled) || (!src && !props.disabled && !props.controlsOnly && !isDragging )) && <div className="absolute top-0 left-0 w-full h-full flex flex-row items-center justify-center bg-gray-800 bg-opacity-30"><ViewGridAddIcon onClick={event => handleSwitchImg(event)} className="text-white m-2 hover:text-white cursor-pointer h-8 w-8 lg:h-12 lg:w-12" /><UploadIcon onClick={onImageUpload} className="text-white m-2 hover:text-white cursor-pointer h-8 w-8 lg:h-12 lg:w-12" /></div>}
+                {(props.controlsOnly) && <div className="w-full h-full flex flex-row items-center justify-center"><ViewGridAddIcon onClick={event => handleSwitchImg(event)} className="mr-2 text-gray-700 hover:text-gray-600 cursor-pointer h-4 w-4 lg:h-6 lg:w-6" /><UploadIcon onClick={onImageUpload} className="ml-2 text-gray-700 hover:text-gray-600 cursor-pointer h-4 w-4 lg:h-6 lg:w-6" /></div>}
+                {<Library modal={props.modalLibrary} isHidden={showLibrary ? (props.disabled ? true : false) : true} preSearchText={props.preSearchText} setSrc={handleOnChange} setShowLibrary={setShowLibrary} />}
+                {(!src && props.disabled) && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center bg-gray-800 bg-opacity-30"><PhotographIcon className="text-white w-1/2" /></div>}
+                {isDragging && <div className="pointer-events-none absolute top-0 left-0 w-full h-full flex flex-row items-center justify-center bg-gray-800 bg-opacity-30"><UploadIcon className="text-white hover:text-white cursor-pointer h-12 w-12" /></div>}
+            </div>
+        )}
+    </ImageUploading>
 }
 
 const Text = props => {
 
     // UI LOGIC STATES
     const [isMouseOver, setIsMouseOver] = useState(false);
+    const [showColors, setShowColors] = useState(false);
 
     const { id } = props;
 
@@ -1454,14 +1564,35 @@ const Text = props => {
         const { target } = e;
     };
 
-    return <div id={id} style={props.style} onMouseOver={() => setIsMouseOver(!props.disabled && true)} onMouseLeave={() => setIsMouseOver(!props.disabled && false)} className={`relative pointer-events-auto ${props.className ? props.className : ''}`}>
+    const handleChangeColor = (color) => {
+        setShowColors(false);
+        props.onChange("color", color);
+    }
+
+    return <div id={id} style={props.style} onMouseOver={() => setIsMouseOver(!props.disabled && true)} onMouseLeave={() => {setIsMouseOver(!props.disabled && false); setShowColors(false)}} className={`relative pointer-events-auto ${props.className ? props.className : ''}`}>
         {!props.disabled && (isMouseOver || props.editingInput) && <div className="pointer-events-none absolute top-0 left-0 w-full h-full flex flex-row items-center justify-center rounded-sm ring-1 ring-blue-500 ring-offset-2"></div>}
         {props.children}
-        {isMouseOver && !props.editingInput && <div className="pointer-events-none absolute -top-0.5 -right-0.5 flex flex-row items-center justify-center rounded-sm ">
-            <div className="pointer-events-none p-1 bg-blue-500 rounded-tr-sm rounded-bl">
-                <PencilIcon /* onClick={event => handleChangeText(event)} */ className="pointer-events-none text-white hover:text-white cursor-pointer h-4 w-4" />
+        {isMouseOver && !props.editingInput && <div className="bg-blue-500 pointer-events-none absolute -top-0.5 -right-0.5 flex flex-row items-center justify-center rounded-bl rounded-tr-sm">
+            {showColors && props.colors.filter(color => color !== props.color).map((color, index) => <div key={`${id}_color_${index}`} className="pointer-events-auto p-1" onClick={() => handleChangeColor(color)}><div className="h-2 w-2 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: color }}></div></div>)}
+            {props.colors && <div className="pointer-events-auto p-1" onClick={() => setShowColors(!showColors)}>
+                <div className="h-2 w-2 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: props.color }}></div>
+            </div>}
+            <div className="pointer-events-none p-1  ">
+                <PencilIcon /* onClick={event => handleChangeText(event)} */ className="pointer-events-none text-white hover:text-white cursor-pointer h-2 w-2 lg:h-4 lg:w-4" />
             </div>
         </div>}
+        {/* {props.editingInput && <div className="bg-blue-500 pointer-events-auto absolute -top-0.5 -right-0.5 flex flex-row items-center justify-center rounded-bl rounded-tr-sm">
+            {props.colors && props.colors.filter(color => color !== props.color).map((color, index) => <div key={`${id}_color_${index}`} className={`pointer-events-auto p-1 ${showColors ? '' : 'hidden'}`} onClick={() => handleChangeColor(color)}><div className="h-2 w-2 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: color }}></div></div>)}
+            {props.colors && <div className="pointer-events-auto p-1" onClick={() => setShowColors(!showColors)}>
+                <div className="h-2 w-2 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: props.color }}></div>
+            </div>}
+        </div>} */}
+        {/* {props.editingInput && <div className="pointer-events-auto bg-gray-800 shadow-md pointer-events-none absolute -top-9 -left-0.5 flex flex-row items-center justify-center rounded">
+            {showColors && props.colors.filter(color => color !== props.color).map((color, index) => <div key={`${id}_color_${index}`} className="pointer-events-auto p-1" onClick={() => handleChangeColor(color)}><div className="h-3 w-3 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: color }}></div></div>)}
+            {props.colors && <div className="pointer-events-auto p-2" onClick={() => setShowColors(!showColors)}>
+                <div className="h-3 w-3 lg:h-4 lg:w-4 rounded-sm ring-1 ring-white cursor-pointer" style={{ backgroundColor: props.color }}></div>
+            </div>}
+        </div>} */}
     </div>
 }
 
@@ -1474,122 +1605,72 @@ const LoadingSpinner = ({ className }) => {
     );
   }
 
-function InlineEdit(props) {
-const [isInputActive, setIsInputActive] = useState(false);
-const [inputValue, setInputValue] = useState(props.text);
-const wrapperRef = useRef(null);
-const textRef = useRef(null);
-const inputRef = useRef(null);
-const enter = useKeyPress("Enter");
-const esc = useKeyPress("Escape");
-// check to see if the user clicked outside of this component
-useOnClickOutside(wrapperRef, () => {
-    if (isInputActive) {
-    props.onSetText(inputValue);
-    setIsInputActive(false);
-    }
-});
-// focus the cursor in the input field on edit start
-useEffect(() => {
-    if (isInputActive) {
-    inputRef.current.focus();
-    }
-}, [isInputActive]);
-useEffect(() => {
-    if (isInputActive) {
-    // if Enter is pressed, save the text and case the editor
-    if (enter) {
-        props.onSetText(inputValue);
-        setIsInputActive(false);
-    }
-    // if Escape is pressed, revert the text and close the editor
-    if (esc) {
-        setInputValue(props.text);
-        setIsInputActive(false);
-    }
-    }
-}, [enter, esc]); // watch the Enter and Escape key presses
-return (
-    <span className="inline-text" ref={wrapperRef}>
-    <span
-        ref={textRef}
-        onClick={() => setIsInputActive(true)}
-        className={`inline-text_copy inline-text_copy--${
-        !isInputActive ? "active" : "hidden"
-        }`}
-    >
-        {props.text}
-    </span>
-    <input
-        ref={inputRef}
-        // set the width to the input length multiplied by the x height
-        // it's not quite right but gets it close
-        /* style={{ width: Math.ceil(inputValue.length * 0.9) + "ex" }} */
-        value={inputValue}
-        onChange={e => {
-        setInputValue(e.target.value);
-        }}
-        className={`inline-text_input inline-text_input--${
-        isInputActive ? "active" : "hidden"
-        }`}
-    />
-    </span>
-);
-}
+  const ListeDeroulante = ({ preSelect, list, onChange, disabled }) => {
+    const [selected, setSelected] = useState(preSelect ? preSelect: '');
 
-function useKeyPress(targetKey) {
-// State for keeping track of whether key is pressed
-const [keyPressed, setKeyPressed] = useState(false);
-// If pressed key is our target key then set to true
-function downHandler({ key }) {
-    if (key === targetKey) {
-    setKeyPressed(true);
-    }
-}
-// If released key is our target key then set to false
-const upHandler = ({ key }) => {
-    if (key === targetKey) {
-    setKeyPressed(false);
-    }
-};
-// Add event listeners
-useEffect(() => {
-    window.addEventListener("keydown", downHandler);
-    window.addEventListener("keyup", upHandler);
-    // Remove event listeners on cleanup
-    return () => {
-    window.removeEventListener("keydown", downHandler);
-    window.removeEventListener("keyup", upHandler);
+    const handleChange = (value) => {        
+        onChange(value);
+        setSelected(value);
     };
-}, []); // Empty array ensures that effect is only run on mount and unmount
-return keyPressed;
-}
 
-function useOnClickOutside(ref, handler) {
-useEffect(
-    () => {
-    const listener = (event) => {
-        // Do nothing if clicking ref's element or descendent elements
-        if (!ref.current || ref.current.contains(event.target)) {
-        return;
-        }
-        handler(event);
-    };
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
-    return () => {
-        document.removeEventListener("mousedown", listener);
-        document.removeEventListener("touchstart", listener);
-    };
-    },
-    // Add ref and handler to effect dependencies
-    // It's worth noting that because passed in handler is a new ...
-    // ... function on every render that will cause this effect ...
-    // ... callback/cleanup to run every render. It's not a big deal ...
-    // ... but to optimize you can wrap handler in useCallback before ...
-    // ... passing it into this hook.
-    [ref, handler]
-);
+    return (
+        <div className={`w-52 lg:w-72 ${disabled ? 'opacity-75' : 'cursor-pointer'}`}>
+        <Listbox disabled={disabled ? true : false} value={selected} onChange={handleChange}>
+            <div className="relative">
+            <Listbox.Button className={`${disabled ? '' : 'cursor-pointer'} relative text-white border-2  border-white w-full py-0.5 pl-3 pr-10 text-left rounded-lg cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-opacity-75 focus-visible:ring-white focus-visible:ring-offset-orange-300 focus-visible:ring-offset-2 focus-visible:border-indigo-500 sm:text-sm`}>
+                <span className="block truncate">{selected || 'Choisir'}</span>
+                <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <SelectorIcon
+                    className="w-4 h-4 text-gray-200"
+                    aria-hidden="true"
+                />
+                </span>
+            </Listbox.Button>
+            <Transition
+                as={Fragment}
+                leave="transition ease-in duration-100"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+            >
+                <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-white rounded-md shadow-lg max-h-60 ring-1 ring-black ring-opacity-5 focus:outline-none z-10 sm:text-sm">
+                {list.map((item, itemIdx) => (
+                    <Listbox.Option
+                    key={itemIdx}
+                    className={({ active }) =>
+                        `${active ? 'text-blue-900 bg-blue-100' : 'text-gray-900'}
+                            select-none relative py-2 pl-10 pr-4 cursor-pointer`
+                    }
+                    value={item}
+                    >
+                    {({ selected, active }) => (
+                        <>
+                        <span
+                            className={`${
+                            selected ? 'font-medium' : 'font-normal'
+                            } block truncate`}
+                        >
+                            {item}
+                        </span>
+                        {selected ? (
+                            <span
+                            className={`${
+                                active ? 'text-blue-600' : 'text-blue-600'
+                            }
+                                    absolute inset-y-0 left-0 flex items-center pl-3`}
+                            >
+                            <CheckIcon className="w-5 h-5" aria-hidden="true" />
+                            </span>
+                        ) : null}
+                        </>
+                    )}
+                    </Listbox.Option>
+                ))}
+                </Listbox.Options>
+            </Transition>
+            </div>
+        </Listbox>
+        </div>
+    )
 }
 
 function useWindowSize() {
