@@ -197,7 +197,7 @@ const BirthdayTool = ({ isHidden }) => {
     }
 
     const renderScreenShot = () => {
-        return <div className="aspect-w-16 aspect-h-9 bg-gray-100 overflow-hidden" style={{ width: "1920px", height: "1080px" }} ref={thumbPreview}>
+        return <div className="aspect-w-16 aspect-h-9 bg-gray-50 overflow-hidden" style={{ width: "1920px", height: "1080px" }} ref={thumbPreview}>
         <div className="overflow-hidden"><img src={BIRTHDAY_IMG_BACKGROUNDS[bgImgIdx].img} alt="ThumbBg" className={`select-none w-full h-full object-center object-cover`} /></div>
 
             {thumbPreview.current && <div className="pointer-events-none flex w-full h-full items-start justify-start" style={{ padding: `48px`}}>
@@ -216,7 +216,7 @@ const BirthdayTool = ({ isHidden }) => {
 
 
     return (
-        <div className={`min-h-screen flex-col items-start justify-start bg-gray-100 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-10 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
+        <div className={`min-h-screen flex-col items-start justify-start bg-gray-50 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-10 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
             <div className="w-full flex space-y-4 lg:space-y-0 flex-col lg:flex-row items-center lg:justify-between">
                 <h2 className="ml-2 text-left text-3xl font-extrabold text-gray-900 select-none">Fêtes automatisées</h2>
                 <div className="flex flex-row space-x-4 h-full items-center">

@@ -36,3 +36,63 @@
     transform: rotate(360deg);
   }
 }
+
+.inline-text_copy--active,
+.inline-text_input--active {
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  text-transform: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  padding: 0;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed #666666;
+}
+.inline-text_copy--active {
+  cursor: pointer;
+}
+.inline-text_copy--hidden,
+.inline-text_input--hidden {
+  display: none;
+}
+.inline-text_input--active {
+  border-bottom: 1px solid #666666;
+  text-align: left;
+}
+
+
+/* Customize website's scrollbar like Mac OS
+Not supports in Firefox and IE */
+
+/* total width */
+div::-webkit-scrollbar {
+    background-color:transparent;
+    width:16px;
+}
+
+/* background of the scrollbar except button or resizer */
+div::-webkit-scrollbar-track {
+    background-color:transparent
+}
+div::-webkit-scrollbar-track:hover {
+    background-color:transparent
+}
+
+/* scrollbar itself */
+div::-webkit-scrollbar-thumb {
+    background-color:#a0a0a5;
+    border-radius:7px;
+    border-top:1px solid transparent;
+    border-bottom:1px solid transparent;
+    border-left:5px solid transparent;
+    border-right:5px solid transparent;
+    background-clip: content-box;
+}
+div::-webkit-scrollbar-thumb:hover {
+    background-color:#8c8c90;
+}
+
+/* set button(top and bottom of the scrollbar) */
+div::-webkit-scrollbar-button {display:none}

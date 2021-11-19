@@ -47,7 +47,7 @@ const DataSourceTool = ({ isHidden }) => {
 
     useEffect(() => {
         /* FcmBd.DataSources.init('RXBK03'); */
-        FcmBd.init({ GOOGLESHEETAPIKEY: process.env.REACT_APP_GOOGLE_SHEET_API_KEY });
+        FcmBd.init({ GOOGLESHEET_API_KEY: process.env.REACT_APP_GOOGLE_SHEET_API_KEY });
         FcmBd.DataSources.create('TestData', "https://docs.google.com/spreadsheets/d/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w/edit?usp=sharing", async (req, res) => {});
 
         /* try {

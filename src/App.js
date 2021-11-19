@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './App.css';
-import { CreationTool, DataSourceTool, VisualQueryBuilderTool, BirthdayTool } from './modules';
-import { DatabaseIcon, PhotographIcon, TableIcon, GiftIcon } from '@heroicons/react/outline'
+import { CreationTool, CreationFromDataTool, DataSourceTool, VisualQueryBuilderTool, BirthdayTool } from './modules';
+import { DatabaseIcon, PhotographIcon, TableIcon, GiftIcon, CollectionIcon } from '@heroicons/react/outline'
 import { useMediaQuery } from 'react-responsive';
 
 function App() {
@@ -91,13 +91,15 @@ function App() {
     <>
     {isAuthorized ? 
     <>
-      <div className="z-50 fixed flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
+      <div className="z-50 absolute top-0 left-0 flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
         <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+        <CollectionIcon onClick={() => setCurrentTool("CreationFromDataTool")} className={`h-6 w-6 text-${currentTool === "CreationFromDataTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <GiftIcon onClick={() => setCurrentTool("BirthdayTool")} className={`h-6 w-6 text-${currentTool === "BirthdayTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <TableIcon onClick={() => setCurrentTool("VisualQueryBuilderTool")} className={`h-6 w-6 text-${currentTool === "VisualQueryBuilderTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
       </div>
       <CreationTool isHidden={currentTool !== "CreationTool"} />
+      {currentTool === "CreationFromDataTool" && <CreationFromDataTool isHidden={currentTool !== "CreationFromDataTool"} />}
       <BirthdayTool isHidden={currentTool !== "BirthdayTool"} />
       <DataSourceTool isHidden={currentTool !== "DataSourceTool"} />
       <VisualQueryBuilderTool isHidden={currentTool !== "VisualQueryBuilderTool"} />
