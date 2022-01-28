@@ -1,0 +1,377 @@
+---------------------------------------------------------------------
+JSON OBJECT TERMS
+---------------------------------------------------------------------
+
+object (obj) = { properties };
+
+properties (props) | property (prop) = { key: value };
+
+array (arr) = [ items ];
+
+value = string | boolean | number | array | object;
+
+
+---------------------------------------------------------------------
+DATASOURCE
+---------------------------------------------------------------------
+
+Permet de conserver les informations de base d'une source et chacun de ses DataSets.
+Garde en mémoire les données de chacun des DataSets et les met à jour quand c'est nécessaire.
+
+On l'utilise donc seulement pour aller chercher les données brutes.
+
+{
+    "properties": {
+        "spreadsheetId": "1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w",
+        "title": "Données pour démonstration"
+    },
+    "type": "GOOGLESHEET",
+    "name": "TestData2",
+    "baseUrl": "https://sheets.googleapis.com/v4/spreadsheets/1gwYEvp4q0Zp2-b1DJcO1k3NoBO-BS5pZa6FwmyiXH1w",
+    "dataSets": {
+        "refs": [
+            "Simons",
+            "Transkid",
+            "Menu",
+            "Fetes"
+        ],
+        "Simons": {
+            "name": "Simons",
+            "ref": "Simons",
+            "baseUrl": "/values/Simons",
+            "id": 1649069940,
+            "dataStoreRef": "TestData2_1649069940",
+            "columns": {
+                "refs": [
+                    "id",
+                    "nom",
+                    "prenom",
+                    "dep",
+                    "secteur",
+                    "position",
+                    "equipe",
+                    "pause",
+                    "debut",
+                    "fin"
+                ],
+                "id": {
+                    "id": 1,
+                    "name": "id",
+                    "title": "id",
+                    "index": 0,
+                    "dataType": "number"
+                },
+                "nom": {
+                    "id": 2,
+                    "name": "nom",
+                    "title": "nom",
+                    "index": 1,
+                    "dataType": "string"
+                },
+                "prenom": {
+                    "id": 3,
+                    "name": "prenom",
+                    "title": "prenom",
+                    "index": 2,
+                    "dataType": "string"
+                },
+                "dep": {
+                    "id": 4,
+                    "name": "dep",
+                    "title": "dep",
+                    "index": 3,
+                    "dataType": "string"
+                },
+                "secteur": {
+                    "id": 5,
+                    "name": "secteur",
+                    "title": "secteur",
+                    "index": 4,
+                    "dataType": "number"
+                },
+                "position": {
+                    "id": 6,
+                    "name": "position",
+                    "title": "position",
+                    "index": 5,
+                    "dataType": "string"
+                },
+                "equipe": {
+                    "id": 7,
+                    "name": "equipe",
+                    "title": "equipe",
+                    "index": 6,
+                    "dataType": "number"
+                },
+                "pause": {
+                    "id": 8,
+                    "name": "pause",
+                    "title": "pause",
+                    "index": 7,
+                    "dataType": "string"
+                },
+                "debut": {
+                    "id": 9,
+                    "name": "debut",
+                    "title": "debut",
+                    "index": 8,
+                    "dataType": "date"
+                },
+                "fin": {
+                    "id": 10,
+                    "name": "fin",
+                    "title": "fin",
+                    "index": 9,
+                    "dataType": "date"
+                }
+            },
+            "dataLoaded": true,
+            "storeRefreshRate": 30000
+        },
+        "Transkid": {
+            "name": "Transkid",
+            "ref": "Transkid",
+            "baseUrl": "/values/Transkid",
+            "id": 1524730019,
+            "dataStoreRef": "TestData2_1524730019",
+            "columns": {
+                "refs": [
+                    "Nom",
+                    "Prénom",
+                    "# Camion",
+                    "Lundi",
+                    "Mardi",
+                    "Mercredi",
+                    "Jeudi",
+                    "Vendredi",
+                    "Samedi",
+                    "Dimanche"
+                ],
+                "Nom": {
+                    "id": 1,
+                    "name": "Nom",
+                    "title": "Nom",
+                    "index": 0,
+                    "dataType": "string"
+                },
+                "Prénom": {
+                    "id": 2,
+                    "name": "Prénom",
+                    "title": "Prénom",
+                    "index": 1,
+                    "dataType": "string"
+                },
+                "# Camion": {
+                    "id": 3,
+                    "name": "# Camion",
+                    "title": "# Camion",
+                    "index": 2,
+                    "dataType": "number"
+                },
+                "Lundi": {
+                    "id": 4,
+                    "name": "Lundi",
+                    "title": "Lundi",
+                    "index": 3,
+                    "dataType": "number"
+                },
+                "Mardi": {
+                    "id": 5,
+                    "name": "Mardi",
+                    "title": "Mardi",
+                    "index": 4,
+                    "dataType": "number"
+                },
+                "Mercredi": {
+                    "id": 6,
+                    "name": "Mercredi",
+                    "title": "Mercredi",
+                    "index": 5,
+                    "dataType": "number"
+                },
+                "Jeudi": {
+                    "id": 7,
+                    "name": "Jeudi",
+                    "title": "Jeudi",
+                    "index": 6,
+                    "dataType": "number"
+                },
+                "Vendredi": {
+                    "id": 8,
+                    "name": "Vendredi",
+                    "title": "Vendredi",
+                    "index": 7,
+                    "dataType": "number"
+                },
+                "Samedi": {
+                    "id": 9,
+                    "name": "Samedi",
+                    "title": "Samedi",
+                    "index": 8,
+                    "dataType": "string"
+                },
+                "Dimanche": {
+                    "id": 10,
+                    "name": "Dimanche",
+                    "title": "Dimanche",
+                    "index": 9,
+                    "dataType": "string"
+                }
+            },
+            "dataLoaded": true,
+            "storeRefreshRate": 30000
+        },
+        "Menu": {
+            "name": "Menu",
+            "ref": "Menu",
+            "baseUrl": "/values/Menu",
+            "id": 0,
+            "dataStoreRef": "TestData2_0",
+            "columns": {
+                "refs": [
+                    "ID",
+                    "P",
+                    "F",
+                    "C",
+                    "T",
+                    "E"
+                ],
+                "ID": {
+                    "id": 1,
+                    "name": "ID",
+                    "title": "ID",
+                    "index": 0,
+                    "dataType": "string"
+                },
+                "P": {
+                    "id": 2,
+                    "name": "P",
+                    "title": "P",
+                    "index": 1,
+                    "dataType": "string"
+                },
+                "F": {
+                    "id": 3,
+                    "name": "F",
+                    "title": "F",
+                    "index": 2,
+                    "dataType": "string"
+                },
+                "C": {
+                    "id": 4,
+                    "name": "C",
+                    "title": "C",
+                    "index": 3,
+                    "dataType": "string"
+                },
+                "T": {
+                    "id": 5,
+                    "name": "T",
+                    "title": "T",
+                    "index": 4,
+                    "dataType": "string"
+                },
+                "E": {
+                    "id": 6,
+                    "name": "E",
+                    "title": "E",
+                    "index": 5,
+                    "dataType": "string"
+                }
+            },
+            "dataLoaded": true,
+            "storeRefreshRate": 30000
+        },
+        "Fetes": {
+            "name": "Fetes",
+            "ref": "Fetes",
+            "baseUrl": "/values/Fetes",
+            "id": 720807057,
+            "dataStoreRef": "TestData2_720807057",
+            "columns": {
+                "refs": [
+                    "nom",
+                    "prenom",
+                    "date"
+                ],
+                "nom": {
+                    "id": 1,
+                    "name": "nom",
+                    "title": "nom",
+                    "index": 0,
+                    "dataType": "string"
+                },
+                "prenom": {
+                    "id": 2,
+                    "name": "prenom",
+                    "title": "prenom",
+                    "index": 1,
+                    "dataType": "string"
+                },
+                "date": {
+                    "id": 3,
+                    "name": "date",
+                    "title": "date",
+                    "index": 2,
+                    "dataType": "date"
+                }
+            },
+            "dataLoaded": true,
+            "storeRefreshRate": 30000
+        }
+    }
+}
+
+
+---------------------------------------------------------------------
+QUERY STRUCTURE
+---------------------------------------------------------------------
+
+{ 
+    select: {
+        nom: 1,
+        prenom: 1,
+        equipe: 1,
+        pause: 1,
+        debut: 1,
+        fin: 1
+    }, 
+    from: 'Simons',
+    where: { equipe: 121 },
+    orderBy: [{ equipe: 1 }, { nom: -1 }, { prenom: 1 }],
+    limit: 10,
+    skip: 0
+};
+
+https://mongodb.github.io/mongo-java-driver/3.0/builders/filters/
+https://docs.mongodb.com/manual/reference/sql-comparison/
+
+WHERE status = "A" -> { status: "A" }
+
+WHERE status = "A" AND age = 50 -> { status: "A", age: 50 }
+
+WHERE status = "A" OR age = 50 -> { $or: [ { status: "A" } , { age: 50 } ] }
+
+WHERE age > 25 -> { age: { $gt: 25 } }
+WHERE age < 25 -> { age: { $lt: 25 } }
+WHERE age >= 25 -> { age: { $gte: 25 } }
+WHERE age <= 25 -> { age: { $lte: 25 } }
+
+WHERE age > 25 AND age <= 50 -> { age: { $gt: 25, $lte: 50 } }
+
+WHERE user_id like "%bc%" -> db.people.find( { user_id: /bc/ } )
+
+---------------------------------------------------------------------
+DATA TABLE STRUCTURE
+---------------------------------------------------------------------
+
+[
+    {
+        Header: "#",
+        accessor: "id",
+        style: {
+            width: '7%',
+            textAlign: 'center',
+        },
+    }
+]
