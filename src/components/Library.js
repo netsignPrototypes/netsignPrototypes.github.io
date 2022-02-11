@@ -132,7 +132,7 @@ const Library = props => {
             {isLoading && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
             <XIcon onClick={() => props.setShowLibrary(false)} className="absolute top-2 right-2 text-gray-700 hover:text-gray-600 cursor-pointer h-5 w-5 lg:h-6 lg:w-6" />
             <TagSearchBar className="mb-2 pt-3 pl-3 pr-8" onChange={getCorrespondingImages} tags={tags} selectedTags={selectedTags} />
-            <MediaGrid className="rounded-sm mb-3 pl-3 mr-3" isLoading={isLoadingMedias} setSrc={props.setSrc} medias={medias} />
+            {!isLoading && <MediaGrid className="rounded-sm mb-3 pl-3 mr-3" isLoading={isLoadingMedias} setSrc={props.setSrc} medias={medias} />}
         </div>
 
     </div>

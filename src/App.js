@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './App.css';
 import { CreationTool, CreationFromDataTool, LayoutTool, ObjectDetectionTool, DataSourceTool, VisualQueryBuilderTool, BirthdayTool } from './modules';
-import { DatabaseIcon, PhotographIcon, TableIcon, GiftIcon, CollectionIcon, TemplateIcon, QrcodeIcon } from '@heroicons/react/outline'
+import { DatabaseIcon, PhotographIcon, TableIcon, GiftIcon, CollectionIcon, TemplateIcon, QrcodeIcon, CakeIcon } from '@heroicons/react/outline'
 import { useMediaQuery } from 'react-responsive';
 
 function App() {
@@ -96,7 +96,7 @@ function App() {
         <CollectionIcon onClick={() => setCurrentTool("CreationFromDataTool")} className={`h-6 w-6 text-${currentTool === "CreationFromDataTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <TemplateIcon onClick={() => setCurrentTool("LayoutTool")} className={`h-6 w-6 text-${currentTool === "LayoutTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <QrcodeIcon onClick={() => setCurrentTool("ObjectDetectionTool")} className={`h-6 w-6 text-${currentTool === "ObjectDetectionTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
-        <GiftIcon onClick={() => setCurrentTool("BirthdayTool")} className={`h-6 w-6 text-${currentTool === "BirthdayTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+        <CakeIcon onClick={() => setCurrentTool("BirthdayTool")} className={`h-6 w-6 text-${currentTool === "BirthdayTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <TableIcon onClick={() => setCurrentTool("VisualQueryBuilderTool")} className={`h-6 w-6 text-${currentTool === "VisualQueryBuilderTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
       </div>

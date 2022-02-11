@@ -121,7 +121,9 @@ const ObjectDetectionTool = ({ isHidden }) => {
     };
 
     const handleShowLibrary = () => {
-        setShowLibrary(!showLibrary);
+        if (searchText !== '') {
+            setShowLibrary(!showLibrary);
+        }
     }
 
     const handleChangeSrc = (media) => {
@@ -134,24 +136,26 @@ const ObjectDetectionTool = ({ isHidden }) => {
         <>
         <Library modal={true} isHidden={showLibrary ? false : true} preSearchText={searchText} setSrc={handleChangeSrc} setShowLibrary={setShowLibrary} />
         <div className={`min-h-screen flex-col items-center justify-center bg-gray-900 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-4 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
-            <div className="w-full flex flex-col-reverse space-x-0 lg:flex-row lg:space-x-6 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-center">
+            <div className="w-full flex flex-col space-x-0 lg:flex-row lg:space-x-6 space-y-4 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-center">
                 {/* <h2 className="ml-2 text-left text-3xl md:text-xl font-extrabold text-white select-none">Création à partir de données</h2> */}
-                <input
-                    id="searchText"
-                    onChange={handleChangeSearchText}
-                    value={searchText}
-                    name="searchText"
-                    type="text"
-                    required
-                    className="resize-none appearance-none relative block h-9 w-96 px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                    placeholder="Description de l'image"
-                />
-                <div onClick={handleShowLibrary} className="rounded-md select-none font-medium py-1 px-2 text-center text-sm text-white shadow align-middle bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500 flex items-center justify-center">
-                    {'Trouver une image'}
+                <div className="flex flex-row items-center mt-3 md:mt-0 lg:space-x-4 space-x-2">
+                    <input
+                        id="searchText"
+                        onChange={handleChangeSearchText}
+                        value={searchText}
+                        name="searchText"
+                        type="text"
+                        required
+                        className="resize-none appearance-none relative block h-9 md:w-96 w-full px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                        placeholder="Description de l'image"
+                    />
+                    <div onClick={handleShowLibrary} className="rounded-md select-none font-medium py-1 px-2 text-center text-sm text-white shadow align-middle bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500 flex items-center justify-center">
+                        {'Chercher'}
+                    </div>
                 </div>
-                <div onClick={handlePrediction} className="rounded-md select-none font-medium py-1 px-2 text-center text-sm text-white shadow align-middle bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500 flex items-center justify-center">
+                {imgSrc !== '' && <div onClick={handlePrediction} className="rounded-md select-none font-medium py-1 px-2 text-center text-sm text-white shadow align-middle bg-blue-600 hover:bg-blue-500 cursor-pointer border-2 border-blue-600 hover:border-blue-500 flex items-center justify-center">
                     {processing ? <LoadingSpinner className="h-5 w-5 text-white" /> : 'Analyser'}
-                </div>
+                </div>}
             </div>
             {!isHidden && <div className="flex flex-col lg:flex-row w-full pointer-events-none">
                 

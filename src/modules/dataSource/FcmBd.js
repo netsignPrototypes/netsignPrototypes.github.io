@@ -1396,6 +1396,10 @@
         DataSources: _DataSources,
         init: init,
         expression: expression,
+        utils: {
+            deepCopy: deepCopy,
+            deepParse: deepParse,
+        }
     }
 })();
 

@@ -1,9 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { } from '@heroicons/react/outline'
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { MenuAlt2Icon, PhotographIcon, FilmIcon, DocumentIcon, CursorClickIcon, TrashIcon, SparklesIcon, ArrowSmUpIcon, ArrowSmDownIcon,ArrowSmLeftIcon,ArrowSmRightIcon, PlayIcon, StopIcon } from '@heroicons/react/outline'
 
 import { useMediaQuery } from 'react-responsive';
 
-import { Slide } from '../components';
+import FcmBd from './dataSource/FcmBd';
+
+import { gsap } from "gsap";
+
+import { Slide, ListeDeroulante } from '../components';
 
 const layoutMatrix = [
     [30,30,48,48],[72,30,108,48],[132,30,168,48],[192,30,228,48],[252,30,288,48],[312,30,348,48],[372,30,408,48],[432,30,468,48],[492,30,528,48],[552,30,588,48],[612,30,648,48],[672,30,708,48],[732,30,768,48],[792,30,828,48],[852,30,888,48],[912,30,948,48],[972,30,1008,48],[1032,30,1068,48],[1092,30,1128,48],[1152,30,1188,48],[1212,30,1248,48],[1272,30,1308,48],[1332,30,1368,48],[1392,30,1428,48],[1452,30,1488,48],[1512,30,1548,48],[1572,30,1608,48],[1632,30,1668,48],[1692,30,1728,48],[1752,30,1788,48],[1812,30,1848,48],[1872,30,1890,48],
@@ -38,6 +42,59 @@ const grayScale = [
     "bg-gray-900",
 ]
 
+const toolTypes = {
+    Cursor: 0,
+    Text: 1,
+    Image: 2,
+    Shape: 3,
+    Video: 4,
+}
+
+const zoneTypes = {
+    1: 'Text',
+    2: 'Image',
+    3: 'Shape',
+    4: 'Video',
+}
+
+const ANIMATION_TYPE = {
+    slideFromLeft: 4,
+    slideFromRight: 1,
+    slideFromBottom: 2,
+    slideFromTop: 3,
+    fade: 5,
+    zoom: 6,
+}
+
+const animationTypes = [
+    { type: 4, icon: ArrowSmRightIcon, oppositeType: 1 },
+    { type: 2, icon: ArrowSmUpIcon, oppositeType: 3 },
+    { type: 3, icon: ArrowSmDownIcon, oppositeType: 2 },
+    { type: 1, icon: ArrowSmLeftIcon, oppositeType: 4 },
+]
+
+const uncompatibleAnimation = {
+    1: 4,
+    2: 3,
+    3: 2,
+    4: 1,
+}
+
+const animationProperties = {
+    1: { start: { x: 100 }, end: { x: 0 } },
+    2: { start: { y: 100 }, end: { y: 0 } },
+    3: { start: { y: -100 }, end: { y: 0 } },
+    4: { start: { x: -100 }, end: { x: 0 } }
+}
+
+const DATASETS = ['Libre', 'Simple Layout', 'Multi Pictures'];
+
+const templates = {
+    'Libre': [],
+    'Simple Layout': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[552,1056,576,1080]],"sequence":1,"animations":[],"finalPosition":{"left":0,"top":0,"width":576,"height":1080}},{"id":"Text-2","type":1,"position":[[48,96,72,120],[432,144,456,168]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":96,"width":408,"height":72}},{"id":"Text-3","type":1,"position":[[48,168,72,192],[504,552,528,576]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":168,"width":480,"height":408}},{"id":"Text-4","type":1,"position":[[48,576,72,600],[504,816,528,840]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":576,"width":480,"height":264}},{"id":"Shape-5","type":3,"position":[[48,864,72,888],[408,864,432,888]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":864,"width":384,"height":24}},{"id":"Image-13","type":2,"position":[[576,0,600,24],[1248,528,1272,552]],"sequence":1,"animations":[],"finalPosition":{"left":576,"top":0,"width":696,"height":552}},{"id":"Image-14","type":2,"position":[[1896,0,1920,24],[1272,528,1296,552]],"sequence":1,"animations":[],"finalPosition":{"left":1272,"top":0,"width":648,"height":552}},{"id":"Image-15","type":2,"position":[[576,552,600,576],[1248,1056,1272,1080]],"sequence":1,"animations":[],"finalPosition":{"left":576,"top":552,"width":696,"height":528}},{"id":"Image-16","type":2,"position":[[1896,552,1920,576],[1272,1056,1296,1080]],"sequence":1,"animations":[],"finalPosition":{"left":1272,"top":552,"width":648,"height":528}}],
+    'Multi Pictures': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},{"id":"Image-2","type":2,"position":[[24,24,48,48],[672,240,696,264]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":24,"width":672,"height":240}},{"id":"Image-3","type":2,"position":[[720,24,744,48],[1056,504,1080,528]],"sequence":1,"animations":[],"finalPosition":{"left":720,"top":24,"width":360,"height":504}},{"id":"Image-4","type":2,"position":[[24,288,48,312],[336,720,360,744]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":288,"width":336,"height":456}},{"id":"Image-5","type":2,"position":[[384,288,408,312],[672,504,696,528]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":288,"width":312,"height":240}},{"id":"Image-6","type":2,"position":[[384,552,408,576],[840,1032,864,1056]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":552,"width":480,"height":504}},{"id":"Image-7","type":2,"position":[[24,768,48,792],[336,1032,360,1056]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":768,"width":336,"height":288}},{"id":"Image-8","type":2,"position":[[1536,264,1560,288],[1104,504,1128,528]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":264,"width":456,"height":264}},{"id":"Image-9","type":2,"position":[[1872,24,1896,48],[1104,216,1128,240]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":24,"width":792,"height":216}},{"id":"Image-10","type":2,"position":[[1584,264,1608,288],[1872,744,1896,768]],"sequence":1,"animations":[],"finalPosition":{"left":1584,"top":264,"width":312,"height":504}},{"id":"Image-11","type":2,"position":[[888,552,912,576],[1296,744,1320,768]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":552,"width":432,"height":216}},{"id":"Image-12","type":2,"position":[[1536,552,1560,576],[1344,744,1368,768]],"sequence":1,"animations":[],"finalPosition":{"left":1344,"top":552,"width":216,"height":216}},{"id":"Image-13","type":2,"position":[[888,792,912,816],[1128,1032,1152,1056]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":792,"width":264,"height":264}},{"id":"Image-14","type":2,"position":[[1872,792,1896,816],[1176,1032,1200,1056]],"sequence":1,"animations":[],"finalPosition":{"left":1176,"top":792,"width":720,"height":264}}]
+}
+
 const LayoutTool = ({ isHidden }) => {
 
     const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
@@ -51,10 +108,23 @@ const LayoutTool = ({ isHidden }) => {
 
     const [zones, setZones] = useState([]);
     const [zoneIdx, setZoneIdx] = useState(0);
+    const [hoverZoneIdx, setHoverZoneIdx] = useState(null);
+    const [selectedZoneIdx, setSelectedZoneIdx] = useState(null);
     const [tempZone, setTempZone] = useState([]);
+    const [currentTool, setCurrentTool] = useState("Text");
+
+    const [uniqueZoneCount, setUniqueZoneCount] = useState(1);
+
+    const [tl, setTl] = useState(null);
+    const [playingPreview, setPlayingPreview] = useState(false);
+
+    const [maxSequence, setMaxSequence] = useState(2);
+
+    const [intensity, setIntensity] = useState(0.8);
+    const [selectedDataSet, setSelectedDataSet] = useState(DATASETS[0]);
 
     useEffect(() => {
-        if (!isHidden) {
+        if (!isHidden && matrix.length === 0) {
             let newMatrix = [];
 
             for (let i = 0; i < 45;i++) {
@@ -87,25 +157,54 @@ const LayoutTool = ({ isHidden }) => {
         return computedPixelSize;
     }
 
+    const handleChangeDataSet = (dataSet) => {
+
+        if (dataSet !== selectedDataSet) {
+
+            if (selectedDataSet === 'Libre') {
+                templates['Libre'] = FcmBd.utils.deepCopy(zones);
+            }
+
+            setSelectedZoneIdx(null);
+            setSelectedDataSet(dataSet);
+
+            if (templates[dataSet]) {
+                setZones(templates[dataSet]);
+            }
+        }
+    }
+
     const handleZoneClick = (square) => {
-        let newZones = zones;
+        let newZones = [...zones];
         let newZone = zones[zoneIdx];
 
-        if (newZones.length === 0) {
-            setZones([[ square, null ]]);
-            setTempZone([ square, square ]);
-        } else if (newZone[1] === null) {
-            if (newZone[0][0] <= square[2] && newZone[0][1] <= square[3]) {
+        setSelectedZoneIdx(null);
 
-                newZones[zoneIdx] = [newZone[0], square];
+        if (newZones.length === 0) {
+            setZones([{ id: `${currentTool}-${uniqueZoneCount}`, type: toolTypes[currentTool], position: [ square, null ], sequence: 1, animations: [] }]);
+            setTempZone([ square, square ]);
+        } else if (newZone && newZone.position[1] === null) {
+            if (newZone.position[0][0] <= square[2] && newZone.position[0][1] <= square[3]) {
+
+                newZones[zoneIdx].position = [newZone.position[0], square];
             } else {
-                newZones[zoneIdx] = [square, newZone[0]];
+                newZones[zoneIdx].position = [square, newZone.position[0]];
+            }
+
+            let position = newZones[zoneIdx].position;
+
+            newZones[zoneIdx].finalPosition = {
+                left: position[0][0] < position[1][0] ? position[0][0] : position[1][0], 
+                top: position[0][1] < position[1][1] ? position[0][1] : position[1][1], 
+                width: position[1][2] > position[0][0] ? position[1][2] - position[0][0] : position[0][2] - position[1][0], 
+                height: position[1][3] > position[0][1] ? position[1][3] - position[0][1] : position[0][3] - position[1][1]
             }
 
             setZones(newZones);
             setTempZone([]);
+            setUniqueZoneCount(uniqueZoneCount + 1);
         } else {
-            newZones.push([ square, null ]);
+            newZones.push({ id: `${currentTool}-${uniqueZoneCount}`, type: toolTypes[currentTool], position: [ square, null ], sequence: 1, animations: [] });
             setZoneIdx(zoneIdx + 1);
             setZones(newZones);
             setTempZone([ square, square ]);
@@ -115,40 +214,529 @@ const LayoutTool = ({ isHidden }) => {
     const handleZoneHover = (square) => {
         let newZone = zones[zoneIdx];
 
-        if (newZone && newZone.length > 0 && newZone[1] === null) {
-            if (newZone[0][0] <= square[2] && newZone[0][1] <= square[3]) {
-                setTempZone([newZone[0], square]);
+        if (newZone && newZone.position.length > 0 && newZone.position[1] === null) {
+            if (newZone.position[0][0] <= square[2] && newZone.position[0][1] <= square[3]) {
+                setTempZone([newZone.position[0], square]);
             } else {
-                setTempZone([square, newZone[0]]);
+                setTempZone([square, newZone.position[0]]);
             }
         }
+    }
+
+    const handleDeleteZone = (index) => {
+        let newZones = [...zones];
+        let newZoneIdx = zoneIdx;
+
+        newZones.splice(index, 1);
+
+        if (newZoneIdx > 0) {
+            newZoneIdx -= 1;
+        }
+
+        if (selectedZoneIdx === index) {
+            setSelectedZoneIdx(null);
+        }
+
+        if (hoverZoneIdx === index) {
+            setHoverZoneIdx(null);
+        }
+
+        let minSequence = Math.min.apply(Math, newZones.map(zone => zone.sequence));
+
+        if (minSequence === 2) {
+            newZones.forEach(zone => {
+                zone.sequence -= 1;
+            });
+            setMaxSequence(maxSequence - 1);
+        }
+
+        setZones(newZones);
+        setZoneIdx(newZoneIdx);
+    }
+
+    const handleSelectZone = (index) => {
+        setCurrentTool('Cursor');
+
+        if (selectedZoneIdx === index) {
+            setSelectedZoneIdx(null);
+        } else {
+            setSelectedZoneIdx(index);
+        }
+    }
+
+    const handleChangeCurrentTool = (tool) => {
+        setCurrentTool(tool);
+        setSelectedZoneIdx(null);
+    }
+    
+    const handleZoneAnimation = (zone, animationType) => {
+        let newZones = [...zones];
+
+        if (newZones[zone].animations.includes(animationType)) {
+            newZones[zone].animations = newZones[zone].animations.filter(animation => animation !== animationType);
+        } else if (newZones[zone].animations.includes(uncompatibleAnimation[animationType])) {
+            newZones[zone].animations = newZones[zone].animations.filter(animation => animation !== uncompatibleAnimation[animationType]);
+            newZones[zone].animations.push(animationType);
+        } else {
+            newZones[zone].animations.push(animationType);
+        }
+
+        setZones(newZones);
+
+        emptyTimeLine();
+        createTimeLine([newZones[zone]], false);
+
+    }
+
+    const stopTimeLine = () => {
+        if (tl !== null) {
+            tl.progress(1);
+        }
+    }
+
+    const emptyTimeLine = () => {
+        if (tl !== null) {
+            tl.progress(1);
+            tl.clear();
+            setTl(null);
+        }
+    }
+
+    const getAnimation = (position, animation) => {
+
+        let finalAnimation = {};
+
+        switch (animation) {
+            case ANIMATION_TYPE.slideFromRight:
+                finalAnimation = { start: { x: getComputedPixelSize(1920 - position.left) }, end: { x: 0 } };
+            break;
+            case ANIMATION_TYPE.slideFromBottom:
+                finalAnimation = { start: { y: getComputedPixelSize(1080 - position.top) }, end: { y: 0 } };
+            break;
+            case ANIMATION_TYPE.slideFromTop:
+                finalAnimation = { start: { y: getComputedPixelSize((position.top + position.height) * -1) }, end: { y: 0 } };
+            break;
+            case ANIMATION_TYPE.slideFromLeft:
+                finalAnimation = { start: { x: getComputedPixelSize((position.left + position.width) * -1) }, end: { x: 0 } };
+            break;
+            case ANIMATION_TYPE.fade: 
+                finalAnimation = { start: { opacity: 0 }, end: { opacity: 0.4 } };
+            break;
+            case ANIMATION_TYPE.zoom: 
+                finalAnimation = { start: { scale: 0 }, end: { scale: 1 } };
+            break;
+            default:
+        }
+
+        return finalAnimation;
+    }
+
+    const createTimeLine = (zonesToAnimate, paused) => {
+        const newTl = gsap.timeline({ paused: paused });
+
+        if (zonesToAnimate.length > 1) {
+            zonesToAnimate = zonesToAnimate.sort((a,b) => a.sequence - b.sequence);
+        }
+
+        zonesToAnimate.forEach((zone, index) => {
+
+            if (zone.animations.length > 0) {
+                let start = { rotation: 0.01 };
+                let end = { rotation: 0, ease: 'power3.inOut', duration: 1.5 };
+
+                if (zone.animations.length === 1 && zone.animations[0] === 5) {
+                    start = {};
+                    end = { ease: 'power3.inOut', duration: 1.5 };
+                }
+
+                zone.animations.forEach(animation => {
+                    let animationSequence = getAnimation(zone.finalPosition, animation)
+                    start = { ...start, ...animationSequence.start };
+                    end = { ...end, ...animationSequence.end };
+                });
+
+                let position = `sequence${zone.sequence}${zone.sequence > 1 && zone.animations.length > 0 ? `-=${index > 0 && zone.level && zonesToAnimate[index - 1].level === zone.level ? '0.8' : '0.5'}` : ''}`;
+
+                if (Object.keys(end).length > 0) {
+                    newTl.fromTo(`#${zone.id}`, start, end, position);
+                } else {
+                    newTl.from(`#${zone.id}`, start, position);
+                }
+                
+            }
+        });
+
+        newTl.then(() => setPlayingPreview(false));
+
+        setTl(newTl);
+
+    }
+
+    const handlePlay = (smart = false) => {
+        emptyTimeLine();
+        setSelectedZoneIdx(null);
+
+        if (!smart) {
+            createTimeLine([...zones], false);
+        } else {
+            createTimeLine(computeZones(FcmBd.utils.deepCopy(zones)), false);
+        }
+        
+        setPlayingPreview(true);
+        
+    }
+
+    const handleStop = () => {
+        emptyTimeLine();
+        setPlayingPreview(false);
+    }
+
+    const handleChangeSequence = (index) => {
+        let newZones = [...zones];
+
+        newZones[index].sequence += 1;
+
+        if (newZones[index].sequence >= maxSequence) {
+            let max = Math.max.apply(Math, zones.map((zone, idx) => index === idx ? 0 : zone.sequence));
+            if (max + 1 < newZones[index].sequence) {
+                newZones[index].sequence = 1;
+            } else {
+                setMaxSequence(max + 1);
+            }
+        }
+
+        setZones(newZones);
+    }
+
+    const computeZones = (zonesToCompute) => {
+        zonesToCompute.forEach((zone, index) => {
+
+            zone.parentZones = [];
+            zone.level = 0;
+            zone.index = index;
+
+            for (let i = 0; i < index;i++) {
+                if (isOverlapping(zone.finalPosition, zonesToCompute[i].finalPosition)) {
+                    zone.parentZones.push(zonesToCompute[i]);
+
+                    if (zonesToCompute[i].level >= zone.level) {
+                        zone.level = zonesToCompute[i].level + 1;
+                    }
+                }
+            }
+        });
+
+        
+
+        return smartAnimation(zonesToCompute)
+    }
+
+    const computeAnimationIntensity = (animationType, zoneToAnimatePosition) => {
+        let zonePosition = getCorners(zoneToAnimatePosition);
+
+        let intensity = 0;
+
+        switch (animationType) {
+            case ANIMATION_TYPE.slideFromRight:
+                intensity = (1920 - zonePosition.tl.x) / 1920;
+            break;
+            case ANIMATION_TYPE.slideFromBottom:
+                intensity = (1080 - zonePosition.tl.y) / 1080;
+            break;
+            case ANIMATION_TYPE.slideFromTop:
+                intensity = (zonePosition.bl.y) / 1080;
+            break;
+            case ANIMATION_TYPE.slideFromLeft:
+                intensity = (zonePosition.tr.x) / 1920;
+            break;
+            case ANIMATION_TYPE.fade: 
+                intensity = 0;
+            break;
+            case ANIMATION_TYPE.zoom: 
+                intensity = (zoneToAnimatePosition.width * zoneToAnimatePosition.height) / (1920 * 1080);
+            break;
+            default:
+        }
+
+        return intensity
+    }
+
+    const smartAnimation = (zonesToAnimate) => {
+
+        //let nbLevels = Math.max.apply(Math, zonesToAnimate.map((zone, idx) => zone.level + 1));
+
+        let sortedZones = zonesToAnimate.sort((a,b) => {
+
+            let order = 0;
+
+            if (a.level < b.level || a.finalPosition.top < b.finalPosition.top || a.finalPosition.left < b.finalPosition.left) {
+                order = -1;
+            } 
+            
+            if (a.level > b.level || a.finalPosition.top > b.finalPosition.top || a.finalPosition.left > b.finalPosition.left) {
+                order = 1;
+            }
+
+            return order;
+        })
+
+        let sequenceNo = 1;
+
+        sortedZones.forEach((zone, index) => {
+            let possibleAnimations = getPossibleAnimations(sortedZones.slice(0, index), zone.finalPosition);
+
+            if (zone.level === 0) {
+                zone.sequence = 1;
+
+                /* if (index > 0) {
+                    possibleAnimations = possibleAnimations.filter(animation => animation !== sortedZones[index - 1].animations[0]);
+                } */
+            } else {
+                sequenceNo += 1;
+                zone.sequence = sequenceNo;
+            }
+
+            if (possibleAnimations.length === 0) {
+                possibleAnimations = [5, 6]
+            } else if (zone.level > 0) {
+                possibleAnimations.push(5);
+                possibleAnimations.push(6);
+            }
+
+            possibleAnimations = possibleAnimations.filter(animation => computeAnimationIntensity(animation, zone.finalPosition) / (zone.level === 0 ? 2 : 1) <= intensity);
+
+            if (possibleAnimations.length === 0) {
+                possibleAnimations = [5]
+            }
+
+            let animIdex = Math.floor(Math.random() * possibleAnimations.length);
+
+            zone.animations = [possibleAnimations[animIdex]];
+            
+        });
+
+        console.log('smartAnimation', sortedZones);
+
+        return sortedZones;
+    }
+
+    const getCorners = (zoneFinalPosition) => {
+        let zonePosition = {
+            tl: { x: zoneFinalPosition.left, y: zoneFinalPosition.top },
+            tr: { x: zoneFinalPosition.left + zoneFinalPosition.width, y: zoneFinalPosition.top },
+            bl: { x: zoneFinalPosition.left, y: zoneFinalPosition.top + zoneFinalPosition.height },
+            br: { x: zoneFinalPosition.left + zoneFinalPosition.width, y: zoneFinalPosition.top + zoneFinalPosition.height },
+        }
+
+        return zonePosition;
+    }
+
+    const getPossibleAnimations = (zonesToCheck, zoneToAnimatePosition) => {
+        let possibleAnimations = [1, 2, 3, 4];
+
+        let zonePosition = getCorners(zoneToAnimatePosition);
+
+        // Basic rules not dependent of other zones
+
+        // Slide from left
+        if (zonePosition.tr.x === 1920 && zoneToAnimatePosition.width < 960) {
+            possibleAnimations = possibleAnimations.filter(animation => animation !== 4);
+        }
+
+        // Slide form right
+        if (zonePosition.tl.x === 0 && zoneToAnimatePosition.width < 960) {
+            possibleAnimations = possibleAnimations.filter(animation => animation !== 1);
+        }
+
+        // Slide from top
+        if (zonePosition.bl.y === 1080 && zoneToAnimatePosition.height < 540) {
+            possibleAnimations = possibleAnimations.filter(animation => animation !== 3);
+        }
+
+        // Slide from bottom
+        if (zonePosition.tl.y === 0 && zoneToAnimatePosition.height < 540) {
+            possibleAnimations = possibleAnimations.filter(animation => animation !== 2);
+        }
+
+        zonesToCheck.forEach((zone, index) => {
+            let zoneToCheckPosition = getCorners(zone.finalPosition);
+
+            let isParentOfZone = isParent(zoneToAnimatePosition, zone.finalPosition);
+
+            if (possibleAnimations.length > 0) {
+
+                if (!isParentOfZone) {
+                    // Slide from left
+                    if (possibleAnimations.includes(4) && zonePosition.tl.x > zoneToCheckPosition.tl.x) {
+                        if ((zonePosition.tl.y >= zoneToCheckPosition.tl.y && zonePosition.tl.y <= zoneToCheckPosition.bl.y) || 
+                        (zonePosition.bl.y >= zoneToCheckPosition.tl.y && zonePosition.bl.y <= zoneToCheckPosition.bl.y) || 
+                        (zonePosition.tl.y <= zoneToCheckPosition.tl.y && zonePosition.bl.y >= zoneToCheckPosition.tl.y)) {
+                            possibleAnimations = possibleAnimations.filter(animation => animation !== 4);
+                        }
+                    }
+
+                    // Slide from right
+                    if (possibleAnimations.includes(1) && zonePosition.tl.x < zoneToCheckPosition.tl.x) {
+                        if ((zonePosition.tl.y >= zoneToCheckPosition.tl.y && zonePosition.tl.y <= zoneToCheckPosition.bl.y) || 
+                        (zonePosition.bl.y >= zoneToCheckPosition.tl.y && zonePosition.bl.y <= zoneToCheckPosition.bl.y) || 
+                        (zonePosition.tl.y <= zoneToCheckPosition.tl.y && zonePosition.bl.y >= zoneToCheckPosition.tl.y)) {
+                            possibleAnimations = possibleAnimations.filter(animation => animation !== 1);
+                        }
+                    }
+
+                    // Slide from top
+                    if (possibleAnimations.includes(3) && ((zonePosition.tl.x >= zoneToCheckPosition.tl.x && zonePosition.tl.x <= zoneToCheckPosition.tr.x) || 
+                    (zonePosition.tr.x >= zoneToCheckPosition.tl.x && zonePosition.tr.x <= zoneToCheckPosition.tr.x) || 
+                    (zonePosition.tl.x <= zoneToCheckPosition.tl.x && zonePosition.tr.x >= zoneToCheckPosition.tl.x))) {
+                        if (zonePosition.tl.y > zoneToCheckPosition.tl.y) {
+                            possibleAnimations = possibleAnimations.filter(animation => animation !== 3);
+                        }
+                    }
+
+                    // Slide from bottom
+                    if (possibleAnimations.includes(2) && ((zonePosition.tl.x >= zoneToCheckPosition.tl.x && zonePosition.tl.x <= zoneToCheckPosition.tr.x) || 
+                    (zonePosition.tr.x >= zoneToCheckPosition.tl.x && zonePosition.tr.x <= zoneToCheckPosition.tr.x) || 
+                    (zonePosition.tl.x <= zoneToCheckPosition.tl.x && zonePosition.tr.x >= zoneToCheckPosition.tl.x))) {
+                        if (zonePosition.tl.y < zoneToCheckPosition.tl.y) {
+                            possibleAnimations = possibleAnimations.filter(animation => animation !== 2);
+                        }
+                    }
+                } else {
+                    // Slide from left
+                    if (possibleAnimations.includes(4) && zoneToCheckPosition.tl.x !== 0) {
+                        possibleAnimations = possibleAnimations.filter(animation => animation !== 4);
+                    }
+
+                    // Slide from right
+                    if (possibleAnimations.includes(1) && zoneToCheckPosition.tr.x !== 1920) {
+                        possibleAnimations = possibleAnimations.filter(animation => animation !== 1);
+                    }
+
+                    // Slide from top
+                    if (possibleAnimations.includes(3) && zoneToCheckPosition.tl.y !== 0) {
+                        possibleAnimations = possibleAnimations.filter(animation => animation !== 3);
+                    }
+
+                    // Slide from bottom
+                    if (possibleAnimations.includes(2) && zoneToCheckPosition.bl.y !== 1080) {
+                        possibleAnimations = possibleAnimations.filter(animation => animation !== 2);
+                    }
+                }
+            }
+
+        });
+
+        return possibleAnimations;
+    }
+
+    const isParent = (childPosition, parentPosition) => {
+
+        let isParent = false;
+
+        let parent = getCorners(parentPosition);
+
+        let child = getCorners(childPosition);
+
+        // Check X axis
+        if (child.tl.x > parent.tl.x && child.tr.x < parent.tr.x) {
+            // Check Y axis
+            if (child.tl.y > parent.tl.y && child.bl.y < parent.bl.y) {
+                isParent = true;
+            }
+        }
+
+        return isParent;
+    }
+
+    const isOverlapping = (childPosition, parentPosition) => {
+
+        let overlapping = false;
+
+        let parent = getCorners(parentPosition);
+
+        let child = getCorners(childPosition);
+
+        // Check X axis
+        if ((child.tl.x > parent.tl.x && child.tl.x < parent.tr.x) || (child.tr.x > parent.tl.x && child.tr.x < parent.tr.x) || (child.tl.x < parent.tl.x && child.tr.x > parent.tl.x)) {
+            // Check Y axis
+            if ((child.tl.y > parent.tl.y && child.tl.y < parent.bl.y) || (child.bl.y > parent.tl.y && child.bl.y < parent.bl.y) || (child.tl.y < parent.tl.y && child.bl.y > parent.tl.y)) {
+                overlapping = true;
+            }
+        }
+
+        return overlapping;
     }
 
     return (
         <>
 
         <div className={`min-h-screen flex-col items-start justify-start bg-gray-900 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-4 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
-            <div className="w-full flex flex-col-reverse space-x-0 lg:flex-row lg:space-x-6 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-end">
+        <div className="w-full flex flex-col-reverse space-x-0 lg:flex-row lg:space-x-6 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-end">
                 {/* <h2 className="ml-2 text-left text-3xl md:text-xl font-extrabold text-white select-none">Création à partir de données</h2> */}
+                {/* {!playingPreview && <div className="flex flex-row mr-6 items-center">
+                    
+                </div>} */}
+                <div className="flex flex-row space-x-4 h-full w-full items-center justify-end mt-4 md:mt-0 lg:mt-0">                    
+                    {playingPreview ? <StopIcon onClick={() => handleStop()} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" /> : <PlayIcon onClick={() => handlePlay()} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" />}
+                    <SparklesIcon onClick={() => handlePlay(true)} className={`text-white hover:text-blue-400 cursor-pointer h-7 w-7`} />
+                </div>
+                
+                <div className="flex flex-row items-center mt-3 lg:mt-0">
+                    <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-white bg-transparent border-transparent"}>
+                    Intensité
+                    </div>
+                    <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-gray-600 bg-transparent border-transparent"}>
+                    <input type="range" id="durationAdjustment" step={0.05} className="rangeNoFill" name="durationAdjustment" min="0" max="1" onChange={e => setIntensity(Number(e.target.value))} defaultValue={intensity} />
+                    </div>
+                </div>
+                <ListeDeroulante disabled={playingPreview} preSelect={selectedDataSet} list={DATASETS} onChange={handleChangeDataSet} />
             </div>
             {!isHidden && <div className="flex flex-col lg:flex-row w-full">
+
+                <div className="flex flex-col">
+                    <div className="mt-2 lg:mx-2 lg:mt-0 flex flex-col space-y-4 px-2 py-3 bg-white rounded-sm">
+                        <CursorClickIcon onClick={() => handleChangeCurrentTool('Cursor')} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                        <MenuAlt2Icon onClick={() => handleChangeCurrentTool('Text')} className={`h-6 w-6 text-${currentTool === "Text" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                        <PhotographIcon onClick={() => handleChangeCurrentTool('Image')} className={`h-6 w-6 text-${currentTool === "Image" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                        <DocumentIcon onClick={() => handleChangeCurrentTool('Shape')} className={`h-6 w-6 text-${currentTool === "Shape" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                        <FilmIcon onClick={() => handleChangeCurrentTool('Video')} className={`h-6 w-6 text-${currentTool === "Video" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                    </div>
+                </div>
                 
                 <div className="w-full overflow-hidden shadow">
                     <div id="thumbPreview" className="w-full aspect-w-16 aspect-h-9 bg-white overflow-hidden rounded" ref={thumbPreview}>
 
                         {thumbPreview.current && thumbPreviewWidth > 0 && 
 
-                            <Slide className={'pointer-events-auto'}>
-                                {zones.map((zone, index) => {
-                                    if (zone[0] && zone[1] !== null) {
-                                     return <div style={{ position: "absolute", left: getComputedPixelSize(zone[0][0] < zone[1][0] ? zone[0][0] : zone[1][0]), top: getComputedPixelSize(zone[0][1] < zone[1][1] ? zone[0][1] : zone[1][1]), width: getComputedPixelSize(zone[1][2] > zone[0][0] ? zone[1][2] - zone[0][0] : zone[0][2] - zone[1][0]), height: getComputedPixelSize(zone[1][3] > zone[0][1] ? zone[1][3] - zone[0][1] : zone[0][3] - zone[1][1]) }} className={`bg-gray-${index + 1}00 pointer-event-none rounded-sm`}></div>
+                            <div className="pointer-events-auto h-full w-full">
+                                {zones.map(({ id, position, type, finalPosition, sequence, animations }, index) => {
+                                    if (finalPosition) {
+                                        return <button key={`zones-${index}`}  onClick={() => { if (currentTool === 'Cursor') handleSelectZone(index) }}  onMouseEnter={() => { if (currentTool === 'Cursor') setHoverZoneIdx(index)}} onMouseLeave={() => { if (currentTool === 'Cursor') setHoverZoneIdx(null)}} style={{ position: "absolute", left: getComputedPixelSize(finalPosition.left), top: getComputedPixelSize(finalPosition.top), width: getComputedPixelSize(finalPosition.width), height: getComputedPixelSize(finalPosition.height) }} className={`pointer-event-none rounded flex flex-row items-center justify-center ${playingPreview ? '' : selectedZoneIdx === index ? 'border border-blue-600' : hoverZoneIdx === index ? 'border border-blue-400' : 'border border-gray-200'}`}>
+                                            <div id={id} className={`${selectedZoneIdx === index ? 'bg-blue-600' : hoverZoneIdx === index && !playingPreview ? 'bg-blue-400' : 'bg-gray-800'} overflow-hidden opacity-40 w-full h-full pointer-event-none rounded-sm flex flex-row items-center justify-center`}>
+                                                {type === toolTypes.Text && <MenuAlt2Icon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                {type === toolTypes.Image && <PhotographIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                {type === toolTypes.Shape && <DocumentIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                {type === toolTypes.Video && <FilmIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                            </div>
+                                            <div className={`bg-gray-200 pointer-events-none absolute top-0 left-0 flex flex-row items-center justify-center rounded-br rounded-tl-sm space-x-1 p-1 ${playingPreview || currentTool !== 'Cursor' ? 'hidden' : ''}`}>
+                                                <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
+                                                    {sequence}
+                                                </div>
+                                                {animationTypes.map((animation, animIdx) => {
+                                                    return <div key={`animationSamll-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
+                                                        <animation.icon className='h-5 w-5' />
+                                                    </div>
+                                                })}
+                                            </div>
+                                        </button>
                                     }
 
                                     return <></>
                                 })}
-                                {tempZone.length > 0 && <div style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-orange-500 pointer-event-none rounded-sm'></div>}
-                                <Grid matrix={matrix} adjusmentWidth={thumbPreviewWidth} onClick={handleZoneClick} onHover={handleZoneHover} />
-                            </Slide>
+                                {tempZone.length > 0 && <div style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-blue-600 opacity-40 pointer-event-none rounded-sm'></div>}
+                                
+                                {currentTool !== 'Cursor' && <Grid matrix={matrix} adjusmentWidth={thumbPreviewWidth} onClick={handleZoneClick} onHover={handleZoneHover} />}
+                            </div>
 
                         }
 
@@ -156,8 +744,49 @@ const LayoutTool = ({ isHidden }) => {
                 </div>
 
                 {/* <div className="mt-4 lg:ml-4 lg:mt-0 space-x-4 lg:space-y-4 lg:space-x-0 flex flex-row lg:flex-col" style={{ width: `${isMobile ? 100 : 18.25}%`}}> */}
-                <div className="mt-2 lg:ml-4 lg:mt-0 container grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-2" style={{ width: `${isMobile ? 100 : 18.25}%`}}>
-                    
+                <div className="mt-2 lg:ml-4 lg:mt-0 container flex flex-col space-y-3" style={{ width: `${isMobile ? 100 : 18.25}%`}}>
+                    {/* <div className='w-full text-xs flex flex-row space-x-3 items-center mb-1 py-2 px-3 bg-white rounded-sm'>
+                        <PlayIcon onClick={() => handlePlay()} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                        <SparklesIcon onClick={() => handlePlay(true)} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                    </div> */}
+                    {zones.map(({ position, type, animations, finalPosition, sequence }, index) => {
+                        if (finalPosition) {
+                            return <div key={`zonesList-${index}`} className={`bg-white pointer-events-auto rounded-sm py-2 px-2 w-full text-sm flex flex-col space-y-2 items-center ${selectedZoneIdx === index ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-gray-900' : hoverZoneIdx === index ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-900' : ''}`}>
+                                <button onClick={() => handleSelectZone(index)} onMouseEnter={() => setHoverZoneIdx(index)} onMouseLeave={() => setHoverZoneIdx(null)} className='w-full text-sm flex flex-row items-center'>
+                                    <div className='mr-3'>
+                                        {type === toolTypes.Text && <MenuAlt2Icon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                        {type === toolTypes.Image && <PhotographIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                        {type === toolTypes.Shape && <DocumentIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                        {type === toolTypes.Video && <FilmIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                    </div>
+                                    <div className='w-full text-left pointer-events-none'>{zoneTypes[type]}</div>
+                                    <div className='h-5 w-5 shrink-0 flex ml-3 rounded text-xs bg-gray-200 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
+                                        {sequence}
+                                    </div>
+                                    <div className='ml-3'>
+                                        <TrashIcon key={`zonesList-${index}-trash`} onClick={(e) => { e.stopPropagation(); handleDeleteZone(index)}} className={`h-4 w-4 text-gray-400 hover:text-red-600 cursor-pointer`} />
+                                    </div>
+                                </button>
+                                {selectedZoneIdx === index && <div className='bg-gray-100 rounded-sm w-full text-xs flex flex-col pb-1'>
+                                    <div className='w-full text-xs flex flex-row items-center mx-2 mt-2 mb-1'>
+                                        <div className='mr-2'>
+                                            <SparklesIcon className={`h-4 w-4 text-gray-400 pointer-events-none`} />
+                                        </div>
+                                        <div className='w-full text-left pointer-events-none'>Animations</div>
+                                    </div>
+                                    <div className='w-full text-xs flex flex-row items-center mx-1 mt-1'>
+                                        {animationTypes.map((animation, animIdx) => {
+                                            return <div key={`animation-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer p-1 m-1 rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
+                                                <animation.icon className='h-5 w-5' />
+                                            </div>
+                                        })}
+                                    </div>
+                                </div>}
+                            </div>
+                        }
+
+                        return <></>
+                    })}
                 </div>
 
             </div>}
@@ -167,16 +796,37 @@ const LayoutTool = ({ isHidden }) => {
     );
 }
 
+/* const Zone = props => {
+    if (props.zone[0] && props.zone[1] !== null) {
+        return <div style={props.style} className={props.className}></div>
+       }
+
+    return <></>
+}
+
+const Zones = props => {
+
+    const adjusmentWidth = props.adjusmentWidth;
+
+    const getComputedPixelSize = (pixel) => {
+        let computedPixelSize = 0;
+        let currentThumbPreviewWidth = adjusmentWidth;
+
+        computedPixelSize = currentThumbPreviewWidth / 1920 * pixel;
+
+        return computedPixelSize;
+    }
+
+    return props.zones.map((zone, index) => {
+        if (zone[0] && zone[1] !== null) {
+            return <Zone zone={zone} key={`refZone-${index}`} style={{ position: "absolute", left: getComputedPixelSize(zone[0][0] < zone[1][0] ? zone[0][0] : zone[1][0]), top: getComputedPixelSize(zone[0][1] < zone[1][1] ? zone[0][1] : zone[1][1]), width: getComputedPixelSize(zone[1][2] > zone[0][0] ? zone[1][2] - zone[0][0] : zone[0][2] - zone[1][0]), height: getComputedPixelSize(zone[1][3] > zone[0][1] ? zone[1][3] - zone[0][1] : zone[0][3] - zone[1][1]) }} className={`bg-gray-${index + 1}00 pointer-event-none rounded-sm`} />
+        }
+
+        return <></>
+    })
+} */
+
 const GridSquare = props => {
-
-    const handleZoneClick = () => {
-        props.onClick(props.square);
-    }
-
-    const handleZoneHover = () => {
-        props.onHover(props.square);
-    }
-
     return <button onMouseEnter={() => props.onHover(props.square)} onClick={() => props.onClick(props.square)} style={props.style} className='hover:bg-blue-600 hover:rounded-sm'></button>
 }
 
