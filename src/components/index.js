@@ -9,6 +9,7 @@ import Slide from './Slide'
 import TagSearchBar from './TagSearchBar';
 import Text from './Text';
 import ToggleButton from './ToggleButton';
+import Zone from './Zone';
 
 export {
     Img,
@@ -22,4 +23,5 @@ export {
     TagSearchBar,
     Text,
     ToggleButton,
+    Zone,
 }

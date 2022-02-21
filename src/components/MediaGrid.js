@@ -120,7 +120,7 @@ const MediaGrid = props => {
     }
 
     return (
-        <div className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 max-h-full overflow-auto ${props.className}`}>
+        <div id="MediaGrid" className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 max-h-full overflow-auto ${props.className}`}>
             {medias.map((media, index) => {
                 return <MediaContainer key={media.id} alt={media.tags} metadata={media} onClick={handleOnClickMedia} src={media.previewURL} /* hoverOptions={checkAsSimilarMedias(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarMedias(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} */ />
             })}

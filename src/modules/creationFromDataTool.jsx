@@ -19,6 +19,7 @@ import { saveAs } from 'file-saver';
 import ImageUploading from 'react-images-uploading';
 import { ColorExtractor } from 'react-color-extractor'
 import ReactQuill from 'react-quill';
+import LazyLoad, { forceCheck } from 'react-lazyload';
 
 const DATASETS = ['Parcs nationaux', 'Divertissement', 'Activités du jour', 'Menu du jour']
 
@@ -1298,7 +1299,7 @@ const Library = props => {
     </div>
 }
 
-const MediaContainer = ({ src, alt, onClick, hoverOptions, selected, metadata }) => {
+const MediaContainer = ({ src, alt, onClick, hoverOptions, selected, metadata, gridId, gridContainer }) => {
 
     // STATES MANAGEMENT ------------------------------------------------------------------------------
   
@@ -1325,13 +1326,13 @@ const MediaContainer = ({ src, alt, onClick, hoverOptions, selected, metadata })
       {isMobile ? 
         <div onClick={handleOnClick} className="aspect-w-16 aspect-h-9 cursor-pointer">
           {isLoading && <div className="flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
-          <img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" />
+          <LazyLoad overflow height={200} scrollContainer={gridContainer}><img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" /></LazyLoad>
           {((isMouseOver || isMobile || true) && hoverOptions && hoverOptions.length > 0) && <div className="flex flex-row items-end justify-end"><div className="p-1 bg-gray-800 bg-opacity-50 rounded-tl-lg rounded-br-sm">{hoverOptions.map(option => option)}</div></div>}
         </div>
       :
         <div onClick={handleOnClick} onMouseOver={() => setIsMouseOver(true)} onMouseLeave={() => setIsMouseOver(false)} className="aspect-w-16 aspect-h-9 cursor-pointer">
           {isLoading && <div className="flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
-          <img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" />
+          <LazyLoad overflow height={200} scrollContainer={gridContainer}><img onLoad={() => setIsLoading(false)} src={mediaPreviewUrl} alt={mediaData.tags} className="select-none rounded-sm shadow w-full h-full object-center object-cover" /></LazyLoad>
           {((isMouseOver || isMobile || true) && hoverOptions && hoverOptions.length > 0) && <div className="flex flex-row items-end justify-end"><div className="p-1 bg-gray-800 bg-opacity-50 rounded-tl-lg rounded-tl-lg rounded-br-sm">{hoverOptions.map(option => option)}</div></div>}
         </div>
       }
@@ -1429,16 +1430,21 @@ const MediaGrid = props => {
     // DATA STATES
     const [medias, setMedias] = useState(props.medias || []);
     const [selectedMedias, setSelectedMedias] = useState(props.selectedMedias || []);
+    const [id, setId] = useState(Math.floor(Math.random() * 100000));
+
+    const gridRef = useRef(null);
 
     // UI LOGIC STATES
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         setMedias(props.medias);
+        forceCheck();
     }, [props.medias])
 
     useEffect(() => {
         setIsLoading(props.isLoading);
+        forceCheck();
     }, [props.isLoading])
   
     // UI LOGIC STATES
@@ -1540,9 +1546,9 @@ const MediaGrid = props => {
     }
 
     return (
-        <div className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 max-h-full overflow-auto ${props.className}`}>
+        <div id={`MediaGrid-${id}`} ref={gridRef} className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-4 lg:gap-2 max-h-full overflow-auto ${props.className}`}>
             {medias.map((media, index) => {
-                return <MediaContainer key={media.id} alt={media.tags} metadata={media} onClick={handleOnClickMedia} src={media.previewURL} /* hoverOptions={checkAsSimilarMedias(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarMedias(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} */ />
+                return <MediaContainer gridContainer={gridRef} gridId={`MediaGrid-${id}`} key={`Media-${media.id}-${id}`} alt={media.tags} metadata={media} onClick={handleOnClickMedia} src={media.previewURL} /* hoverOptions={checkAsSimilarMedias(index) ? [<ViewGridAddIcon onClick={event => handleShowSimilarMedias(event, index)} className="h-4 w-4 lg:h-5 lg:w-5 text-white hover:text-opacity-75" />] : []} */ />
             })}
             {isLoading && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center bg-white bg-opacity-30"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}
         </div>

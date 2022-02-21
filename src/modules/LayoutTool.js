@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { MenuAlt2Icon, PhotographIcon, FilmIcon, DocumentIcon, CursorClickIcon, TrashIcon, SparklesIcon, ArrowSmUpIcon, ArrowSmDownIcon,ArrowSmLeftIcon,ArrowSmRightIcon, PlayIcon, StopIcon } from '@heroicons/react/outline'
+import { MenuAlt2Icon, PhotographIcon, FilmIcon, DocumentIcon, CursorClickIcon, TrashIcon, SparklesIcon, ArrowSmUpIcon, ArrowSmDownIcon, ArrowSmLeftIcon, ArrowSmRightIcon, PlayIcon, StopIcon } from '@heroicons/react/outline'
 
 import { useMediaQuery } from 'react-responsive';
 
@@ -7,7 +7,9 @@ import FcmBd from './dataSource/FcmBd';
 
 import { gsap } from "gsap";
 
-import { Slide, ListeDeroulante } from '../components';
+import { Slide, ListeDeroulante, Zone } from '../components';
+
+import useMouse from '@react-hook/mouse-position'
 
 const layoutMatrix = [
     [30,30,48,48],[72,30,108,48],[132,30,168,48],[192,30,228,48],[252,30,288,48],[312,30,348,48],[372,30,408,48],[432,30,468,48],[492,30,528,48],[552,30,588,48],[612,30,648,48],[672,30,708,48],[732,30,768,48],[792,30,828,48],[852,30,888,48],[912,30,948,48],[972,30,1008,48],[1032,30,1068,48],[1092,30,1128,48],[1152,30,1188,48],[1212,30,1248,48],[1272,30,1308,48],[1332,30,1368,48],[1392,30,1428,48],[1452,30,1488,48],[1512,30,1548,48],[1572,30,1608,48],[1632,30,1668,48],[1692,30,1728,48],[1752,30,1788,48],[1812,30,1848,48],[1872,30,1890,48],
@@ -29,6 +31,27 @@ const layoutMatrix = [
     [30,972,48,1008],[72,972,108,1008],[132,972,168,1008],[192,972,228,1008],[252,972,288,1008],[312,972,348,1008],[372,972,408,1008],[432,972,468,1008],[492,972,528,1008],[552,972,588,1008],[612,972,648,1008],[672,972,708,1008],[732,972,768,1008],[792,972,828,1008],[852,972,888,1008],[912,972,948,1008],[972,972,1008,1008],[1032,972,1068,1008],[1092,972,1128,1008],[1152,972,1188,1008],[1212,972,1248,1008],[1272,972,1308,1008],[1332,972,1368,1008],[1392,972,1428,1008],[1452,972,1488,1008],[1512,972,1548,1008],[1572,972,1608,1008],[1632,972,1668,1008],[1692,972,1728,1008],[1752,972,1788,1008],[1812,972,1848,1008],[1872,972,1890,1008],
     [30,1032,48,1050],[72,1032,108,1050],[132,1032,168,1050],[192,1032,228,1050],[252,1032,288,1050],[312,1032,348,1050],[372,1032,408,1050],[432,1032,468,1050],[492,1032,528,1050],[552,1032,588,1050],[612,1032,648,1050],[672,1032,708,1050],[732,1032,768,1050],[792,1032,828,1050],[852,1032,888,1050],[912,1032,948,1050],[972,1032,1008,1050],[1032,1032,1068,1050],[1092,1032,1128,1050],[1152,1032,1188,1050],[1212,1032,1248,1050],[1272,1032,1308,1050],[1332,1032,1368,1050],[1392,1032,1428,1050],[1452,1032,1488,1050],[1512,1032,1548,1050],[1572,1032,1608,1050],[1632,1032,1668,1050],[1692,1032,1728,1050],[1752,1032,1788,1050],[1812,1032,1848,1050],[1872,1032,1890,1050]
 ];
+
+const images = [
+    'https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
+    'https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80',
+    'https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644869432047-fa8bdbe849cd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
+    'https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644574739831-d19ded59cae8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644748865694-2db1be00e13a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
+    'https://images.unsplash.com/photo-1637336659506-93ee3acccd85?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644840379571-2a973eee0726?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
+    'https://images.unsplash.com/photo-1644805424176-e426671f33ec?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
+    'https://images.unsplash.com/photo-1644773741827-d635af7357b4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
+    'https://images.unsplash.com/photo-1644707386365-117da5d3fdc4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&q=80',
+    'https://images.unsplash.com/photo-1644667621462-4938986c3a41?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2077&q=80',
+    'https://images.unsplash.com/photo-1644604992281-5c07ca56fa5b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&q=80',
+    'https://images.unsplash.com/photo-1644657167747-49910669ac24?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644530633761-094c893a6558?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',
+    'https://images.unsplash.com/photo-1644601397307-ae67d3024d46?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80'
+
+ ]
 
 const grayScale = [
     "bg-gray-100",
@@ -87,18 +110,29 @@ const animationProperties = {
     4: { start: { x: -100 }, end: { x: 0 } }
 }
 
-const DATASETS = ['Libre', 'Simple Layout', 'Multi Pictures'];
+const DATASETS = ['Création libre', 'Simple Layout', 'Multi Pictures', 'News'];
 
 const templates = {
-    'Libre': [],
-    'Simple Layout': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[552,1056,576,1080]],"sequence":1,"animations":[],"finalPosition":{"left":0,"top":0,"width":576,"height":1080}},{"id":"Text-2","type":1,"position":[[48,96,72,120],[432,144,456,168]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":96,"width":408,"height":72}},{"id":"Text-3","type":1,"position":[[48,168,72,192],[504,552,528,576]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":168,"width":480,"height":408}},{"id":"Text-4","type":1,"position":[[48,576,72,600],[504,816,528,840]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":576,"width":480,"height":264}},{"id":"Shape-5","type":3,"position":[[48,864,72,888],[408,864,432,888]],"sequence":1,"animations":[],"finalPosition":{"left":48,"top":864,"width":384,"height":24}},{"id":"Image-13","type":2,"position":[[576,0,600,24],[1248,528,1272,552]],"sequence":1,"animations":[],"finalPosition":{"left":576,"top":0,"width":696,"height":552}},{"id":"Image-14","type":2,"position":[[1896,0,1920,24],[1272,528,1296,552]],"sequence":1,"animations":[],"finalPosition":{"left":1272,"top":0,"width":648,"height":552}},{"id":"Image-15","type":2,"position":[[576,552,600,576],[1248,1056,1272,1080]],"sequence":1,"animations":[],"finalPosition":{"left":576,"top":552,"width":696,"height":528}},{"id":"Image-16","type":2,"position":[[1896,552,1920,576],[1272,1056,1296,1080]],"sequence":1,"animations":[],"finalPosition":{"left":1272,"top":552,"width":648,"height":528}}],
-    'Multi Pictures': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},{"id":"Image-2","type":2,"position":[[24,24,48,48],[672,240,696,264]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":24,"width":672,"height":240}},{"id":"Image-3","type":2,"position":[[720,24,744,48],[1056,504,1080,528]],"sequence":1,"animations":[],"finalPosition":{"left":720,"top":24,"width":360,"height":504}},{"id":"Image-4","type":2,"position":[[24,288,48,312],[336,720,360,744]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":288,"width":336,"height":456}},{"id":"Image-5","type":2,"position":[[384,288,408,312],[672,504,696,528]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":288,"width":312,"height":240}},{"id":"Image-6","type":2,"position":[[384,552,408,576],[840,1032,864,1056]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":552,"width":480,"height":504}},{"id":"Image-7","type":2,"position":[[24,768,48,792],[336,1032,360,1056]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":768,"width":336,"height":288}},{"id":"Image-8","type":2,"position":[[1536,264,1560,288],[1104,504,1128,528]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":264,"width":456,"height":264}},{"id":"Image-9","type":2,"position":[[1872,24,1896,48],[1104,216,1128,240]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":24,"width":792,"height":216}},{"id":"Image-10","type":2,"position":[[1584,264,1608,288],[1872,744,1896,768]],"sequence":1,"animations":[],"finalPosition":{"left":1584,"top":264,"width":312,"height":504}},{"id":"Image-11","type":2,"position":[[888,552,912,576],[1296,744,1320,768]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":552,"width":432,"height":216}},{"id":"Image-12","type":2,"position":[[1536,552,1560,576],[1344,744,1368,768]],"sequence":1,"animations":[],"finalPosition":{"left":1344,"top":552,"width":216,"height":216}},{"id":"Image-13","type":2,"position":[[888,792,912,816],[1128,1032,1152,1056]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":792,"width":264,"height":264}},{"id":"Image-14","type":2,"position":[[1872,792,1896,816],[1176,1032,1200,1056]],"sequence":1,"animations":[],"finalPosition":{"left":1176,"top":792,"width":720,"height":264}}]
+    'Création libre': [],
+    'Simple Layout': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[696,1056,720,1080]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":0,"top":0,"width":720,"height":1080}},{"id":"Shape-2","type":3,"position":[[1896,0,1920,24],[720,1056,744,1080]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":720,"top":0,"width":1200,"height":1080}},{"id":"Image-7","type":2,"position":[[744,24,768,48],[1296,504,1320,528]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":744,"top":24,"width":576,"height":504}},{"id":"Image-8","type":2,"position":[[1872,24,1896,48],[1344,504,1368,528]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80","finalPosition":{"left":1344,"top":24,"width":552,"height":504}},{"id":"Image-9","type":2,"position":[[744,552,768,576],[1296,1032,1320,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":744,"top":552,"width":576,"height":504}},{"id":"Image-10","type":2,"position":[[1344,552,1368,576],[1872,1032,1896,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644869432047-fa8bdbe849cd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":1344,"top":552,"width":552,"height":504}},{"id":"Text-11","type":1,"position":[[24,48,48,72],[672,168,696,192]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":24,"top":48,"width":672,"height":144}},{"id":"Text-12","type":1,"position":[[24,216,48,240],[672,1032,696,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":24,"top":216,"width":672,"height":840}}],
+    'Multi Pictures': [{"id":"Shape-1","type":3,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},{"id":"Image-2","type":2,"position":[[24,24,48,48],[672,240,696,264]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":24,"width":672,"height":240}},{"id":"Image-3","type":2,"position":[[720,24,744,48],[1056,504,1080,528]],"sequence":1,"animations":[],"finalPosition":{"left":720,"top":24,"width":360,"height":504}},{"id":"Image-4","type":2,"position":[[24,288,48,312],[336,720,360,744]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":288,"width":336,"height":456}},{"id":"Image-5","type":2,"position":[[384,288,408,312],[672,504,696,528]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":288,"width":312,"height":240}},{"id":"Image-6","type":2,"position":[[384,552,408,576],[840,1032,864,1056]],"sequence":1,"animations":[],"finalPosition":{"left":384,"top":552,"width":480,"height":504}},{"id":"Image-7","type":2,"position":[[24,768,48,792],[336,1032,360,1056]],"sequence":1,"animations":[],"finalPosition":{"left":24,"top":768,"width":336,"height":288}},{"id":"Image-8","type":2,"position":[[1536,264,1560,288],[1104,504,1128,528]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":264,"width":456,"height":264}},{"id":"Image-9","type":2,"position":[[1872,24,1896,48],[1104,216,1128,240]],"sequence":1,"animations":[],"finalPosition":{"left":1104,"top":24,"width":792,"height":216}},{"id":"Image-10","type":2,"position":[[1584,264,1608,288],[1872,744,1896,768]],"sequence":1,"animations":[],"finalPosition":{"left":1584,"top":264,"width":312,"height":504}},{"id":"Image-11","type":2,"position":[[888,552,912,576],[1296,744,1320,768]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":552,"width":432,"height":216}},{"id":"Image-12","type":2,"position":[[1536,552,1560,576],[1344,744,1368,768]],"sequence":1,"animations":[],"finalPosition":{"left":1344,"top":552,"width":216,"height":216}},{"id":"Image-13","type":2,"position":[[888,792,912,816],[1128,1032,1152,1056]],"sequence":1,"animations":[],"finalPosition":{"left":888,"top":792,"width":264,"height":264}},{"id":"Image-14","type":2,"position":[[1872,792,1896,816],[1176,1032,1200,1056]],"sequence":1,"animations":[],"finalPosition":{"left":1176,"top":792,"width":720,"height":264}}],
+    'News': [
+        {"id":"Fond","type":4,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},
+        {"id":"bandeau","type":3,"position":[[0,888,24,912],[1896,1008,1920,1032]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":0,"top":888,"width":1920,"height":144}},
+        {"id":"CoinBandeau","type":3,"position":[[1896,840,1920,864],[1560,1008,1584,1032]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":1560,"top":840,"width":360,"height":192}},
+        {"id":"Heure","type":1,"position":[[1584,864,1608,888],[1872,984,1896,1008]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":1584,"top":864,"width":312,"height":144}},
+        {"id":"Logo","type":2,"position":[[144,888,168,912],[24,1008,48,1032]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80","finalPosition":{"left":24,"top":888,"width":144,"height":144}},
+        {"id":"ImagePrincipale","type":2,"position":[[72,240,96,264],[816,648,840,672]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":72,"top":240,"width":768,"height":432}},
+        {"id":"Titre","type":1,"position":[[1824,72,1848,96],[72,192,96,216]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":72,"top":72,"width":1776,"height":144}},
+        {"id":"Corp","type":1,"position":[[864,240,888,264],[1824,792,1848,816]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":864,"top":240,"width":984,"height":576}}],
 }
 
 const LayoutTool = ({ isHidden }) => {
 
     const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
     const thumbPreview = useRef(null);
+
+    const mouse = useMouse(thumbPreview, { fps: 60 });
 
     const [matrix, setMatrix] = useState([]);
 
@@ -123,15 +157,17 @@ const LayoutTool = ({ isHidden }) => {
     const [intensity, setIntensity] = useState(0.8);
     const [selectedDataSet, setSelectedDataSet] = useState(DATASETS[0]);
 
+    const [imgIdx, setImgIdx] = useState(0);
+
     useEffect(() => {
         if (!isHidden && matrix.length === 0) {
             let newMatrix = [];
 
-            for (let i = 0; i < 45;i++) {
-                for (let y = 0; y < 80;y++) {
-                    newMatrix.push([y * 24 /* + 4 */, i * 24 /* + 4 */, (y + 1) * 24 /* - 4 */, (i + 1) * 24 /* - 4 */])
-                }
-            }
+            //for (let i = 0; i < 45;i++) {
+            //    for (let y = 0; y < 80;y++) {
+            //        newMatrix.push([y * 24 /* + 4 */, i * 24 /* + 4 */, (y + 1) * 24 /* - 4 */, (i + 1) * 24 /* - 4 */])
+            //    }
+            //}
 
             setMatrix(newMatrix);
         }
@@ -157,12 +193,26 @@ const LayoutTool = ({ isHidden }) => {
         return computedPixelSize;
     }
 
+    const getRealPixelSize = (pixel) => {
+        let computedPixelSize = 0;
+        let currentThumbPreviewWidth = thumbPreviewWidth;
+
+        if (thumbPreviewWidth === 0 || (thumbPreview.current && thumbPreview.current.offsetWidth !== thumbPreviewWidth)) {
+            currentThumbPreviewWidth = thumbPreview.current.offsetWidth;
+            setThumbPreviewWidth(currentThumbPreviewWidth);
+        }
+
+        computedPixelSize = 1920 / currentThumbPreviewWidth * pixel;
+
+        return computedPixelSize;
+    }
+
     const handleChangeDataSet = (dataSet) => {
 
         if (dataSet !== selectedDataSet) {
 
-            if (selectedDataSet === 'Libre') {
-                templates['Libre'] = FcmBd.utils.deepCopy(zones);
+            if (selectedDataSet === 'Création libre') {
+                templates['Création libre'] = FcmBd.utils.deepCopy(zones);
             }
 
             setSelectedZoneIdx(null);
@@ -208,6 +258,80 @@ const LayoutTool = ({ isHidden }) => {
             setZoneIdx(zoneIdx + 1);
             setZones(newZones);
             setTempZone([ square, square ]);
+        }
+    }
+
+    const handlePreviewScreenClick = (mouseX, mouseY, mouseDown) => {
+
+        const gridSize = 24;
+
+        let realX = getRealPixelSize(mouseX);
+        let realY = getRealPixelSize(mouseY);
+
+        let x = realX - realX % gridSize;
+        let y = realY - realY % gridSize;
+
+        let square = [ x, y, x + gridSize, y + gridSize ];
+
+        let newZones = [...zones];
+        let newZone = zones[zoneIdx];
+
+        setSelectedZoneIdx(null);
+
+        if (newZones.length === 0 && mouseDown) {
+            setZones([{ id: `${currentTool}-${uniqueZoneCount}`, type: toolTypes[currentTool], position: [ square, null ], sequence: 1, animations: [], src: images[imgIdx] }]);
+            setTempZone([ square, square ]);
+
+            if (toolTypes[currentTool] === toolTypes.Image) {
+                let newImgIdx = imgIdx + 1;
+
+                if (newImgIdx < images.length) {
+                    setImgIdx(newImgIdx);
+                } else {
+                    setImgIdx(0);
+                }
+            }
+        } else if (newZone && newZone.position[1] === null && !mouseDown) {
+            if (newZone.position[0][0] <= square[2] && newZone.position[0][1] <= square[3]) {
+
+                newZones[zoneIdx].position = [newZone.position[0], square];
+            } else {
+                newZones[zoneIdx].position = [square, newZone.position[0]];
+            }
+
+            let position = newZones[zoneIdx].position;
+            let finalPosition = {
+                left: position[0][0] < position[1][0] ? position[0][0] : position[1][0], 
+                top: position[0][1] < position[1][1] ? position[0][1] : position[1][1], 
+                width: position[1][2] > position[0][0] ? position[1][2] - position[0][0] : position[0][2] - position[1][0], 
+                height: position[1][3] > position[0][1] ? position[1][3] - position[0][1] : position[0][3] - position[1][1]
+            }
+
+            newZones[zoneIdx].finalPosition = finalPosition;
+
+            newZones[zoneIdx].position = [[finalPosition.left, finalPosition.top, finalPosition.left + gridSize, finalPosition.top + gridSize], 
+            [finalPosition.left + finalPosition.width - gridSize, finalPosition.top + finalPosition.height - gridSize, finalPosition.left + finalPosition.width, finalPosition.top + finalPosition.height]];
+
+            setZones(newZones);
+            setTempZone([]);
+            setUniqueZoneCount(uniqueZoneCount + 1);
+        } else if (mouseDown) {
+            newZones.push({ id: `${currentTool}-${uniqueZoneCount}`, type: toolTypes[currentTool], position: [ square, null ], sequence: 1, animations: [], src: images[imgIdx] });
+            setZoneIdx(zoneIdx + 1);
+            setZones(newZones);
+            setTempZone([ square, square ]);
+
+            if (toolTypes[currentTool] === toolTypes.Image) {
+
+                let newImgIdx = imgIdx + 1;
+
+                if (newImgIdx < images.length) {
+                    setImgIdx(newImgIdx);
+                } else {
+                    setImgIdx(0);
+                }
+                
+            }
         }
     }
 
@@ -308,22 +432,22 @@ const LayoutTool = ({ isHidden }) => {
 
         switch (animation) {
             case ANIMATION_TYPE.slideFromRight:
-                finalAnimation = { start: { x: getComputedPixelSize(1920 - position.left) }, end: { x: 0 } };
+                finalAnimation = { start: { x: getComputedPixelSize(1920 - position.left), rotation: 0.01 }, end: { x: 0, rotation: 0, ease: 'power3.inOut', duration: 1.5 } };
             break;
             case ANIMATION_TYPE.slideFromBottom:
-                finalAnimation = { start: { y: getComputedPixelSize(1080 - position.top) }, end: { y: 0 } };
+                finalAnimation = { start: { y: getComputedPixelSize(1080 - position.top), rotation: 0.01 }, end: { y: 0, rotation: 0, ease: 'power3.inOut', duration: 1.5 } };
             break;
             case ANIMATION_TYPE.slideFromTop:
-                finalAnimation = { start: { y: getComputedPixelSize((position.top + position.height) * -1) }, end: { y: 0 } };
+                finalAnimation = { start: { y: getComputedPixelSize((position.top + position.height) * -1), rotation: 0.01 }, end: { y: 0, rotation: 0, ease: 'power3.inOut', duration: 1.5 } };
             break;
             case ANIMATION_TYPE.slideFromLeft:
-                finalAnimation = { start: { x: getComputedPixelSize((position.left + position.width) * -1) }, end: { x: 0 } };
+                finalAnimation = { start: { x: getComputedPixelSize((position.left + position.width) * -1), rotation: 0.01 }, end: { x: 0, rotation: 0, ease: 'power3.inOut', duration: 1.5 } };
             break;
             case ANIMATION_TYPE.fade: 
-                finalAnimation = { start: { opacity: 0 }, end: { opacity: 0.4 } };
+                finalAnimation = { start: { opacity: 0 }, end: { opacity: 0.75, ease: 'power3.inOut', duration: 1.5 } };
             break;
             case ANIMATION_TYPE.zoom: 
-                finalAnimation = { start: { scale: 0 }, end: { scale: 1 } };
+                finalAnimation = { start: { scale: 0, rotation: 0.01 }, end: { scale: 1, rotation: 0, ease: 'power3.inOut', duration: 1.5 } };
             break;
             default:
         }
@@ -332,22 +456,20 @@ const LayoutTool = ({ isHidden }) => {
     }
 
     const createTimeLine = (zonesToAnimate, paused) => {
-        const newTl = gsap.timeline({ paused: paused });
+        const newTl = gsap.timeline({ paused: paused, clearProps: true });
 
         if (zonesToAnimate.length > 1) {
             zonesToAnimate = zonesToAnimate.sort((a,b) => a.sequence - b.sequence);
         }
 
+        let lastZoneType = '';
+
         zonesToAnimate.forEach((zone, index) => {
 
             if (zone.animations.length > 0) {
-                let start = { rotation: 0.01 };
-                let end = { rotation: 0, ease: 'power3.inOut', duration: 1.5 };
 
-                if (zone.animations.length === 1 && zone.animations[0] === 5) {
-                    start = {};
-                    end = { ease: 'power3.inOut', duration: 1.5 };
-                }
+                let start = {};
+                let end = {};
 
                 zone.animations.forEach(animation => {
                     let animationSequence = getAnimation(zone.finalPosition, animation)
@@ -355,18 +477,20 @@ const LayoutTool = ({ isHidden }) => {
                     end = { ...end, ...animationSequence.end };
                 });
 
-                let position = `sequence${zone.sequence}${zone.sequence > 1 && zone.animations.length > 0 ? `-=${index > 0 && zone.level && zonesToAnimate[index - 1].level === zone.level ? '0.8' : '0.5'}` : ''}`;
+                let position = `sequence${zone.sequence}${zone.sequence > 1 && zone.animations.length > 0 ? `-=${index > 0 && zone.level && zonesToAnimate[index - 1].level === zone.level ? lastZoneType === zone.type ? '1.1' : '0.8' : '0.5'}` : ''}`;
 
                 if (Object.keys(end).length > 0) {
                     newTl.fromTo(`#${zone.id}`, start, end, position);
                 } else {
                     newTl.from(`#${zone.id}`, start, position);
                 }
+
+                lastZoneType = zone.type;
                 
             }
         });
 
-        newTl.then(() => setPlayingPreview(false));
+        newTl.then(() => handleStop());
 
         setTl(newTl);
 
@@ -379,7 +503,8 @@ const LayoutTool = ({ isHidden }) => {
         if (!smart) {
             createTimeLine([...zones], false);
         } else {
-            createTimeLine(computeZones(FcmBd.utils.deepCopy(zones)), false);
+            //createTimeLine(computeZones(FcmBd.utils.deepCopy(zones)), false);
+            createTimeLineV2(smartAnimationV2(computeZonesV2(FcmBd.utils.deepCopy(zones))), false);
         }
         
         setPlayingPreview(true);
@@ -412,12 +537,13 @@ const LayoutTool = ({ isHidden }) => {
         zonesToCompute.forEach((zone, index) => {
 
             zone.parentZones = [];
+            zone.childZones = [];
             zone.level = 0;
             zone.index = index;
 
             for (let i = 0; i < index;i++) {
-                if (isOverlapping(zone.finalPosition, zonesToCompute[i].finalPosition)) {
-                    zone.parentZones.push(zonesToCompute[i]);
+                if (isParent(zone.finalPosition, zonesToCompute[i].finalPosition) || isOverlapping(zone.finalPosition, zonesToCompute[i].finalPosition)) {
+                    zone.parentZones = [zonesToCompute[i]];
 
                     if (zonesToCompute[i].level >= zone.level) {
                         zone.level = zonesToCompute[i].level + 1;
@@ -426,10 +552,381 @@ const LayoutTool = ({ isHidden }) => {
             }
         });
 
-        
+        zonesToCompute.forEach((zone, index) => {
+            if (zone.parentZones.length > 0 && zone.parentZones[0].level > 0) {
+                zone.parentZones[0].childZones.push(zone);
+            }
+        });
+
+        /* console.log('computedZones', zonesToCompute.map(zone => ({ index: zone.index, level: zone.level, parentZones: zone.parentZones }))) */
 
         return smartAnimation(zonesToCompute)
     }
+
+    const computeZonesV2 = (zones) => {
+
+        zones.forEach((zone, index) => {
+
+            zone.index = index;
+
+            zone.level = 0;
+            zone.parent = null;
+            zone.childs = [];
+            zone.overlappings = [];
+
+            zone.corners = getCorners(zone.finalPosition);
+
+            zone.surrounding = {
+                left: [],
+                right: [],
+                top: [],
+                bottom: []
+            }
+
+        });
+
+        zones.forEach((zoneA, indexA) => {
+
+            zones.forEach((zoneB, indexB) => {
+
+                if (indexA !== indexB) {
+
+                    let parent = false;
+                    let child = false;
+                    let overlapping = false;
+
+                    // Déterminer le parent direct de chaque zone
+                    // Pour être le parent d'une zone, la zone enfant doit être complètement à l'intérieur de celle-ci. Une zone ne peut pas avoir plusieurs parents et peut ne pas avoir de parent du tout.
+                    if (isParent(zoneA.finalPosition, zoneB.finalPosition) && indexA > indexB) {
+                        zoneA.parent = zoneB;
+                        parent = true;
+                    }
+
+                    // Déterminer les enfants direct de chaque zone
+                    // Pour être l'enfant d'une zone, la zone parent doit contenir celle-ci complètement. Une zone peut avoir plusieurs enfants et peut ne pas avoir d'enfants du tout.
+                    else if (isParent(zoneB.finalPosition, zoneA.finalPosition) && indexA < indexB) {
+                        zoneA.childs.push(zoneB);
+                        child = true;
+                    }
+
+                    // Déterminer les zones qui se chevauchent
+                    // Une zone qui embarque par dessus une autre zone sans pouvoir être qualifié de parent ou d'enfant direct.
+                    else if (isOverlapping(zoneA.finalPosition, zoneB.finalPosition) && indexA > indexB) {
+                        zoneA.overlappings.push(zoneB);
+                        overlapping = true;
+                    }
+
+                    // Déterminer le niveau de chaque zone
+                    // Une zone qui embarque par dessus une autre zone est un niveau supérieur, mais deux zones qui ne se croisent pas avec des indexes Z différent sont sur le même niveau
+                    if ((parent || overlapping)) {
+                        zoneA.level = zoneB.level + 1;
+                    }
+
+                    // Déterminer les zones qui se trouves à gauche, droite, au dessus et en dessous de chaque zones  
+                    // Tous niveaux et chevauchement confondus
+
+                    if (!child) {
+                        // À gauche?
+                        if (zoneA.corners.tl.x >= zoneB.corners.tl.x && ((parent && zoneB.corners.tl.x !== 0) || !parent)
+                            && ((zoneA.corners.tr.y <= zoneB.corners.tr.y && zoneA.corners.br.y <= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y >= zoneB.corners.tr.y && zoneA.corners.br.y >= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y >= zoneB.corners.tr.y && zoneA.corners.br.y <= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y <= zoneB.corners.tr.y && zoneA.corners.br.y >= zoneB.corners.br.y))) {
+
+                                zoneA.surrounding.left.push(zoneB);
+                        }
+
+                        // À droite?
+                        if (zoneA.corners.tr.x <= zoneB.corners.tr.x && ((parent && zoneB.corners.tr.x !== 1920) || !parent)
+                            && ((zoneA.corners.tr.y <= zoneB.corners.tr.y && zoneA.corners.br.y <= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y >= zoneB.corners.tr.y && zoneA.corners.br.y >= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y >= zoneB.corners.tr.y && zoneA.corners.br.y <= zoneB.corners.br.y)
+                            || (zoneA.corners.tr.y <= zoneB.corners.tr.y && zoneA.corners.br.y >= zoneB.corners.br.y))) {
+
+                                zoneA.surrounding.right.push(zoneB);
+                        }
+
+                        // Au dessus?
+                        if (zoneA.corners.tl.y >= zoneB.corners.tl.y && ((parent && zoneB.corners.tl.y !== 0) || !parent)
+                            && ((zoneA.corners.tr.x <= zoneB.corners.tr.x && zoneA.corners.tl.x <= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x >= zoneB.corners.tr.x && zoneA.corners.tl.x >= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x >= zoneB.corners.tr.x && zoneA.corners.tl.x <= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x <= zoneB.corners.tr.x && zoneA.corners.tl.x >= zoneB.corners.tl.x))) {
+
+                                zoneA.surrounding.top.push(zoneB);
+                        }
+
+                        // En dessous?
+                        if (zoneA.corners.bl.y <= zoneB.corners.bl.y && ((parent && zoneB.corners.bl.y !== 1080) || !parent)
+                            && ((zoneA.corners.tr.x <= zoneB.corners.tr.x && zoneA.corners.tl.x <= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x >= zoneB.corners.tr.x && zoneA.corners.tl.x >= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x >= zoneB.corners.tr.x && zoneA.corners.tl.x <= zoneB.corners.tl.x)
+                            || (zoneA.corners.tr.x <= zoneB.corners.tr.x && zoneA.corners.tl.x >= zoneB.corners.tl.x))) {
+
+                                zoneA.surrounding.bottom.push(zoneB);
+                        }
+                    }
+                }
+
+            });
+
+            /* console.log('computedZonesV2 | ' + zoneA.id, { 
+                        level: zoneA.level, 
+                        parent: zoneA.parent ? zoneA.parent.id : '', 
+                        childs: JSON.stringify(zoneA.childs.map(child => child.id)),
+                        overlappings: JSON.stringify(zoneA.overlappings.map(child => child.id)),
+                        surrounding:  JSON.stringify({ left: zoneA.surrounding.left.map(child => child.id), right: zoneA.surrounding.right.map(child => child.id), top: zoneA.surrounding.top.map(child => child.id), bottom: zoneA.surrounding.bottom.map(child => child.id) }) 
+                    }
+            ); */
+        });
+
+        
+
+        return zones;
+    }
+
+    const sortZones = (zones, method, reversed) => {
+
+        console.log('sortZones', method, reversed);
+
+        switch (method) {
+            case 'fromCenter':
+                return zones.sort((a,b) => {
+
+                    /* let order = 0; */
+    
+                    let aCenterX = a.finalPosition.left + a.finalPosition.width / 2 - 960;
+                    let aCenterY = a.finalPosition.top + a.finalPosition.height / 2 - 540;
+                    let bCenterX = b.finalPosition.left + b.finalPosition.width / 2 - 960;
+                    let bCenterY = b.finalPosition.top + b.finalPosition.height / 2 - 540;
+    
+                    if (aCenterX < 0) aCenterX *= -1;
+                    if (aCenterY < 0) aCenterY *= -1;
+                    if (bCenterX < 0) bCenterX *= -1;
+                    if (bCenterY < 0) bCenterY *= -1;
+
+                    let distanceA = Math.sqrt( aCenterX + aCenterY );
+                    let distanceB = Math.sqrt( bCenterX + bCenterY );
+        
+                    /* if (a.level < b.level || (aCenterX < bCenterX && (aCenterY < bCenterY || aCenterY > bCenterY))) {
+                        //order = reversed && !(a.level < b.level) ? 1 : -1;
+                        order = -1;
+                    } else if (a.level > b.level || (aCenterX > bCenterX && (aCenterY > bCenterY || aCenterY < bCenterY))) {
+                        //order = reversed && !(a.level > b.level) ? -1 : 1;
+                        order = 1;
+                    } */
+        
+                    if (reversed) {
+                        return a.level - b.level || distanceA - distanceB;
+                    } else {
+                        return a.level - b.level || distanceB - distanceA;
+                    }
+                    
+                });
+            case 'readingOrder':
+                return zones.sort((a,b) => {
+
+                    /* let order = 0;
+        
+                    if (a.level < b.level || (a.finalPosition.left < b.finalPosition.left && (a.finalPosition.top < b.finalPosition.top || a.finalPosition.top > b.finalPosition.top))) {
+                        order = reversed && !(a.level < b.level) ? 1 : -1;
+                    } else if (a.level > b.level || (a.finalPosition.left > b.finalPosition.left && (a.finalPosition.top > b.finalPosition.top || a.finalPosition.top < b.finalPosition.top))) {
+                        order = reversed && !(a.level > b.level) ? -1 : 1;
+                    } */
+
+                    let distanceA = Math.sqrt( a.finalPosition.left + a.finalPosition.top );
+                    let distanceB = Math.sqrt( b.finalPosition.left + b.finalPosition.top );
+        
+                    return a.level - b.level || distanceA - distanceB;
+                    /* if (reversed) {
+                        return a.level - b.level || distanceB - distanceA;
+                    } else {
+                        return a.level - b.level || distanceA - distanceB;
+                    } */
+                });
+            default:
+                return zones;
+        }
+    }
+
+    const smartAnimationV2 = (zonesToAnimate) => {
+        
+        // Déterminer l'ordre d'arrivé des zones par niveau et position 
+        let method = ['readingOrder', 'fromCenter'][Math.floor(Math.random() * 2)];
+        let reversed = Math.floor(Math.random() * 2) === 0 ? false : true;
+
+        let sortedZones = sortZones(zonesToAnimate, method, reversed);
+
+        let sequenceNo = 1;
+
+        let lastZoneType = null;
+        let lastZoneAnimation = null;
+
+        sortedZones.forEach((zone, index) => {
+            let possibleAnimations = getPossibleAnimationsV2(sortedZones.slice(0, index), zone);
+
+            if (zone.level === 0) {
+                zone.sequence = 1;
+                zone.sequenceOffset = '';
+            } else {
+                
+                if (zone.parent && zone.parent.level > 0) {
+                    zone.sequence = zone.parent.sequence + 1;
+                    zone.sequenceOffset = '1.2';
+                } else if (zone.overlappings[0] && zone.overlappings[0].sequence > 1 && zone.overlappings.length === 1) {
+                    zone.sequence = zone.overlappings[0].sequence/*  < zone.overlappings[0].sequence ? zone.overlappings[0].sequence : zone.overlappings[zone.overlappings.length - 1].sequence */;
+                    zone.sequenceOffset = '0.2';
+                } else {
+                    sequenceNo += 1;
+                    zone.sequence = sequenceNo;
+
+                    if (index > 0 && sortedZones[index - 1].type === zone.type) {
+                        zone.sequenceOffset = '1.1';
+                    } else if (index > 0 && sortedZones[index - 1].level === zone.level) {
+                        zone.sequenceOffset = '0.8';
+                    } else {
+                        zone.sequenceOffset = '0.5';
+                    }
+                }
+            }
+
+            if (possibleAnimations.length === 0) {
+                possibleAnimations = [5, 6]
+            } else if (zone.level > 0) {
+                possibleAnimations.push(5);
+                possibleAnimations.push(6);
+            }
+
+            possibleAnimations = possibleAnimations.filter(animation => computeAnimationIntensity(animation, zone.finalPosition) / (zone.level === 0 ? 2 : 1) <= intensity);
+
+            if (possibleAnimations.length === 0) {
+                possibleAnimations = [5]
+            }
+
+            if (zone.level !== 0 && lastZoneType === zone.type && possibleAnimations.includes(lastZoneAnimation)) {
+                zone.animations = [lastZoneAnimation];
+            } else {
+                let animIndex = Math.floor(Math.random() * possibleAnimations.length);
+
+                zone.animations = [possibleAnimations[animIndex]];
+                lastZoneAnimation = possibleAnimations[animIndex];
+            }
+
+            lastZoneType = zone.type;
+
+        });
+
+        console.log('smartAnimationV2', sortedZones);
+
+        return sortedZones;
+    }
+
+    const getPossibleAnimationsV2 = (zonesToCheck, zone) => {
+        let possibleAnimations = [1, 2, 3, 4];
+
+        // Basic rules not dependent of other zones for level 0 (Background) zones.
+
+        if (zone.level === 0) {
+            // Slide from left
+            if (zone.corners.tr.x === 1920 && zone.position.width < 960) {
+                possibleAnimations = possibleAnimations.filter(animation => animation !== 4);
+            }
+
+            // Slide form right
+            if (zone.corners.tl.x === 0 && zone.position.width < 960) {
+                possibleAnimations = possibleAnimations.filter(animation => animation !== 1);
+            }
+
+            // Slide from top
+            if (zone.corners.bl.y === 1080 && zone.position.height < 540) {
+                possibleAnimations = possibleAnimations.filter(animation => animation !== 3);
+            }
+
+            // Slide from bottom
+            if (zone.corners.tl.y === 0 && zone.position.height < 540) {
+                possibleAnimations = possibleAnimations.filter(animation => animation !== 2);
+            }
+        }
+        
+
+        // Basic rules dependent of other zones that are already displayed
+        for (let zoneToCheck of zonesToCheck) {
+            if (possibleAnimations.length > 0) {
+                // Slide from left
+                if (possibleAnimations.includes(4) && (zone.surrounding.left.some(surroudingZone => surroudingZone.id === zoneToCheck.id) || (zone.parent && zone.parent.level > 0 && zone.parent.corners.tl.x !== 0))) {
+                    possibleAnimations = possibleAnimations.filter(animation => animation !== 4);
+                }
+
+                // Slide form right
+                if (possibleAnimations.includes(1) && (zone.surrounding.right.some(surroudingZone => surroudingZone.id === zoneToCheck.id) || (zone.parent && zone.parent.level > 0 && zone.parent.corners.tr.x !== 1920))) {
+                    possibleAnimations = possibleAnimations.filter(animation => animation !== 1);
+                }
+
+                // Slide from top
+                if (possibleAnimations.includes(3) && (zone.surrounding.top.some(surroudingZone => surroudingZone.id === zoneToCheck.id) || (zone.parent && zone.parent.level > 0 && zone.parent.corners.tl.y !== 0))) {
+                    possibleAnimations = possibleAnimations.filter(animation => animation !== 3);
+                }
+
+                // Slide from bottom
+                if (possibleAnimations.includes(2) && (zone.surrounding.bottom.some(surroudingZone => surroudingZone.id === zoneToCheck.id) || (zone.parent && zone.parent.level > 0 && zone.parent.corners.bl.y !== 1080))) {
+                    possibleAnimations = possibleAnimations.filter(animation => animation !== 2);
+                }
+            } else {
+                break;
+            }
+        }
+
+        /* console.log('getPossibleAnimationsV2 | ' + zone.id, { 
+                level: zone.level, 
+                parent: zone.parent ? zone.parent.id : '', 
+                childs: JSON.stringify(zone.childs.map(child => child.id)),
+                overlappings: JSON.stringify(zone.overlappings.map(child => child.id)),
+                surrounding:  JSON.stringify({ left: zone.surrounding.left.map(child => child.id), right: zone.surrounding.right.map(child => child.id), top: zone.surrounding.top.map(child => child.id), bottom: zone.surrounding.bottom.map(child => child.id) }) 
+            },
+            JSON.stringify(possibleAnimations)
+        ); */
+
+        return possibleAnimations;
+    }
+
+    const createTimeLineV2 = (zonesToAnimate, paused) => {
+        const newTl = gsap.timeline({ paused: paused, clearProps: true });
+
+        if (zonesToAnimate.length > 1) {
+            zonesToAnimate = zonesToAnimate.sort((a,b) => a.sequence - b.sequence);
+        }
+
+        zonesToAnimate.forEach((zone, index) => {
+
+            if (zone.animations.length > 0) {
+
+                let start = {};
+                let end = {};
+
+                zone.animations.forEach(animation => {
+                    let animationSequence = getAnimation(zone.finalPosition, animation)
+                    start = { ...start, ...animationSequence.start };
+                    end = { ...end, ...animationSequence.end };
+                });
+
+                let position = `sequence${zone.sequence}${zone.sequenceOffset !== '' ? `-=${zone.sequenceOffset}` : ''}`;
+
+                if (Object.keys(end).length > 0) {
+                    newTl.fromTo(`#${zone.id}`, start, end, position);
+                } else {
+                    newTl.from(`#${zone.id}`, start, position);
+                }
+                
+            }
+        });
+
+        newTl.then(() => handleStop());
+
+        setTl(newTl);
+
+    }
+
+
 
     const computeAnimationIntensity = (animationType, zoneToAnimatePosition) => {
         let zonePosition = getCorners(zoneToAnimatePosition);
@@ -464,23 +961,57 @@ const LayoutTool = ({ isHidden }) => {
     const smartAnimation = (zonesToAnimate) => {
 
         //let nbLevels = Math.max.apply(Math, zonesToAnimate.map((zone, idx) => zone.level + 1));
+        let sortedZones;
+        let sortedIndex = Math.floor(Math.random() * 2);
 
-        let sortedZones = zonesToAnimate.sort((a,b) => {
+        console.log('sortedIndex', sortedIndex)
 
-            let order = 0;
+        if (sortedIndex === 0) {
+            sortedZones = zonesToAnimate.sort((a,b) => {
 
-            if (a.level < b.level || a.finalPosition.top < b.finalPosition.top || a.finalPosition.left < b.finalPosition.left) {
-                order = -1;
-            } 
-            
-            if (a.level > b.level || a.finalPosition.top > b.finalPosition.top || a.finalPosition.left > b.finalPosition.left) {
-                order = 1;
-            }
+                let order = 0;
+    
+                if (a.level < b.level || (a.finalPosition.left < b.finalPosition.left && (a.finalPosition.top < b.finalPosition.top || a.finalPosition.top > b.finalPosition.top))) {
+                    order = -1;
+                } else if (a.level > b.level || (a.finalPosition.left > b.finalPosition.left && (a.finalPosition.top > b.finalPosition.top || a.finalPosition.top < b.finalPosition.top))) {
+                    order = 1;
+                }
+    
+                return order;
+            })
+        } else {
 
-            return order;
-        })
+            let sortedReverse = Math.floor(Math.random() * 2) === 0 ? false : true;
+
+            sortedZones = zonesToAnimate.sort((a,b) => {
+
+                let order = 0;
+
+                let aCenterX = a.finalPosition.left + a.finalPosition.width / 2 - 960;
+                let aCenterY = a.finalPosition.top + a.finalPosition.height / 2 - 540;
+                let bCenterX = b.finalPosition.left + b.finalPosition.width / 2 - 960;
+                let bCenterY = b.finalPosition.top + b.finalPosition.height / 2 - 540;
+
+                if (aCenterX < 0) aCenterX *= -1;
+                if (aCenterY < 0) aCenterY *= -1;
+                if (bCenterX < 0) bCenterX *= -1;
+                if (bCenterY < 0) bCenterY *= -1;
+    
+                if (a.level < b.level || (aCenterX < bCenterX && (aCenterY < bCenterY || aCenterY > bCenterY))) {
+                    order = sortedReverse ? 1 : -1;
+                } else if (a.level > b.level || (aCenterX > bCenterX && (aCenterY > bCenterY || aCenterY < bCenterY))) {
+                    order = sortedReverse ? -1 : 1;
+                }
+    
+                return order;
+            })
+        }
+        
 
         let sequenceNo = 1;
+
+        let lastZoneType = null;
+        let lastZoneAnimation = null;
 
         sortedZones.forEach((zone, index) => {
             let possibleAnimations = getPossibleAnimations(sortedZones.slice(0, index), zone.finalPosition);
@@ -492,8 +1023,23 @@ const LayoutTool = ({ isHidden }) => {
                     possibleAnimations = possibleAnimations.filter(animation => animation !== sortedZones[index - 1].animations[0]);
                 } */
             } else {
-                sequenceNo += 1;
-                zone.sequence = sequenceNo;
+                /* if (zone.childZones.length > 0) {
+
+                    if (sequenceNo === 1) {
+                        sequenceNo += 1;
+                        zone.sequence = sequenceNo;
+                    }
+                    
+                    zone.childZones.forEach(childZone => {
+                        childZone.sequence = zone.sequence;
+                    });
+                } else  */if (zone.parentZones.length > 0 && zone.parentZones[0].level > 0) {
+                    zone.sequence = zone.parentZones[0].sequence;
+                } else {
+                    sequenceNo += 1;
+                    zone.sequence = sequenceNo;
+                }
+                
             }
 
             if (possibleAnimations.length === 0) {
@@ -509,9 +1055,17 @@ const LayoutTool = ({ isHidden }) => {
                 possibleAnimations = [5]
             }
 
-            let animIdex = Math.floor(Math.random() * possibleAnimations.length);
+            if (zone.level !== 0 && lastZoneType === zone.type && possibleAnimations.includes(lastZoneAnimation)) {
+                zone.animations = [lastZoneAnimation];
+            } else {
+                let animIndex = Math.floor(Math.random() * possibleAnimations.length);
 
-            zone.animations = [possibleAnimations[animIdex]];
+                zone.animations = [possibleAnimations[animIndex]];
+                lastZoneAnimation = possibleAnimations[animIndex];
+            }
+
+            lastZoneType = zone.type;
+            
             
         });
 
@@ -638,14 +1192,32 @@ const LayoutTool = ({ isHidden }) => {
         let child = getCorners(childPosition);
 
         // Check X axis
-        if (child.tl.x > parent.tl.x && child.tr.x < parent.tr.x) {
+        /* if (child.tl.x >= parent.tl.x && child.tr.x <= parent.tr.x) {
             // Check Y axis
-            if (child.tl.y > parent.tl.y && child.bl.y < parent.bl.y) {
+            if (child.tl.y >= parent.tl.y && child.bl.y <= parent.bl.y) {
+                isParent = true;
+            }
+        } */
+
+        if (isCornerIn(parent, child.tl) && isCornerIn(parent, child.tr)) {
+            if (isCornerIn(parent, child.bl) && isCornerIn(parent, child.br)) {
                 isParent = true;
             }
         }
 
         return isParent;
+    }
+
+    const isCornerIn = (corners, corner) => {
+        let isIn = false;
+
+        if (corners.tl.x <= corner.x && corners.tr.x >= corner.x) {
+            if (corners.tl.y <= corner.y && corners.bl.y >= corner.y) {
+                isIn = true;
+            }
+        }
+
+        return isIn;
     }
 
     const isOverlapping = (childPosition, parentPosition) => {
@@ -667,6 +1239,33 @@ const LayoutTool = ({ isHidden }) => {
         return overlapping;
     }
 
+    const handleZoneChange = (zoneIdx, key, value = null) => {
+        switch (key) {
+            case 'animations':
+                handleZoneAnimation(zoneIdx, value);
+            break;
+            case 'sequence':
+                handleChangeSequence(zoneIdx);
+            break;
+            case 'finalPosition':
+                let newZones = [...zones];
+
+                if (value.position[0][0] <= value.position[1][2] && value.position[0][1] <= value.position[1][3]) {
+                    newZones[zoneIdx].position = [value.position[0], value.position[1]];
+                } else {
+                    newZones[zoneIdx].position = [value.position[1], value.position[0]];
+                }
+
+                delete value.position;
+
+                newZones[zoneIdx].finalPosition = value;
+
+                setZones(newZones);
+            break;
+            default:
+        }
+    }
+
     return (
         <>
 
@@ -683,7 +1282,7 @@ const LayoutTool = ({ isHidden }) => {
                 
                 <div className="flex flex-row items-center mt-3 lg:mt-0">
                     <div className={"select-none rounded-md m-1 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-white bg-transparent border-transparent"}>
-                    Intensité
+                    Animation
                     </div>
                     <div className={"select-none rounded-md m-1 px-2 py-0.5 text-center text-xs flex items-center font-medium justify-center align-middle text-gray-600 bg-transparent border-transparent"}>
                     <input type="range" id="durationAdjustment" step={0.05} className="rangeNoFill" name="durationAdjustment" min="0" max="1" onChange={e => setIntensity(Number(e.target.value))} defaultValue={intensity} />
@@ -708,35 +1307,43 @@ const LayoutTool = ({ isHidden }) => {
 
                         {thumbPreview.current && thumbPreviewWidth > 0 && 
 
-                            <div className="pointer-events-auto h-full w-full">
-                                {zones.map(({ id, position, type, finalPosition, sequence, animations }, index) => {
-                                    if (finalPosition) {
-                                        return <button key={`zones-${index}`}  onClick={() => { if (currentTool === 'Cursor') handleSelectZone(index) }}  onMouseEnter={() => { if (currentTool === 'Cursor') setHoverZoneIdx(index)}} onMouseLeave={() => { if (currentTool === 'Cursor') setHoverZoneIdx(null)}} style={{ position: "absolute", left: getComputedPixelSize(finalPosition.left), top: getComputedPixelSize(finalPosition.top), width: getComputedPixelSize(finalPosition.width), height: getComputedPixelSize(finalPosition.height) }} className={`pointer-event-none rounded flex flex-row items-center justify-center ${playingPreview ? '' : selectedZoneIdx === index ? 'border border-blue-600' : hoverZoneIdx === index ? 'border border-blue-400' : 'border border-gray-200'}`}>
-                                            <div id={id} className={`${selectedZoneIdx === index ? 'bg-blue-600' : hoverZoneIdx === index && !playingPreview ? 'bg-blue-400' : 'bg-gray-800'} overflow-hidden opacity-40 w-full h-full pointer-event-none rounded-sm flex flex-row items-center justify-center`}>
-                                                {type === toolTypes.Text && <MenuAlt2Icon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
-                                                {type === toolTypes.Image && <PhotographIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
-                                                {type === toolTypes.Shape && <DocumentIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
-                                                {type === toolTypes.Video && <FilmIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
-                                            </div>
-                                            <div className={`bg-gray-200 pointer-events-none absolute top-0 left-0 flex flex-row items-center justify-center rounded-br rounded-tl-sm space-x-1 p-1 ${playingPreview || currentTool !== 'Cursor' ? 'hidden' : ''}`}>
-                                                <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
-                                                    {sequence}
-                                                </div>
-                                                {animationTypes.map((animation, animIdx) => {
-                                                    return <div key={`animationSamll-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
-                                                        <animation.icon className='h-5 w-5' />
-                                                    </div>
-                                                })}
-                                            </div>
-                                        </button>
-                                    }
+                            <>
+                                <div className={`absolute z-10 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? 'pointer-events-none' : ''}`}>
+                                    {zones.map((/* { id, position, type, finalPosition, sequence, animations, src } */zone, index) => {
+                                        if (zone.finalPosition) {
+                                            return <Zone zone={zone} index={index} onClick={handleSelectZone} onMouseEnter={setHoverZoneIdx} onMouseLeave={setHoverZoneIdx} isDisabled={playingPreview || currentTool !== 'Cursor'} isPlaying={playingPreview} isSelected={selectedZoneIdx === index} isHovered={hoverZoneIdx === index} onChange={handleZoneChange} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} />
+                                            /* return <button key={`zones-${index}`}  onClick={() => { if (currentTool === 'Cursor') handleSelectZone(index) }}  onMouseEnter={() => { if (currentTool === 'Cursor') setHoverZoneIdx(index)}} onMouseLeave={() => { if (currentTool === 'Cursor') setHoverZoneIdx(null)}} style={{ position: "absolute", left: getComputedPixelSize(finalPosition.left), top: getComputedPixelSize(finalPosition.top), width: getComputedPixelSize(finalPosition.width), height: getComputedPixelSize(finalPosition.height) }} className={`${currentTool === 'Cursor' ? 'pointer-events-auto' : 'pointer-events-none'} ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded'} flex flex-row items-center justify-center ${playingPreview ? '' : selectedZoneIdx === index ? 'border border-blue-600' : hoverZoneIdx === index ? 'border border-blue-400' : 'border border-gray-200'}`}>
+                                                        <div id={id} className={`${selectedZoneIdx === index ? 'bg-blue-400' : hoverZoneIdx === index && !playingPreview ? 'bg-blue-200' : playingPreview && type === toolTypes.Shape ? 'bg-gray-100' : 'bg-gray-400'} overflow-hidden ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded-sm'} opacity-75 w-full h-full pointer-events-none flex flex-row items-center justify-center`}>
+                                                            {type === toolTypes.Text && <MenuAlt2Icon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                            {type === toolTypes.Image && <PhotographIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                            {type === toolTypes.Image && <img id={`image-${id}`} src={src ? src : images[index]} alt={`${id}`} crossOrigin='anonymous' className={`select-none w-full h-full object-center object-cover bg-white`} />}
+                                                            {type === toolTypes.Shape && <DocumentIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                            {type === toolTypes.Video && <FilmIcon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
+                                                        </div>
+                                                        <div className={`bg-gray-200 pointer-events-none absolute top-0 left-0 flex flex-row items-center justify-center rounded-br rounded-tl-sm space-x-1 p-1 ${playingPreview || currentTool !== 'Cursor' ? 'hidden' : ''}`}>
+                                                            <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
+                                                                {sequence}
+                                                            </div>
+                                                            {animationTypes.map((animation, animIdx) => {
+                                                                return <div key={`animationSamll-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
+                                                                    <animation.icon className='h-5 w-5' />
+                                                                </div>
+                                                            })}
+                                                        </div>
+                                                    </button> */
+                                        }
 
-                                    return <></>
-                                })}
-                                {tempZone.length > 0 && <div style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-blue-600 opacity-40 pointer-event-none rounded-sm'></div>}
-                                
-                                {currentTool !== 'Cursor' && <Grid matrix={matrix} adjusmentWidth={thumbPreviewWidth} onClick={handleZoneClick} onHover={handleZoneHover} />}
-                            </div>
+                                        return <></>
+                                    })}
+                                    
+                                    
+                                    {/* {currentTool !== 'Cursor' && <Grid matrix={matrix} adjusmentWidth={thumbPreviewWidth} onClick={handleZoneClick} onHover={handleZoneHover} />} */}
+                                </div>
+                                <div className={`absolute z-20 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? '' : 'hidden'}`}>
+                                    {tempZone.length > 0 && <div style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-blue-600 opacity-40 z-0 pointer-event-none rounded-sm'></div>}
+                                    {currentTool !== 'Cursor' && selectedDataSet === 'Création libre' && <VirtualGrid hidden={playingPreview ? true : !mouse.isOver} x={mouse.x} y={mouse.y} adjusmentWidth={thumbPreviewWidth} onClick={handlePreviewScreenClick} isDown={mouse.isDown} onHover={handleZoneHover} />}
+                                </div>
+                            </>
 
                         }
 
@@ -847,6 +1454,61 @@ const Grid = props => {
     return matrix.map((square, index) => {
         return <GridSquare square={square} onClick={props.onClick} onHover={props.onHover} key={`refSquare-${index}`} style={{ position: "absolute", left: getComputedPixelSize(square[0]), top: getComputedPixelSize(square[1]), width: getComputedPixelSize(square[2] - square[0]), height: getComputedPixelSize(square[3] - square[1]) }} />
     })
+}
+
+const VirtualGrid = props => {
+
+    const gridSize = 24;
+
+    const [mouseDown, setMouseDown] = useState(false);
+
+    const getComputedPixelSize = (pixel) => {
+        let computedPixelSize = 0;
+        let currentThumbPreviewWidth = props.adjusmentWidth;
+
+        computedPixelSize = currentThumbPreviewWidth / 1920 * pixel;
+
+        return computedPixelSize;
+    }
+
+    const getRealPixelSize = (pixel) => {
+        let computedPixelSize = 0;
+        let currentThumbPreviewWidth = props.adjusmentWidth;
+
+        computedPixelSize = 1920 / currentThumbPreviewWidth * pixel;
+
+        return computedPixelSize;
+    }
+
+    useEffect(() => {
+        if (!props.hidden) {
+            if (props.isDown) {
+                setMouseDown(true);
+                let realX = getRealPixelSize(props.x);
+                let realY = getRealPixelSize(props.y);
+    
+                let x = realX - realX % gridSize;
+                let y = realY - realY % gridSize;
+        
+                let square = [ x, y, x + gridSize, y + gridSize ];
+    
+                props.onHover(square);
+            } else if (mouseDown && !props.isDown) {
+                setMouseDown(false);
+                props.onClick(props.x, props.y, false);
+            }
+        } else {
+            setMouseDown(false);
+        }
+    }, [props.isDown, props.hidden, props.x, props.y]);
+
+
+
+    return <button className={`w-full h-full pointer-events-auto z-10 ${props.hidden ? 'hidden' : ''}`} onMouseDown={(event) => {if (event.button === 0) props.onClick(props.x, props.y, true)}}><div className='bg-blue-600 rounded-sm cursor-pointer pointer-events-none'  /* onMouseUp={() => props.onClick(props.x, props.y)} */ style={{ position: "absolute", 
+    left: props.x - props.x % getComputedPixelSize(gridSize), 
+    top: props.y - props.y % getComputedPixelSize(gridSize), 
+    width: getComputedPixelSize(gridSize), 
+    height: getComputedPixelSize(gridSize) }} ></div></button>
 }
 
 function useWindowSize() {
