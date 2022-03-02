@@ -10,6 +10,7 @@ import TagSearchBar from './TagSearchBar';
 import Text from './Text';
 import ToggleButton from './ToggleButton';
 import Zone from './Zone';
+import ZoneContent from './ZoneContent';
 
 export {
     Img,
@@ -24,4 +25,5 @@ export {
     Text,
     ToggleButton,
     Zone,
+    ZoneContent,
 }

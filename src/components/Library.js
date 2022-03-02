@@ -126,7 +126,7 @@ const Library = props => {
         }); */
     }
 
-    return <div className={`${isMobile || props.modal ? "fixed z-50 top-0 left-0" : "absolute top-0 left-0"} pointer-events-auto p-4 lg:p-12 w-full h-full flex flex-col space-y-2 items-center justify-start bg-gray-800 bg-opacity-30 ${props.isHidden ? 'hidden' : ''}`} style={{ background: 'rgba(16,18,27,0.4)', backdropFilter: 'blur(6px)' }}>
+    return <div className={`${isMobile || props.modal ? "fixed top-0 left-0" : "absolute top-0 left-0"} pointer-events-auto p-4 lg:p-12 w-full h-full flex flex-col space-y-2 items-center justify-start bg-gray-800 bg-opacity-30 ${props.isHidden ? 'hidden' : ''}`} style={{ background: 'rgba(16,18,27,0.4)', backdropFilter: 'blur(6px)', zIndex: 600 }}>
 
         <div className={`pointer-events-auto relative flex flex-col lg:max-w-2xl w-full h-full items-start justify-start bg-gray-100 rounded`}>
             {isLoading && <div className="absolute top-0 left-0 flex w-full h-full items-center justify-center"><LoadingSpinner className="h-6 w-6 text-blue-600" /></div>}

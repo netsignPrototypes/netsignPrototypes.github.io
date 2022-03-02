@@ -11,6 +11,10 @@ import { Slide, ListeDeroulante, Zone } from '../components';
 
 import useMouse from '@react-hook/mouse-position'
 
+import { csv2json } from 'csvjson-csv2json';
+
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
 const layoutMatrix = [
     [30,30,48,48],[72,30,108,48],[132,30,168,48],[192,30,228,48],[252,30,288,48],[312,30,348,48],[372,30,408,48],[432,30,468,48],[492,30,528,48],[552,30,588,48],[612,30,648,48],[672,30,708,48],[732,30,768,48],[792,30,828,48],[852,30,888,48],[912,30,948,48],[972,30,1008,48],[1032,30,1068,48],[1092,30,1128,48],[1152,30,1188,48],[1212,30,1248,48],[1272,30,1308,48],[1332,30,1368,48],[1392,30,1428,48],[1452,30,1488,48],[1512,30,1548,48],[1572,30,1608,48],[1632,30,1668,48],[1692,30,1728,48],[1752,30,1788,48],[1812,30,1848,48],[1872,30,1890,48],
     [30,72,48,108],[72,72,108,108],[132,72,168,108],[192,72,228,108],[252,72,288,108],[312,72,348,108],[372,72,408,108],[432,72,468,108],[492,72,528,108],[552,72,588,108],[612,72,648,108],[672,72,708,108],[732,72,768,108],[792,72,828,108],[852,72,888,108],[912,72,948,108],[972,72,1008,108],[1032,72,1068,108],[1092,72,1128,108],[1152,72,1188,108],[1212,72,1248,108],[1272,72,1308,108],[1332,72,1368,108],[1392,72,1428,108],[1452,72,1488,108],[1512,72,1548,108],[1572,72,1608,108],[1632,72,1668,108],[1692,72,1728,108],[1752,72,1788,108],[1812,72,1848,108],[1872,72,1890,108],
@@ -132,6 +136,9 @@ const LayoutTool = ({ isHidden }) => {
     const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
     const thumbPreview = useRef(null);
 
+    const hoverZoneRef = useRef(null);
+
+    const mouseHoverZone = useMouse(hoverZoneRef, { fps: 60 });
     const mouse = useMouse(thumbPreview, { fps: 60 });
 
     const [matrix, setMatrix] = useState([]);
@@ -158,6 +165,8 @@ const LayoutTool = ({ isHidden }) => {
     const [selectedDataSet, setSelectedDataSet] = useState(DATASETS[0]);
 
     const [imgIdx, setImgIdx] = useState(0);
+
+    const [clipboardData, setClipboardData] = useState('');
 
     useEffect(() => {
         if (!isHidden && matrix.length === 0) {
@@ -346,6 +355,20 @@ const LayoutTool = ({ isHidden }) => {
             }
         }
     }
+
+    const handleHoverZone = (index) => {
+        if (hoverZoneIdx !== selectedZoneIdx) {
+            setHoverZoneIdx(index);
+        } else if (hoverZoneIdx === null && selectedZoneIdx === null) {
+            setHoverZoneIdx(index);
+        }
+    }
+
+    useEffect(() => {
+        if (mouseHoverZone.isOver) {
+            setHoverZoneIdx(selectedZoneIdx);
+        }
+    }, [mouseHoverZone.isOver]);
 
     const handleDeleteZone = (index) => {
         let newZones = [...zones];
@@ -1266,8 +1289,54 @@ const LayoutTool = ({ isHidden }) => {
         }
     }
 
+    const handleOnPasteClipboardData = (e) => {
+        const { clipboardData } = e;
+        e.persist();
+        setClipboardData(clipboardData);
+
+        /* console.log(clipboardData.getData('Text'));
+        console.log(clipboardData.getData('text/plain'));
+        console.log(clipboardData.getData('text/html'));
+        console.log(clipboardData.getData('text/rtf'));
+
+        console.log(clipboardData.getData('Url'));
+        console.log(clipboardData.getData('text/uri-list'));
+        console.log(clipboardData.getData('text/x-moz-url')); */
+
+        const json = csv2json(clipboardData.getData('Text'));
+        console.log(json);
+
+        
+    }
+
+    const handleDragEnd = (result) => {
+        const {destination, source, draggableId} = result;
+        if (!destination) {
+            return;
+        }
+
+        if (destination.droppableId === source.droppableId && destination.index === source.index) {
+            return;
+        }
+
+        const newZones = [...zones]
+        const newZone = zones[source.index];
+        newZones.splice(source.index, 1);
+        newZones.splice(destination.index, 0, newZone);
+
+        if (source.index === selectedZoneIdx) {
+            setSelectedZoneIdx(destination.index);
+        }
+
+        setZones(newZones.map((zone, index) => {
+            zone.index = index;
+            return zone;
+        }));
+    }
+
     return (
         <>
+        
 
         <div className={`min-h-screen flex-col items-start justify-start bg-gray-900 py-20 lg:py-12 px-4 sm:px-6 lg:px-52 space-y-4 lg:space-y-8 ${isHidden ? 'hidden' : 'flex'}`}>
         <div className="w-full flex flex-col-reverse space-x-0 lg:flex-row lg:space-x-6 lg:space-y-0 md:flex-row md:space-x-6 md:space-y-0 items-center justify-end">
@@ -1275,6 +1344,15 @@ const LayoutTool = ({ isHidden }) => {
                 {/* {!playingPreview && <div className="flex flex-row mr-6 items-center">
                     
                 </div>} */}
+                {/* <input
+                        id="pasteData"
+                        onPaste={handleOnPasteClipboardData}
+                        value={''}
+                        name="pasteData"
+                        type="text"
+                        className="resize-none appearance-none relative block h-9 md:w-96 w-full px-3 py-2 border border-gray-300 placeholder-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                        placeholder="Collez des données"
+                    /> */}
                 <div className="flex flex-row space-x-4 h-full w-full items-center justify-end mt-4 md:mt-0 lg:mt-0">                    
                     {playingPreview ? <StopIcon onClick={() => handleStop()} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" /> : <PlayIcon onClick={() => handlePlay()} className="text-white hover:text-blue-400 cursor-pointer h-7 w-7" />}
                     <SparklesIcon onClick={() => handlePlay(true)} className={`text-white hover:text-blue-400 cursor-pointer h-7 w-7`} />
@@ -1311,7 +1389,7 @@ const LayoutTool = ({ isHidden }) => {
                                 <div className={`absolute z-10 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? 'pointer-events-none' : ''}`}>
                                     {zones.map((/* { id, position, type, finalPosition, sequence, animations, src } */zone, index) => {
                                         if (zone.finalPosition) {
-                                            return <Zone zone={zone} index={index} onClick={handleSelectZone} onMouseEnter={setHoverZoneIdx} onMouseLeave={setHoverZoneIdx} isDisabled={playingPreview || currentTool !== 'Cursor'} isPlaying={playingPreview} isSelected={selectedZoneIdx === index} isHovered={hoverZoneIdx === index} onChange={handleZoneChange} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} />
+                                            return <Zone zone={zone} key={zone.id} index={index} onClick={handleSelectZone} onMouseEnter={handleHoverZone} onMouseLeave={setHoverZoneIdx} isDisabled={playingPreview || currentTool !== 'Cursor' || (selectedZoneIdx !== null && selectedZoneIdx !== index && hoverZoneIdx === selectedZoneIdx)} isPlaying={playingPreview} isSelected={selectedZoneIdx === index} isHovered={hoverZoneIdx === index} onChange={handleZoneChange} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} />
                                             /* return <button key={`zones-${index}`}  onClick={() => { if (currentTool === 'Cursor') handleSelectZone(index) }}  onMouseEnter={() => { if (currentTool === 'Cursor') setHoverZoneIdx(index)}} onMouseLeave={() => { if (currentTool === 'Cursor') setHoverZoneIdx(null)}} style={{ position: "absolute", left: getComputedPixelSize(finalPosition.left), top: getComputedPixelSize(finalPosition.top), width: getComputedPixelSize(finalPosition.width), height: getComputedPixelSize(finalPosition.height) }} className={`${currentTool === 'Cursor' ? 'pointer-events-auto' : 'pointer-events-none'} ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded'} flex flex-row items-center justify-center ${playingPreview ? '' : selectedZoneIdx === index ? 'border border-blue-600' : hoverZoneIdx === index ? 'border border-blue-400' : 'border border-gray-200'}`}>
                                                         <div id={id} className={`${selectedZoneIdx === index ? 'bg-blue-400' : hoverZoneIdx === index && !playingPreview ? 'bg-blue-200' : playingPreview && type === toolTypes.Shape ? 'bg-gray-100' : 'bg-gray-400'} overflow-hidden ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded-sm'} opacity-75 w-full h-full pointer-events-none flex flex-row items-center justify-center`}>
                                                             {type === toolTypes.Text && <MenuAlt2Icon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}
@@ -1339,8 +1417,11 @@ const LayoutTool = ({ isHidden }) => {
                                     
                                     {/* {currentTool !== 'Cursor' && <Grid matrix={matrix} adjusmentWidth={thumbPreviewWidth} onClick={handleZoneClick} onHover={handleZoneHover} />} */}
                                 </div>
+                                <div className={`absolute z-20 top-0 left-0 h-full w-full pointer-events-none ${currentTool === 'Cursor' && hoverZoneIdx !== selectedZoneIdx && selectedZoneIdx !== null ? '' : 'hidden'}`}>
+                                    <button ref={hoverZoneRef} onMouseEnter={() => setHoverZoneIdx(selectedZoneIdx)} className={'pointer-events-auto'} style={{ position: "absolute", left: getComputedPixelSize(selectedZoneIdx !== null ? zones[selectedZoneIdx].finalPosition.left : 0), top: getComputedPixelSize(selectedZoneIdx !== null ?zones[selectedZoneIdx].finalPosition.top : 0), width: getComputedPixelSize(selectedZoneIdx !== null ?zones[selectedZoneIdx].finalPosition.width : 0), height: getComputedPixelSize(selectedZoneIdx !== null ?zones[selectedZoneIdx].finalPosition.height : 0) }}></button>
+                                </div>
                                 <div className={`absolute z-20 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? '' : 'hidden'}`}>
-                                    {tempZone.length > 0 && <div style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-blue-600 opacity-40 z-0 pointer-event-none rounded-sm'></div>}
+                                    {tempZone.length > 0 && <div key={'tempZone-key'} style={{ position: "absolute", left: getComputedPixelSize(tempZone[0][0] < tempZone[1][0] ? tempZone[0][0] : tempZone[1][0]), top: getComputedPixelSize(tempZone[0][1] < tempZone[1][1] ? tempZone[0][1] : tempZone[1][1]), width: getComputedPixelSize(tempZone[1][2] > tempZone[0][0] ? tempZone[1][2] - tempZone[0][0] : tempZone[0][2] - tempZone[1][0]), height: getComputedPixelSize(tempZone[1][3] > tempZone[0][1] ? tempZone[1][3] - tempZone[0][1] : tempZone[0][3] - tempZone[1][1]) }} className='bg-blue-600 opacity-40 z-0 pointer-event-none rounded-sm'></div>}
                                     {currentTool !== 'Cursor' && selectedDataSet === 'Création libre' && <VirtualGrid hidden={playingPreview ? true : !mouse.isOver} x={mouse.x} y={mouse.y} adjusmentWidth={thumbPreviewWidth} onClick={handlePreviewScreenClick} isDown={mouse.isDown} onHover={handleZoneHover} />}
                                 </div>
                             </>
@@ -1351,55 +1432,59 @@ const LayoutTool = ({ isHidden }) => {
                 </div>
 
                 {/* <div className="mt-4 lg:ml-4 lg:mt-0 space-x-4 lg:space-y-4 lg:space-x-0 flex flex-row lg:flex-col" style={{ width: `${isMobile ? 100 : 18.25}%`}}> */}
-                <div className="mt-2 lg:ml-4 lg:mt-0 container flex flex-col space-y-3" style={{ width: `${isMobile ? 100 : 18.25}%`}}>
-                    {/* <div className='w-full text-xs flex flex-row space-x-3 items-center mb-1 py-2 px-3 bg-white rounded-sm'>
-                        <PlayIcon onClick={() => handlePlay()} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
-                        <SparklesIcon onClick={() => handlePlay(true)} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
-                    </div> */}
-                    {zones.map(({ position, type, animations, finalPosition, sequence }, index) => {
-                        if (finalPosition) {
-                            return <div key={`zonesList-${index}`} className={`bg-white pointer-events-auto rounded-sm py-2 px-2 w-full text-sm flex flex-col space-y-2 items-center ${selectedZoneIdx === index ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-gray-900' : hoverZoneIdx === index ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-900' : ''}`}>
-                                <button onClick={() => handleSelectZone(index)} onMouseEnter={() => setHoverZoneIdx(index)} onMouseLeave={() => setHoverZoneIdx(null)} className='w-full text-sm flex flex-row items-center'>
-                                    <div className='mr-3'>
-                                        {type === toolTypes.Text && <MenuAlt2Icon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
-                                        {type === toolTypes.Image && <PhotographIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
-                                        {type === toolTypes.Shape && <DocumentIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
-                                        {type === toolTypes.Video && <FilmIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
-                                    </div>
-                                    <div className='w-full text-left pointer-events-none'>{zoneTypes[type]}</div>
-                                    <div className='h-5 w-5 shrink-0 flex ml-3 rounded text-xs bg-gray-200 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
-                                        {sequence}
-                                    </div>
-                                    <div className='ml-3'>
-                                        <TrashIcon key={`zonesList-${index}-trash`} onClick={(e) => { e.stopPropagation(); handleDeleteZone(index)}} className={`h-4 w-4 text-gray-400 hover:text-red-600 cursor-pointer`} />
-                                    </div>
-                                </button>
-                                {selectedZoneIdx === index && <div className='bg-gray-100 rounded-sm w-full text-xs flex flex-col pb-1'>
-                                    <div className='w-full text-xs flex flex-row items-center mx-2 mt-2 mb-1'>
-                                        <div className='mr-2'>
-                                            <SparklesIcon className={`h-4 w-4 text-gray-400 pointer-events-none`} />
-                                        </div>
-                                        <div className='w-full text-left pointer-events-none'>Animations</div>
-                                    </div>
-                                    <div className='w-full text-xs flex flex-row items-center mx-1 mt-1'>
-                                        {animationTypes.map((animation, animIdx) => {
-                                            return <div key={`animation-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer p-1 m-1 rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
-                                                <animation.icon className='h-5 w-5' />
-                                            </div>
-                                        })}
-                                    </div>
-                                </div>}
-                            </div>
-                        }
+                            <div className="mt-2 lg:ml-4 lg:mt-0 container flex flex-col space-y-3" style={{ width: `${isMobile ? 100 : 18.25}%`}}>
+                                {/* <div className='w-full text-xs flex flex-row space-x-3 items-center mb-1 py-2 px-3 bg-white rounded-sm'>
+                                    <PlayIcon onClick={() => handlePlay()} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                                    <SparklesIcon onClick={() => handlePlay(true)} className={`h-6 w-6 text-${currentTool === "Cursor" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                                </div> */}
+                                
+                                {zones.map(({ position, type, animations, finalPosition, sequence, id }, index) => {
+                                    if (finalPosition) {
+                                        return <div key={`zonesList-${id}`} className={`bg-white pointer-events-auto rounded-sm py-2 px-2 w-full text-sm flex flex-col space-y-2 items-center ${selectedZoneIdx === index ? 'ring-2 ring-blue-600 ring-offset-2 ring-offset-gray-900' : hoverZoneIdx === index ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-900' : 'hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 hover:ring-offset-gray-900'}`}>
+                                                    <button onClick={() => handleSelectZone(index)} onMouseEnter={() => setHoverZoneIdx(index)} onMouseLeave={() => setHoverZoneIdx(null)} className='w-full text-sm flex flex-row items-center'>
+                                                        <div className='mr-3' >
+                                                            {type === toolTypes.Text && <MenuAlt2Icon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                                            {type === toolTypes.Image && <PhotographIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                                            {type === toolTypes.Shape && <DocumentIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                                            {type === toolTypes.Video && <FilmIcon key={`zonesList-${index}-icon`} className={`h-5 w-5 text-gray-400 pointer-events-none`} />}
+                                                        </div>
+                                                        <div className='w-full text-left pointer-events-none'>{zoneTypes[type]}</div>
+                                                        <div className='h-5 w-5 shrink-0 flex ml-3 rounded text-xs bg-gray-200 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); handleChangeSequence(index)}}>
+                                                            {sequence}
+                                                        </div>
+                                                        <div className='ml-3'>
+                                                            <TrashIcon key={`zonesList-${id}-trash`} onClick={(e) => { e.stopPropagation(); handleDeleteZone(index)}} className={`h-4 w-4 text-gray-400 hover:text-red-600 cursor-pointer`} />
+                                                        </div>
+                                                    </button>
+                                                    {selectedZoneIdx === index && <div className='bg-gray-100 rounded-sm w-full text-xs flex flex-col pb-1'>
+                                                        <div className='w-full text-xs flex flex-row items-center mx-2 mt-2 mb-1'>
+                                                            <div className='mr-2'>
+                                                                <SparklesIcon className={`h-4 w-4 text-gray-400 pointer-events-none`} />
+                                                            </div>
+                                                            <div className='w-full text-left pointer-events-none'>Animations</div>
+                                                        </div>
+                                                        <div className='w-full text-xs flex flex-row items-center mx-1 mt-1'>
+                                                            {animationTypes.map((animation, animIdx) => {
+                                                                return <div key={`zonesList-animation-${index}-${animIdx}`} onClick={() => handleZoneAnimation(index, animation.type)} className={`pointer-events-auto cursor-pointer p-1 m-1 rounded ${animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
+                                                                    <animation.icon className='h-5 w-5' />
+                                                                </div>
+                                                            })}
+                                                        </div>
+                                                    </div>}
+                                                </div>
 
-                        return <></>
-                    })}
-                </div>
+                                    }
+
+                                    return <></>
+                                })}
+                            </div>
 
             </div>}
 
             <section className={`container grid md:grid-cols-4 grid-cols-3 gap-1 lg:grid-cols-12 lg:gap-2 w-full`}></section>
-        </div></>
+        </div>
+        
+        </>
     );
 }
 

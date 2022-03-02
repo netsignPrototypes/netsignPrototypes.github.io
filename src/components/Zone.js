@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 
-import { MenuAlt2Icon, PhotographIcon, FilmIcon, DocumentIcon, ArrowSmUpIcon, ArrowSmDownIcon, ArrowSmLeftIcon, ArrowSmRightIcon } from '@heroicons/react/outline'
+import { MenuAlt2Icon, PhotographIcon, FilmIcon, DocumentIcon, ArrowSmUpIcon, ArrowSmDownIcon, ArrowSmLeftIcon, ArrowSmRightIcon, TrashIcon } from '@heroicons/react/outline'
+
+import { useOnClickOutside, useWindowSize } from '../hooks';
+
+import useMouse from '@react-hook/mouse-position';
+
+import ZoneContent from './ZoneContent';
 
 const toolTypes = {
     Cursor: 0,
@@ -16,6 +22,13 @@ const animationTypes = [
     { type: 3, icon: ArrowSmDownIcon, oppositeType: 2 },
     { type: 1, icon: ArrowSmLeftIcon, oppositeType: 4 },
 ]
+
+const zoneTypes = {
+    1: 'Text',
+    2: 'Image',
+    3: 'Shape',
+    4: 'Video',
+}
 
 const images = [
     'https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',
@@ -38,20 +51,47 @@ const images = [
 
  ]
 
+const CURSOR_TYPE = {
+    tl: 'cursor-nwse-resize',
+    tr: 'cursor-nesw-resize',
+    bl: 'cursor-nesw-resize',
+    br: 'cursor-nwse-resize',
+    t: 'cursor-ns-resize',
+    b: 'cursor-ns-resize',
+    l: 'cursor-ew-resize',
+    r: 'cursor-ew-resize',
+    m: 'cursor-move',
+}
+
 // <Zone zone={} index={} onClick={} onMouseEnter={} onMouseLeave={} isDisabled={} isSelected={} isHovered={} onChange={} adjusmentWidth={} />
 
-const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, isSelected, isHovered, isPlaying, onChange, adjusmentWidth, mouseX, mouseY, mouseDown, mouseHover }) => {
+const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, isSelected, isHovered, isPlaying, onChange, adjusmentWidth, mouseX, mouseY, mouseDown, mouseHover, mouseRef = null, gridSize }) => {
 
     // STATES MANAGEMENT ------------------------------------------------------------------------------
   
     // DATA STATES
-    const gridSize = 24;
+    /* const gridSize = 24; */
     const [tempFinalPosition, setTempFinalPosition] = useState({});
     const [startMousePosition, setStartMousePosition] = useState(null);
   
     // UI LOGIC STATES
     const [mouseIsDown, setMouseIsDown] = useState(false);
     const [selectedPositionEditor, setSelectedPositionEditor] = useState(null);
+    const [mouseUp, setMouseUp] = useState(false);
+
+    // REFS
+    const ref = useRef(null);
+    /* useOnClickOutside(ref, (event) => { 
+        if (isSelected && selectedPositionEditor === null) {
+            event.stopPropagation();
+            event.preventDefault();        
+            onClick(zone);
+        }
+        console.log('clickOutside', event)
+    }); */
+
+    const mouse = useMouse(mouseRef, { fps: 60 });
+    const screenSize = useWindowSize();
 
 
     // UTILITY FUNCTIONS
@@ -74,7 +114,7 @@ const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, is
         return computedPixelSize;
     }
 
-    const handleChangeTempFinalPosition = (newX, newY) => {
+    const handleChangeTempFinalPosition = (newX, newY, startPosition) => {
 
         let newTempFinalPosition = {}
         let position = [zone.position[0], zone.position[1]];        
@@ -115,9 +155,9 @@ const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, is
                 position[1][2] = newX + gridSize;
             break;
             case 'm':
-                if (startMousePosition !== null) {
-                    let xDiff = startMousePosition.x - newX;
-                    let yDiff = startMousePosition.y - newY;
+                if (startPosition !== null) {
+                    let xDiff = startPosition.x - newX;
+                    let yDiff = startPosition.y - newY;
 
                     position[0] = [position[0][0] - xDiff, position[0][1] - yDiff, position[0][2] - xDiff, position[0][3] - yDiff];
                     position[1] = [position[1][0] - xDiff, position[1][1] - yDiff, position[1][2] - xDiff, position[1][3] - yDiff];
@@ -139,43 +179,62 @@ const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, is
         setTempFinalPosition(newTempFinalPosition);
     }
 
-    const getValueDiff = (currentValue, newValue) => {
-        if (newValue > currentValue) {
-            return currentValue - newValue;
-        } else {
-            return newValue - currentValue;
+    const handleOnClick = (event) => {
+        if (selectedPositionEditor === null) {
+            event.stopPropagation(); 
+            onClick(zone);
         }
+    }
+
+    const handleMouseEnter = (event) => {
+        if (selectedPositionEditor === null) onMouseEnter(zone.id)
+    }
+
+    const handleMouseLeave = (event) => {
+        if (selectedPositionEditor === null) onMouseLeave(null)
     }
 
     useEffect(() => {
         if (selectedPositionEditor !== null) {
-            if (mouseDown) {
+            if (mouse.isDown /* && !mouseUp */) {
                 setMouseIsDown(true);
-                let realX = getRealPixelSize(mouseX);
-                let realY = getRealPixelSize(mouseY);
+
+                let realX = getRealPixelSize(mouse.x);
+                let realY = getRealPixelSize(mouse.y);
     
                 let x = realX - realX % gridSize;
-                let y = realY - realY % gridSize;                
+                let y = realY - realY % gridSize;
 
-                handleChangeTempFinalPosition(x, y);
-
-            } else if (mouseIsDown && !mouseDown && mouseHover) {
+                if (!mouseIsDown) {
+                    setStartMousePosition({ x: x, y: y });
+                    handleChangeTempFinalPosition(x, y, { x: x, y: y });
+                } else {
+                    handleChangeTempFinalPosition(x, y, startMousePosition);
+                }
+            } else if (mouseIsDown && !mouse.isDown && mouse.isOver) {
                 setMouseIsDown(false);
+                setMouseUp(false);
                 setSelectedPositionEditor(null);
                 setStartMousePosition(null);
-                onChange(index, 'finalPosition', tempFinalPosition);
+                onChange(zone, 'finalPosition', tempFinalPosition);
                 setTempFinalPosition({});
+            } else if (!mouse.isDown && !mouseIsDown && !tempFinalPosition.left) {
+                setSelectedPositionEditor(null);
+                onClick(zone);
             }
         } else {
-            setMouseIsDown(false);
+            if (mouseIsDown || mouseUp) {
+                setMouseIsDown(false);
+                setMouseUp(false);
+            }
             /* setSelectedPositionEditor(null);
             setTempFinalPosition({}); */
         }
-    }, [mouseDown, isSelected, mouseX, mouseY]);
+    }, [mouse.isDown, mouse.x, mouse.y]);
 
     const getRealMousePosition = () => {
-        let realX = getRealPixelSize(mouseX);
-        let realY = getRealPixelSize(mouseY);
+        let realX = getRealPixelSize(mouse.x);
+        let realY = getRealPixelSize(mouse.y);
 
         let x = realX - realX % gridSize;
         let y = realY - realY % gridSize;
@@ -183,52 +242,56 @@ const Zone = ({ zone, index, onClick, onMouseEnter, onMouseLeave, isDisabled, is
         return { x: x, y: y };
     }
 
-  
-    return <button key={`zones-${zone.id}`} disabled={isDisabled}  onClick={() => { if (selectedPositionEditor === null) onClick(index) }}  onMouseEnter={() => onMouseEnter(index)} onMouseLeave={() => onMouseLeave(null)} style={{ position: "absolute", left: getComputedPixelSize(tempFinalPosition.left !== undefined ? tempFinalPosition.left : zone.finalPosition.left), top: getComputedPixelSize(tempFinalPosition.top !== undefined ? tempFinalPosition.top : zone.finalPosition.top), width: getComputedPixelSize(tempFinalPosition.width !== undefined ? tempFinalPosition.width : zone.finalPosition.width), height: getComputedPixelSize(tempFinalPosition.height !== undefined ? tempFinalPosition.height : zone.finalPosition.height) }} className={`${isDisabled ? 'pointer-events-none' : 'pointer-events-auto'} ${[toolTypes.Image].includes(zone.type) && isPlaying ? '' : 'rounded'} flex flex-row items-center justify-center ${isPlaying ? '' : isSelected ? 'border border-blue-600' : isHovered ? 'border border-blue-400' : 'border border-gray-200'}`}>
-        <div id={zone.id} className={`${isSelected ? 'bg-blue-400' : isHovered ? 'bg-blue-200' : isPlaying && zone.type === toolTypes.Shape ? 'bg-gray-100' : 'bg-gray-400'} overflow-hidden ${[toolTypes.Image].includes(zone.type) && isPlaying ? '' : 'rounded-sm'} opacity-75 w-full h-full pointer-events-none flex flex-row items-center justify-center`}>
-            {zone.type === toolTypes.Text && <MenuAlt2Icon key={`zones-${zone.id}-icon`} className={`h-12 w-12 text-white`} />}
-            {zone.type === toolTypes.Image && <img id={`image-${zone.id}`} src={zone.src ? zone.src : images[index]} alt={`${zone.id}`} crossOrigin='anonymous' className={`select-none w-full h-full object-center object-cover bg-white`} />}
-            {zone.type === toolTypes.Shape && <DocumentIcon key={`zones-${zone.id}-icon`} className={`h-12 w-12 text-white`} />}
-            {zone.type === toolTypes.Video && <FilmIcon key={`zones-${zone.id}-icon`} className={`h-12 w-12 text-white`} />}
-        </div>
-        <div className={`bg-gray-200 pointer-events-none absolute top-0 left-0 flex flex-row items-center justify-center rounded-br rounded-tl-sm space-x-1 p-1 ${isDisabled || !isSelected ? 'hidden' : ''}`}>
-            <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); onChange(index, 'sequence')}}>
-                {zone.sequence}
-            </div>
-            {animationTypes.map((animation, animIdx) => {
-                return <div key={`animationSamll-${zone.id}-${animIdx}`} onClick={() => onChange(index, 'animations', animation.type)} className={`pointer-events-auto cursor-pointer rounded ${zone.animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
-                    <animation.icon className='h-5 w-5' />
-                </div>
-            })}
-        </div>
-        {isSelected && <div className='absolute top-0 left-0 w-full h-full pointer-events-auto'>
-            <button id="tl" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('tl')}} className='absolute -top-1 -left-1 rounded-full w-2 h-2 bg-blue-600'></button>
-            <button id="tr" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('tr')}} className='absolute -top-1 -right-1 rounded-full w-2 h-2 bg-blue-600'></button>
-            <button id="bl" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('bl')}} className='absolute -bottom-1 -left-1 rounded-full w-2 h-2 bg-blue-600'></button>
-            <button id="br" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('br')}} className='absolute -bottom-1 -right-1 rounded-full w-2 h-2 bg-blue-600'></button>
+    
+    return (
+        <>
+            <button key={`zones-${zone.id}`} disabled={isDisabled} onClick={handleOnClick}  onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave} style={{ position: "absolute", left: getComputedPixelSize(tempFinalPosition.left !== undefined ? tempFinalPosition.left : zone.finalPosition.left), top: getComputedPixelSize(tempFinalPosition.top !== undefined ? tempFinalPosition.top : zone.finalPosition.top), width: getComputedPixelSize(tempFinalPosition.width !== undefined ? tempFinalPosition.width : zone.finalPosition.width), height: getComputedPixelSize(tempFinalPosition.height !== undefined ? tempFinalPosition.height : zone.finalPosition.height) }} className={`${isDisabled ? 'pointer-events-none' : 'pointer-events-auto'} ${[toolTypes.Image].includes(zone.type) && isPlaying ? '' : 'rounded'} group flex flex-row items-center justify-center ${isPlaying ? '' : isSelected ? 'border border-blue-500' : isHovered ? 'border border-blue-400' : 'border border-gray-200 hover:border-blue-400'} ${CURSOR_TYPE[selectedPositionEditor] ? CURSOR_TYPE[selectedPositionEditor] : 'cursor-pointer'}`}>
+                <ZoneContent zone={zone} isSelected={isSelected} isHovered={isHovered} onChange={onChange} isPlaying={isPlaying} adjusmentWidth={adjusmentWidth} />
+            </button>
+            {isSelected && 
+                <>
+                    {mouseIsDown && <div className={`absolute top-0 left-0 h-full w-full z-40 pointer-events-auto ${CURSOR_TYPE[selectedPositionEditor]}`}></div>}
+                    <div ref={ref} style={{ position: "absolute", left: getComputedPixelSize(tempFinalPosition.left !== undefined ? tempFinalPosition.left : zone.finalPosition.left), top: getComputedPixelSize(tempFinalPosition.top !== undefined ? tempFinalPosition.top : zone.finalPosition.top), width: getComputedPixelSize(tempFinalPosition.width !== undefined ? tempFinalPosition.width : zone.finalPosition.width), height: getComputedPixelSize(tempFinalPosition.height !== undefined ? tempFinalPosition.height : zone.finalPosition.height) }} className={`pointer-events-auto z-50 border border-blue-500 ${CURSOR_TYPE[selectedPositionEditor]}`}>
 
+                        <div className='absolute top-0 left-0 h-full w-full flex flex-row items-center justify-center pointer-events-none'>
+                            <button id="m" onMouseDown={(event) => {if (event.button === 0) event.stopPropagation(); setSelectedPositionEditor('m')}} className={`w-full h-full cursor-move ${selectedPositionEditor === 'm' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        </div>
 
-            <div className='absolute -top-1 left-0 w-full h-2 flex flex-row justify-center pointer-events-none'>
-                <button id="t" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('t')}} className='rounded-full w-6 h-2 bg-blue-600 pointer-events-auto'></button>
-            </div>
+                        {!mouseIsDown && mouseRef.current && screenSize.height && 
+                        <div style={{ position: "fixed", 
+                            zIndex: 500,
+                            left: getComputedPixelSize(tempFinalPosition.left !== undefined ? tempFinalPosition.left : zone.finalPosition.left) + mouseRef.current.getBoundingClientRect().left, 
+                            bottom: (screenSize.height - getComputedPixelSize(tempFinalPosition.top !== undefined ? tempFinalPosition.top : zone.finalPosition.top) - mouseRef.current.getBoundingClientRect().top), 
+                            width: getComputedPixelSize(tempFinalPosition.width !== undefined ? tempFinalPosition.width : zone.finalPosition.width)}} className={`flex flex-row items-center justify-center pointer-events-none`}>
+                        <div id='propertyBubble' className={`bg-gray-200 pointer-events-none flex flex-row items-center justify-center rounded-lg space-x-1 p-1.5 m-2 shadow-lg border border-gray-300 pointer-events-auto`}>
+                                <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); onChange(zone, 'sequence')}}>
+                                    {zone.sequence}
+                                </div>
+                                {animationTypes.map((animation, animIdx) => {
+                                    return <div key={`animationSamll-${zone.id}-${animIdx}`} onClick={(event) => {event.stopPropagation(); onChange(zone, 'animations', animation.type)}} className={`pointer-events-auto cursor-pointer rounded ${zone.animations.includes(animation.type) ? 'bg-blue-200 text-blue-600' : 'bg-white text-gray-500 hover:bg-blue-100 hover:text-blue-400'}`}>
+                                        <animation.icon className='h-5 w-5' />
+                                    </div>
+                                })}
+                                <div className='h-5 w-5 shrink-0 flex rounded text-xs bg-white text-gray-500 hover:bg-red-100 hover:text-red-600 items-center justify-center cursor-pointer pointer-events-auto' onClick={(e) => { e.stopPropagation(); onChange(zone, 'delete')}}>
+                                    <TrashIcon className='h-4 w-4' />
+                                </div>
+                            </div>        
+                        </div>}
 
-            <div className='absolute -bottom-1 left-0 w-full h-2 flex flex-row justify-center pointer-events-none'>
-                <button id="b" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('b')}} className='rounded-full w-6 h-2 bg-blue-600 pointer-events-auto'></button>
-            </div>
+                        <button id="t" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('t')}} className={`absolute -top-1 left-0 w-full h-2 cursor-ns-resize ${selectedPositionEditor === 't' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="b" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('b')}} className={`absolute -bottom-1 left-0 w-full h-2 cursor-ns-resize ${selectedPositionEditor === 'b' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="l" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('l')}} className={`absolute top-0 -left-1 h-full w-2 cursor-ew-resize ${selectedPositionEditor === 'l' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="r" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('r')}} className={`absolute top-0 -right-1 h-full w-2 cursor-ew-resize ${selectedPositionEditor === 'r' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
 
-            <div className='absolute top-0 -left-1 h-full w-2 flex flex-row items-center pointer-events-none'>
-                <button id="l" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('l')}} className='rounded-full w-2 h-6 bg-blue-600 pointer-events-auto'></button>
-            </div>
-
-            <div className='absolute top-0 -right-1 h-full w-2 flex flex-row items-center pointer-events-none'>
-                <button id="r" onMouseDown={(event) => {if (event.button === 0) setSelectedPositionEditor('r')}} className='rounded-full w-2 h-6 bg-blue-600 pointer-events-auto'></button>
-            </div>
-
-            <div className='absolute top-0 left-0 h-full w-full flex flex-row items-center justify-center pointer-events-none'>
-                <button id="m" onMouseDown={(event) => {if (event.button === 0) setStartMousePosition(getRealMousePosition()); setSelectedPositionEditor('m')}} className='rounded-full w-6 h-6 bg-blue-600 pointer-events-auto'></button>
-            </div>
-        </div>}
-    </button>
+                        <button id="tl" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('tl')}} className={`absolute cursor-nwse-resize -top-1 -left-1 rounded-full w-2 h-2 bg-blue-500 ${selectedPositionEditor === 'tl' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="tr" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('tr')}} className={`absolute cursor-nesw-resize -top-1 -right-1 rounded-full w-2 h-2 bg-blue-500 ${selectedPositionEditor === 'tr' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="bl" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('bl')}} className={`absolute cursor-nesw-resize -bottom-1 -left-1 rounded-full w-2 h-2 bg-blue-500 ${selectedPositionEditor === 'bl' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                        <button id="br" onMouseDown={(event) => {event.stopPropagation(); if (event.button === 0) setSelectedPositionEditor('br')}} className={`absolute cursor-nwse-resize -bottom-1 -right-1 rounded-full w-2 h-2 bg-blue-500 ${selectedPositionEditor === 'br' || selectedPositionEditor === null ? 'pointer-events-auto' : 'pointer-events-none'}`}></button>
+                    </div>
+                </>
+            }
+        </>
+    )
 }
 
 export default Zone;

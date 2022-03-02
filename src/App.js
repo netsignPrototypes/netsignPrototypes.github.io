@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import './App.css';
-import { CreationTool, CreationFromDataTool, LayoutTool, ObjectDetectionTool, DataSourceTool, VisualQueryBuilderTool, BirthdayTool } from './modules';
+import { CreationTool, CreationFromDataTool, LayoutTool, LayoutToolV2, ObjectDetectionTool, DataSourceTool, VisualQueryBuilderTool, BirthdayTool } from './modules';
 import { DatabaseIcon, PhotographIcon, TableIcon, GiftIcon, CollectionIcon, TemplateIcon, QrcodeIcon, CakeIcon } from '@heroicons/react/outline'
 import { useMediaQuery } from 'react-responsive';
+import { Slide } from './components';
 
 function App() {
 
@@ -89,12 +90,62 @@ function App() {
 
   return (
     <>
-    {isAuthorized ? 
+    {isAuthorized ?
+    currentTool === "LayoutToolV2" ? 
+      <div className='w-full flex flex-col sm:flex-row flex-wrap sm:flex-nowrap max-h-screen flex-grow '>
+        <div className="z-50 flex-shrink flex-grow-0 bg-gray-100 shadow-md shadow-gray-900/50">
+            <div className="sticky top-0 w-full h-full">
+              <div className="flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 lg:p-4 lg:pt-7 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
+                <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                <CollectionIcon onClick={() => setCurrentTool("CreationFromDataTool")} className={`h-6 w-6 text-${currentTool === "CreationFromDataTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                {/* <TemplateIcon onClick={() => setCurrentTool("LayoutTool")} className={`h-6 w-6 text-${currentTool === "LayoutTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} /> */}
+                <TemplateIcon onClick={() => setCurrentTool("LayoutToolV2")} className={`h-6 w-6 text-${currentTool === "LayoutToolV2" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                <QrcodeIcon onClick={() => setCurrentTool("ObjectDetectionTool")} className={`h-6 w-6 text-${currentTool === "ObjectDetectionTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                <CakeIcon onClick={() => setCurrentTool("BirthdayTool")} className={`h-6 w-6 text-${currentTool === "BirthdayTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+                <TableIcon onClick={() => setCurrentTool("VisualQueryBuilderTool")} className={`h-6 w-6 text-${currentTool === "VisualQueryBuilderTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+              </div>
+            </div>
+        </div>
+        {currentTool === "LayoutToolV2" && <LayoutToolV2 isHidden={currentTool !== "LayoutToolV2"} />}
+        {/* <main role="main" class="w-10/12 flex-grow-0 flex-shrink-0">
+          <div className='w-full h-full flex-shrink flex-grow-0 flex flex-col bg-gray-300'>
+            <div className='w-full h-full flex flex-col items-center justify-center bg-gray-900 overflow-hidden'>
+
+              <div className='w-3/4'>
+                <div className='aspect-w-16 aspect-h-9 mx-2 w-full overflow-hidden'>
+                  <div className='w-full h-full bg-white rounded'>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <div className='w-full flex-shrink-0 flex-grow-0 min-h-fit bg-gray-600 overflow-x-scroll'>
+              <div className='grid grid-flow-col auto-cols-max px-4 pt-4 pb-2'>
+                  {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(item => <div className='aspect-w-16 aspect-h-9 w-48 mx-2 rounded overflow-hidden hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-gray-600'>
+                    <div className='w-full h-full bg-white'>
+                    </div>
+                  </div>)}
+                  <div className='w-3 h-full'>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <div class="z-50 w-full flex-shrink flex-grow-0 px-2 bg-gray-700 shadow-md shadow-gray-900/50">
+            
+            <div class="flex sm:flex-col px-2">
+                
+            </div>
+        </div> */}
+      </div>
+    :
     <>
       <div className="z-50 absolute top-0 left-0 flex flex-row lg:flex-col lg:max-w-min lg:min-h-screen p-3 lg:p-4 lg:pt-7 space-x-4 lg:space-x-0 lg:space-y-4 rounded-br-md bg-white shadow lg:bg-transparent lg:shadow-none">
         <PhotographIcon onClick={() => setCurrentTool("CreationTool")} className={`h-6 w-6 text-${currentTool === "CreationTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <CollectionIcon onClick={() => setCurrentTool("CreationFromDataTool")} className={`h-6 w-6 text-${currentTool === "CreationFromDataTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
-        <TemplateIcon onClick={() => setCurrentTool("LayoutTool")} className={`h-6 w-6 text-${currentTool === "LayoutTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
+        {/* <TemplateIcon onClick={() => setCurrentTool("LayoutTool")} className={`h-6 w-6 text-${currentTool === "LayoutTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} /> */}
+        <TemplateIcon onClick={() => setCurrentTool("LayoutToolV2")} className={`h-6 w-6 text-${currentTool === "LayoutToolV2" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <QrcodeIcon onClick={() => setCurrentTool("ObjectDetectionTool")} className={`h-6 w-6 text-${currentTool === "ObjectDetectionTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <CakeIcon onClick={() => setCurrentTool("BirthdayTool")} className={`h-6 w-6 text-${currentTool === "BirthdayTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
         <DatabaseIcon onClick={() => setCurrentTool("DataSourceTool")} className={`h-6 w-6 text-${currentTool === "DataSourceTool" ? "blue-600" : "gray-400"} hover:text-blue-500 cursor-pointer`} />
