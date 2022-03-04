@@ -7,7 +7,7 @@ import FcmBd from './dataSource/FcmBd';
 
 import { gsap } from "gsap";
 
-import { Slide, ListeDeroulante, Zone } from '../components';
+import { Slide, ListeDeroulante, ZoneEditor } from '../components';
 
 import useMouse from '@react-hook/mouse-position'
 
@@ -1389,7 +1389,7 @@ const LayoutTool = ({ isHidden }) => {
                                 <div className={`absolute z-10 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? 'pointer-events-none' : ''}`}>
                                     {zones.map((/* { id, position, type, finalPosition, sequence, animations, src } */zone, index) => {
                                         if (zone.finalPosition) {
-                                            return <Zone zone={zone} key={zone.id} index={index} onClick={handleSelectZone} onMouseEnter={handleHoverZone} onMouseLeave={setHoverZoneIdx} isDisabled={playingPreview || currentTool !== 'Cursor' || (selectedZoneIdx !== null && selectedZoneIdx !== index && hoverZoneIdx === selectedZoneIdx)} isPlaying={playingPreview} isSelected={selectedZoneIdx === index} isHovered={hoverZoneIdx === index} onChange={handleZoneChange} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} />
+                                            return <ZoneEditor zone={zone} key={zone.id} index={index} onClick={handleSelectZone} onMouseEnter={handleHoverZone} onMouseLeave={setHoverZoneIdx} isDisabled={playingPreview || currentTool !== 'Cursor' || (selectedZoneIdx !== null && selectedZoneIdx !== index && hoverZoneIdx === selectedZoneIdx)} isPlaying={playingPreview} isSelected={selectedZoneIdx === index} isHovered={hoverZoneIdx === index} onChange={handleZoneChange} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} />
                                             /* return <button key={`zones-${index}`}  onClick={() => { if (currentTool === 'Cursor') handleSelectZone(index) }}  onMouseEnter={() => { if (currentTool === 'Cursor') setHoverZoneIdx(index)}} onMouseLeave={() => { if (currentTool === 'Cursor') setHoverZoneIdx(null)}} style={{ position: "absolute", left: getComputedPixelSize(finalPosition.left), top: getComputedPixelSize(finalPosition.top), width: getComputedPixelSize(finalPosition.width), height: getComputedPixelSize(finalPosition.height) }} className={`${currentTool === 'Cursor' ? 'pointer-events-auto' : 'pointer-events-none'} ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded'} flex flex-row items-center justify-center ${playingPreview ? '' : selectedZoneIdx === index ? 'border border-blue-600' : hoverZoneIdx === index ? 'border border-blue-400' : 'border border-gray-200'}`}>
                                                         <div id={id} className={`${selectedZoneIdx === index ? 'bg-blue-400' : hoverZoneIdx === index && !playingPreview ? 'bg-blue-200' : playingPreview && type === toolTypes.Shape ? 'bg-gray-100' : 'bg-gray-400'} overflow-hidden ${[toolTypes.Image].includes(type) && playingPreview ? '' : 'rounded-sm'} opacity-75 w-full h-full pointer-events-none flex flex-row items-center justify-center`}>
                                                             {type === toolTypes.Text && <MenuAlt2Icon key={`zones-${index}-icon`} className={`h-12 w-12 text-white`} />}

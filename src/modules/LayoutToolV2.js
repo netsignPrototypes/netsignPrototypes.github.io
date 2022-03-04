@@ -7,7 +7,7 @@ import FcmBd from './dataSource/FcmBd';
 
 import { gsap } from "gsap";
 
-import { Zone, ZoneContent } from '../components';
+import { ZoneEditor, ZoneContent } from '../components';
 
 import useMouse from '@react-hook/mouse-position';
 
@@ -16,6 +16,15 @@ import { csv2json } from 'csvjson-csv2json';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 import usePanZoom from "use-pan-and-zoom";
+
+import { useRecoilState } from 'recoil';
+
+import {
+    slidesState,
+    currentSlideState,
+    hoveredZoneIdState,
+    selectedZoneIdState
+} from "../state/atoms"
 
 import { useWindowSize } from '../hooks';
 import useKeyboardShortcut from 'use-keyboard-shortcut'
@@ -130,62 +139,6 @@ const DEFAULT_SLIDES = [
     }
 ]
 
-const DEFAULT_SLIDES_OLD = [
-    {
-        id: 1,
-        duration: 5,
-        zones: [/* ZONES */]
-    },
-    {
-        id: 2,
-        duration: 5,
-        zones: [
-            {"id":"Shape-1001","type":3,"position":[[0,0,24,24],[696,1056,720,1080]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":0,"top":0,"width":720,"height":1080}},
-            {"id":"Shape-1002","type":3,"position":[[1896,0,1920,24],[720,1056,744,1080]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":720,"top":0,"width":1200,"height":1080}},
-            {"id":"Image-1007","type":2,"position":[[744,24,768,48],[1296,504,1320,528]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":744,"top":24,"width":576,"height":504}},
-            {"id":"Image-1008","type":2,"position":[[1872,24,1896,48],[1344,504,1368,528]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80","finalPosition":{"left":1344,"top":24,"width":552,"height":504}},
-            {"id":"Image-1009","type":2,"position":[[744,552,768,576],[1296,1032,1320,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":744,"top":552,"width":576,"height":504}},
-            {"id":"Image-10010","type":2,"position":[[1344,552,1368,576],[1872,1032,1896,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644869432047-fa8bdbe849cd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80","finalPosition":{"left":1344,"top":552,"width":552,"height":504}},
-            {"id":"Text-10011","type":1,"position":[[24,24,48,72],[672,168,696,192]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":24,"top":24,"width":672,"height":168}},
-            {"id":"Text-10012","type":1,"position":[[24,216,48,240],[672,1032,696,1056]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":24,"top":216,"width":672,"height":840}}
-        ]
-    },
-    {
-        id: 3,
-        duration: 5,
-        zones: [
-            {"id":"Shape-2001","type":3,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"src":'',"finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},
-            {"id":"Image-2002","type":2,"position":[[24,24,48,48],[672,240,696,264]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1598635416326-ff055cbb02cb?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',"finalPosition":{"left":24,"top":24,"width":672,"height":240}},
-            {"id":"Image-2003","type":2,"position":[[720,24,744,48],[1056,504,1080,528]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80',"finalPosition":{"left":720,"top":24,"width":360,"height":504}},
-            {"id":"Image-2004","type":2,"position":[[24,288,48,312],[336,720,360,744]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',"finalPosition":{"left":24,"top":288,"width":336,"height":456}},
-            {"id":"Image-2005","type":2,"position":[[384,288,408,312],[672,504,696,528]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644869432047-fa8bdbe849cd?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',"finalPosition":{"left":384,"top":288,"width":312,"height":240}},
-            {"id":"Image-2006","type":2,"position":[[384,552,408,576],[840,1032,864,1056]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1567637903900-7a2f05e37e1a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',"finalPosition":{"left":384,"top":552,"width":480,"height":504}},
-            {"id":"Image-2007","type":2,"position":[[24,768,48,792],[336,1032,360,1056]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644574739831-d19ded59cae8?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',"finalPosition":{"left":24,"top":768,"width":336,"height":288}},
-            {"id":"Image-2008","type":2,"position":[[1536,264,1560,288],[1104,504,1128,528]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644748865694-2db1be00e13a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',"finalPosition":{"left":1104,"top":264,"width":456,"height":264}},
-            {"id":"Image-2009","type":2,"position":[[1872,24,1896,48],[1104,216,1128,240]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1637336659506-93ee3acccd85?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80',"finalPosition":{"left":1104,"top":24,"width":792,"height":216}},
-            {"id":"Image-20010","type":2,"position":[[1584,264,1608,288],[1872,744,1896,768]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644840379571-2a973eee0726?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',"finalPosition":{"left":1584,"top":264,"width":312,"height":504}},
-            {"id":"Image-20011","type":2,"position":[[888,552,912,576],[1296,744,1320,768]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644805424176-e426671f33ec?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',"finalPosition":{"left":888,"top":552,"width":432,"height":216}},
-            {"id":"Image-20012","type":2,"position":[[1536,552,1560,576],[1344,744,1368,768]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644773741827-d635af7357b4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1935&q=80',"finalPosition":{"left":1344,"top":552,"width":216,"height":216}},
-            {"id":"Image-20013","type":2,"position":[[888,792,912,816],[1128,1032,1152,1056]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644707386365-117da5d3fdc4?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1932&q=80',"finalPosition":{"left":888,"top":792,"width":264,"height":264}},
-            {"id":"Image-20014","type":2,"position":[[1872,792,1896,816],[1176,1032,1200,1056]],"sequence":1,"animations":[],"src":'https://images.unsplash.com/photo-1644667621462-4938986c3a41?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2077&q=80',"finalPosition":{"left":1176,"top":792,"width":720,"height":264}}
-        ]
-    },
-    {
-        id: 4,
-        duration: 5,
-        zones: [
-            {"id":"Fond-300","type":4,"position":[[0,0,24,24],[1896,1056,1920,1080]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":0,"top":0,"width":1920,"height":1080}},
-            {"id":"bandeau-300","type":3,"position":[[0,888,24,912],[1896,1008,1920,1032]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":0,"top":888,"width":1920,"height":144}},
-            {"id":"CoinBandeau-300","type":3,"position":[[1896,840,1920,864],[1560,1008,1584,1032]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":1560,"top":840,"width":360,"height":192}},
-            {"id":"Heure-300","type":1,"position":[[1584,864,1608,888],[1872,984,1896,1008]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":1584,"top":864,"width":312,"height":144}},
-            {"id":"Logo-300","type":2,"position":[[144,888,168,912],[24,1008,48,1032]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644780295337-452d26bc1f89?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2071&q=80","finalPosition":{"left":24,"top":888,"width":144,"height":144}},
-            {"id":"ImagePrincipale-300","type":2,"position":[[72,240,96,264],[816,648,840,672]],"sequence":1,"animations":[],"src":"https://images.unsplash.com/photo-1644678961183-b57d0b9423d6?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80","finalPosition":{"left":72,"top":240,"width":768,"height":432}},
-            {"id":"Titre-300","type":1,"position":[[1824,72,1848,96],[72,192,96,216]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":72,"top":72,"width":1776,"height":144}},
-            {"id":"Corp-300","type":1,"position":[[864,240,888,264],[1824,792,1848,816]],"sequence":1,"animations":[],"src":"","finalPosition":{"left":864,"top":240,"width":984,"height":576}}
-        ]
-    }
-]
-
 const DEFAULT_SLIDE = {
     id: 0,
     duration: 5,
@@ -227,27 +180,24 @@ const LayoutToolV2 = ({ isHidden }) => {
 
     /* Thumb previews */
     const [thumbPreviewWidth, setThumbPreviewWidth] = useState(0);
+    const [thumbPreviewPosition, setThumbPreviewPosition] = useState({ x: 0, y: 0 });
     const [thumbPreviewContainerWidth, setThumbPreviewContainerWidth] = useState(0);
     const [smallThumbPreviewWidth, setSmallThumbPreviewWidth] = useState(0);
 
     /* Zones */
     const [zones, setZones] = useState([]);
     const [currentZone, setCurrentZone] = useState(null);
-    const [hoveredZoneId, setHoveredZoneId] = useState(null);
-    const [selectedZoneId, setSelectedZoneId] = useState(null);
+    /* const [hoveredZoneId, setHoveredZoneId] = useRecoilState(hoveredZoneIdState); */
+    const [selectedZoneId, setSelectedZoneId] = useRecoilState(selectedZoneIdState)/* useState(null) */;
 
     const [tempZone, setTempZone] = useState([]);
-    const [zoneIdx, setZoneIdx] = useState(0);
-    const [hoverZoneIdx, setHoverZoneIdx] = useState(null);
-    const [selectedZoneIdx, setSelectedZoneIdx] = useState(null);
 
     const [changeHistory, setChangeHistory] = useState([DEFAULT_SLIDES[0]]);
     const [changeHistoryIdx, setChangeHistoryIdx] = useState(0);
     
     /* Slides */
-    const [slides, setSlides] = useState(DEFAULT_SLIDES);
-    const [currentSlide, setCurrentSlide] = useState(DEFAULT_SLIDES[0]);
-    const [slideIdx, setSlideIdx] = useState(0);
+    const [slides, setSlides] = useRecoilState(slidesState) /* useState(DEFAULT_SLIDES) */;
+    const [currentSlide, setCurrentSlide] = useRecoilState(currentSlideState) /* useState(DEFAULT_SLIDES[0]) */;
 
     /* Animations */
     const [maxSequence, setMaxSequence] = useState(2);
@@ -276,9 +226,9 @@ const LayoutToolV2 = ({ isHidden }) => {
     const [gridSize, setGridSize] = useState(24);
 
     /* Panning & zooming */
-    /* const [canPan, setCanPan] = useState(false);
+    const [canPan, setCanPan] = useState(false);
     const [currentZoom, setCurrentZoom] = useState(1);
-    const [currentPan, setCurrentPan] = useState({x: 0, y: 0}); */
+    const [currentPan, setCurrentPan] = useState({x: 0, y: 0});
 
     // REFS --------------------------------------
 
@@ -286,24 +236,20 @@ const LayoutToolV2 = ({ isHidden }) => {
     const thumbPreviewContainer = useRef(null);
     const thumbPreview = useRef(null);
     const smallThumbPreview = useRef(null);
-
-    /* Zone on top of selected zone so our mouse goes trough layers on top of the selected zone */
-    const hoverZoneRef = useRef(null);
     
 
     // CUSTOM HOOKS ------------------------------
 
-    const mouseHoverZone = useMouse(hoverZoneRef, { fps: 30 });
     /* const mouse = useMouse(thumbPreview, { fps: 30 }); */
     const isMobile = useMediaQuery({ query: `(max-width: 1024px)` });
     const screenSize = useWindowSize();
-    /* const { transform, setContainer, panZoomHandlers, setPan, zoom, container } = usePanZoom({ 
+    const { transform, setContainer, panZoomHandlers, setPan, setZoom, pan, zoom, container, center } = usePanZoom({ 
         minZoom: 1, 
         maxZoom: 6, 
         enablePan: (currentTool === 'PanZoom' && canPan), 
         enableZoom: (currentTool === 'PanZoom'),
-        zoomSensitivity: 0.001
-    }); */
+        zoomSensitivity: 0.0007
+    });
 
     const ctrlShiftZ = useKeyboardShortcut(["Control", "Shift", "Z"], () => { handleChangeHistoryIdx(1) }, { overrideSystem: true, ignoreInputFields: false, repeatOnHold: false });
     const ctrlZ = useKeyboardShortcut(["Control", "Z"], keys => { handleChangeHistoryIdx(-1) }, { overrideSystem: true, ignoreInputFields: false, repeatOnHold: false });
@@ -313,7 +259,10 @@ const LayoutToolV2 = ({ isHidden }) => {
 
     useEffect(() => {
         if (!isHidden) {
-
+            setSlides(DEFAULT_SLIDES);
+            setCurrentSlide(DEFAULT_SLIDES[0]);
+            setCurrentZone(null);
+            setSelectedZoneId(null);
         }
 
         return () => {
@@ -339,6 +288,8 @@ const LayoutToolV2 = ({ isHidden }) => {
 
             setThumbPreviewWidth(previewWidth);
             setThumbPreviewContainerWidth(containerWidth);
+            setZoom(1);
+            setThumbPreviewPosition({ x: (containerWidth - previewWidth) / 2, y: (containerHeight - previewHeight) / 2 })
         }
         
         /* if (thumbPreview.current) {
@@ -351,12 +302,6 @@ const LayoutToolV2 = ({ isHidden }) => {
     }, [screenSize]);
 
     useEffect(() => {
-        if (mouseHoverZone.isOver && selectedZoneIdx !== null) {
-            setHoverZoneIdx(selectedZoneIdx);
-        }
-    }, [mouseHoverZone.isOver]);
-
-    useEffect(() => {
         if (zones !== null) {
             zones.forEach(zone => {
                 gsap.set(`#${zoneTypes[zone.type]}-${zone.id}`, { opacity: 1 })
@@ -365,14 +310,14 @@ const LayoutToolV2 = ({ isHidden }) => {
         }
      }, [zones]);
 
-    /* useEffect(() => {
+    useEffect(() => {
         if (zoom === 1 && canPan) {
             setPan({ x: 0, y: 0});
             setCanPan(false);
         } else if (!canPan && zoom > 1) {
             setCanPan(true);
         }
-    }, [zoom]);  */
+    }, [zoom]); 
 
 
     // DATA STATE MANAGEMENT FUNCTIONS ----------------------------------------------------------------
@@ -442,25 +387,6 @@ const LayoutToolV2 = ({ isHidden }) => {
         setIsSaved(checkIfSaved(slides.find(slide => slide.id === currentSlide.id), { ...currentSlide, ...updatedSlide }));
     }
 
-    /* À revoir pour slides */
-    const handleSelectSlide = (index) => {
-
-        if (index !== slideIdx && !playingPreview) {
-            const newSlides = [...slides];
-            const newZones = [...zones];
-            newSlides[slideIdx] = newZones;
-
-            setHoverZoneIdx(null);
-            setSelectedZoneIdx(null);
-            setSlideIdx(index);
-            setSlides(newSlides);
-            setZones(FcmBd.utils.deepCopy(newSlides[index]));
-            setZoneIdx(newSlides[index].length > 0 ? newSlides[index].length - 1 : 0);
-        } 
-        
-
-    }
-
     /* Zones */
     const handleAddZone = (zone) => {
         handleUpdateSlide({ zones: [...currentSlide.zones, { ...DEFAULT_ZONE, ...zone, id: uniqueZoneCount, type: toolTypes[currentTool] }]});
@@ -476,7 +402,6 @@ const LayoutToolV2 = ({ isHidden }) => {
         }
 
         handleUpdateSlide({ zones: updatedObject });
-        setIsSaved(false);
     }
 
     const handleEditZone = (zone) => {
@@ -491,17 +416,17 @@ const LayoutToolV2 = ({ isHidden }) => {
         );
 
         if (id === selectedZoneId) {
-            setCurrentZone(updatedZone);
+            setCurrentZone({...updatedZone});
         }
 
         handleUpdateSlide({ zones: updatedObject });
     }
 
-    const handleHoveredZone = (id) => {
-        if (hoveredZoneId !== selectedZoneId || (hoverZoneIdx === null && selectedZoneIdx === null)) {
+    /* const handleHoveredZone = (id) => {
+        if (hoveredZoneId !== selectedZoneId) {
             setHoveredZoneId(id);
         }
-    }
+    } */
 
     const handleSelectedZone = (zone = {}) => {
         if (currentTool !== 'Cursor') {
@@ -509,31 +434,33 @@ const LayoutToolV2 = ({ isHidden }) => {
         }
         
         if (zone.id && selectedZoneId === zone.id) {
+            console.log("Unselect");
             setSelectedZoneId(null);
             setCurrentZone(null);
         } else if (zone.id) {
+            console.log("Select");
             setSelectedZoneId(zone.id);
             setCurrentZone({ ...zone });
-        } else if (hoveredZoneId !== null) {
+        } /* else if (hoveredZoneId !== null) {
             selectedZoneId(hoveredZoneId);
             setCurrentZone({ ...currentSlide.zones.find(zone => zone.id === hoveredZoneId) });
-        }
+        } */
         
     }
 
 
     /* Current zone */
-    const handleCreateNewZone = (mouseX, mouseY, mouseDown) => {
+    const handleCreateNewZone = (/* mouseX, mouseY */ square, mouseDown) => {
 
         /* const gridSize = 24; */
 
-        let realX = getRealPixelSize(mouseX);
+        /* let realX = getRealPixelSize(mouseX);
         let realY = getRealPixelSize(mouseY);
 
         let x = realX - realX % gridSize;
         let y = realY - realY % gridSize;
 
-        let square = [ x, y, x + gridSize, y + gridSize ];
+        let square = [ x, y, x + gridSize, y + gridSize ]; */
 
         if (currentZone && !mouseDown) {
             handleAddZone({...currentZone, ...getPositions([tempZone, square]) });
@@ -665,16 +592,24 @@ const LayoutToolV2 = ({ isHidden }) => {
 
     const handleChangeHistoryIdx = (move) => {
         let newChangeHistoryIdx = changeHistoryIdx;
+        let newCurrentSlide;
 
         if (newChangeHistoryIdx > 0 && move < 0) {
-            setChangeHistoryIdx(newChangeHistoryIdx - 1);
-            setCurrentSlide(changeHistory[newChangeHistoryIdx - 1]);
-            setIsSaved(checkIfSaved(slides.find(slide => slide.id === currentSlide.id), changeHistory[newChangeHistoryIdx - 1]));
+            newCurrentSlide = changeHistory[newChangeHistoryIdx - 1];
+            newChangeHistoryIdx--;
         } else if (newChangeHistoryIdx + 1 < changeHistory.length && move > 0) {
-            setChangeHistoryIdx(newChangeHistoryIdx + 1);
-            setCurrentSlide(changeHistory[newChangeHistoryIdx + 1]);
-            setIsSaved(checkIfSaved(slides.find(slide => slide.id === currentSlide.id), changeHistory[newChangeHistoryIdx + 1]));
+            newCurrentSlide = changeHistory[newChangeHistoryIdx + 1];
+            newChangeHistoryIdx++;
         }
+
+        setChangeHistoryIdx(newChangeHistoryIdx);
+        setCurrentSlide(newCurrentSlide);
+        setIsSaved(checkIfSaved(slides.find(slide => slide.id === currentSlide.id), newCurrentSlide));
+
+        if (selectedZoneId !== null) {
+            handleEditZone(newCurrentSlide.zones.find(zone => zone.id === selectedZoneId));
+        }
+
     }
 
 
@@ -705,13 +640,12 @@ const LayoutToolV2 = ({ isHidden }) => {
     /* Outil de création */
     const handleChangeCurrentTool = (tool) => {
         setCurrentTool(tool);
-        setSelectedZoneIdx(null);
+        setSelectedZoneId(null);
     }
 
     /* Animations */
     const handlePlay = (smart = false) => {
         emptyTimeLine();
-        setSelectedZoneIdx(null);
 
         if (!smart) {            
 
@@ -727,17 +661,11 @@ const LayoutToolV2 = ({ isHidden }) => {
                 computedZones = [...computedZones, ...computedZone];
             })
 
-            //createTimeLine([...zones], false);
-
             setZones([...computedZones]);
 
-            //createTimeLineV2([...computedZones], false);
         } else {
-            //createTimeLine(computeZones(FcmBd.utils.deepCopy(zones)), false);
 
             let computedZones = smartAnimationV2(computeZonesV2(FcmBd.utils.deepCopy(currentSlide.zones)));
-
-            /* createTimeLineV2(computedZones, false); */
 
             setZones([...computedZones]);
         }
@@ -750,12 +678,12 @@ const LayoutToolV2 = ({ isHidden }) => {
         emptyTimeLine();
         setPlayingPreview(false);
 
-        zones.forEach(zone => {
-            gsap.set(`#${zoneTypes[zone.type]}-${zone.id}`, { opacity: 0.75 })
-        });
-
-        setZones(null);
-
+        if (zones !== null) {
+            zones.forEach(zone => {
+                gsap.set(`#${zoneTypes[zone.type]}-${zone.id}`, { opacity: 0.75 })
+            });
+            setZones(null);
+        }
     }
 
     const stopTimeLine = () => {
@@ -1187,10 +1115,36 @@ const LayoutToolV2 = ({ isHidden }) => {
     les mesures enregistrées sont basées sur un écran 1920x1080, mais la zone d'édition n'a pas cette dimension */
     const getComputedPixelSize = (pixel) => {
         let computedPixelSize = 0;
+        let currentThumbPreviewWidth = getThumbPreviewWidth();
+
+        /* if (thumbPreviewContainerWidth === 0 || (thumbPreviewContainer.current && thumbPreviewContainer.current.offsetWidth !== thumbPreviewContainerWidth)) {
+
+            let containerWidth = thumbPreviewContainer.current.offsetWidth;
+            let containerHeight = thumbPreviewContainer.current.offsetHeight;
+
+            let previewWidth = containerWidth * 0.75;
+            let previewHeight = previewWidth / 16 * 9;
+
+            if (previewHeight >= containerHeight * 0.95) {
+                previewHeight = containerHeight * 0.95;
+                previewWidth = previewHeight / 9 * 16;
+            }
+
+            currentThumbPreviewWidth = previewWidth;
+            setThumbPreviewContainerWidth(containerWidth);
+            setThumbPreviewWidth(currentThumbPreviewWidth);
+        } */
+
+        computedPixelSize = currentThumbPreviewWidth / 1920 * pixel;
+
+        return computedPixelSize;
+    }
+
+    const getThumbPreviewWidth = () => {
         let currentThumbPreviewWidth = thumbPreviewWidth;
 
         if (thumbPreviewContainerWidth === 0 || (thumbPreviewContainer.current && thumbPreviewContainer.current.offsetWidth !== thumbPreviewContainerWidth)) {
-            /* currentThumbPreviewWidth = thumbPreview.current.offsetWidth; */
+
             let containerWidth = thumbPreviewContainer.current.offsetWidth;
             let containerHeight = thumbPreviewContainer.current.offsetHeight;
 
@@ -1207,9 +1161,7 @@ const LayoutToolV2 = ({ isHidden }) => {
             setThumbPreviewWidth(currentThumbPreviewWidth);
         }
 
-        computedPixelSize = currentThumbPreviewWidth / 1920 * pixel;
-
-        return computedPixelSize;
+        return currentThumbPreviewWidth;
     }
 
     /* Obtenir la grosseur d'une pixel dans un l'aperçue d'une vignette de la liste des vignettes, 
@@ -1235,7 +1187,7 @@ const LayoutToolV2 = ({ isHidden }) => {
         let currentThumbPreviewWidth = thumbPreviewWidth;
 
         if (thumbPreviewContainerWidth === 0 || (thumbPreviewContainer.current && thumbPreviewContainer.current.offsetWidth !== thumbPreviewContainerWidth)) {
-            /* currentThumbPreviewWidth = thumbPreview.current.offsetWidth; */
+
             let containerWidth = thumbPreviewContainer.current.offsetWidth;
             let containerHeight = thumbPreviewContainer.current.offsetHeight;
 
@@ -1303,8 +1255,6 @@ const LayoutToolV2 = ({ isHidden }) => {
     /* Obtenir un objet contenant les positions et les positions finales recalculées d'une zone sous la forme { finalPosition: { left: 0, top: 0, width: 1920, height: 1080 }, position: [[0,0,0,0],[0,0,0,0]] }
     à partir d'un objet contenant les positions sous la forme [[0,0,0,0],[0,0,0,0]] */
     const getPositions = (position) => {
-
-        /* const gridSize = 24; */
 
         if (position[0][0] <= position[1][2] && position[0][1] <= position[1][3]) {
             position = [position[0], position[1]];
@@ -1427,10 +1377,11 @@ const LayoutToolV2 = ({ isHidden }) => {
         return newSlides;
     } */
 
+    //<Zone mouseRef={thumbPreview} zone={zone} key={zone.id} index={index} gridSize={gridSize} onClick={handleSelectedZone} /* onMouseEnter={handleHoveredZone} onMouseLeave={setHoveredZoneId} */ isDisabled={playingPreview || currentTool !== 'Cursor' /* || (selectedZoneId !== null && selectedZoneId !== zone.id && hoveredZoneId === selectedZoneId) */ || isDragging} isPlaying={playingPreview} isSelected={selectedZoneId === zone.id} /* isHovered={hoveredZoneId === zone.id} */ onChange={handleChangeZone} adjusmentWidth={thumbPreviewWidth} /* mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} */ />
 
     return (
         <>
-        {console.log('render')}
+        {console.log('render', JSON.stringify(center))}
         <main role="main" className="w-10/12 4k:w-11/12 flex grow-0 shrink-0">
             
           <div className='w-full h-full shrink grow-0 flex flex-col bg-gray-900'>
@@ -1441,9 +1392,9 @@ const LayoutToolV2 = ({ isHidden }) => {
                     <div onClick={() => handleChangeCurrentTool('Cursor')} className={`h-full py-2 px-3 text-white ${currentTool === "Cursor" && !playingPreview ? "bg-blue-500" : "hover:bg-gray-500 cursor-pointer"} flex items-center transition duration-150 ease-in-out delay-0 group`}>
                         <CursorClickIcon className={`h-6 w-6 pointer-events-none transition duration-150 ease-in-out delay-0 group-hover:scale-110`} />
                     </div>
-                    {/* <div onClick={() => handleChangeCurrentTool('PanZoom')} className={`h-full py-2 px-3 text-white ${currentTool === "PanZoom" && !playingPreview ? "bg-blue-500" : "hover:bg-gray-500 cursor-pointer"} flex items-center transition duration-150 ease-in-out delay-0 group`}>
+                    <div onClick={() => handleChangeCurrentTool('PanZoom')} className={`h-full py-2 px-3 text-white ${currentTool === "PanZoom" && !playingPreview ? "bg-blue-500" : "hover:bg-gray-500 cursor-pointer"} flex items-center transition duration-150 ease-in-out delay-0 group`}>
                         <HandIcon className={`h-6 w-6 pointer-events-none transition duration-150 ease-in-out delay-0 group-hover:scale-110`} />
-                    </div> */}
+                    </div>
                     <div onClick={() => handleChangeCurrentTool('Text')} className={`h-full py-2 px-3 text-white ${currentTool === "Text" && !playingPreview ? "bg-blue-500" : "hover:bg-gray-500 cursor-pointer"} flex items-center transition duration-150 ease-in-out delay-0 group`}>
                         <MenuAlt2Icon className={`h-6 w-6 pointer-events-none transition duration-150 ease-in-out delay-0 group-hover:scale-110`} />
                     </div>
@@ -1491,48 +1442,49 @@ const LayoutToolV2 = ({ isHidden }) => {
                         <SaveIcon className={`h-6 w-6 pointer-events-none transition duration-150 ease-in-out delay-0 group-hover:scale-110`} />
                 </div>
             </div>
+            
+            <div className={`w-full h-full flex flex-row items-center justify-center bg-gray-900 overflow-hidden relative ${currentTool === 'PanZoom' ? 'cursor-grab' : ''}`} /* ref={(el) => {if (container === null) setContainer(el)}} {...panZoomHandlers} */ ref={thumbPreviewContainer} >
+
+                <div className={`w-full h-full absolute top-0 left-0 ${currentTool === 'PanZoom' ? 'pointer-events-auto' : 'pointer-events-none hidden'}`} ref={(el) => setContainer(el)} {...panZoomHandlers}></div>
+                    <div onClick={() => { setSelectedZoneId(null); setCurrentZone(null); }} className={`absolute top-0 left-0 w-full h-full ${currentTool === 'PanZoom' ? 'pointer-events-none' : 'pointer-events-auto'}`} ></div>
+                    {thumbPreviewContainer.current && thumbPreviewContainerWidth > 0 && thumbPreviewWidth > 0 &&
+                        <div className={`${currentTool === 'PanZoom' ? 'pointer-events-none' : 'pointer-events-auto'} ${thumbPreviewWidth > 0 ? '' : 'w-3/4'}`} style={zoom > 1 ? { position: 'absolute', top: (thumbPreviewWidth / 16 * 9 * zoom - thumbPreviewWidth / 16 * 9) / 2 + pan.y, left: (thumbPreviewWidth * zoom - thumbPreviewWidth) / 2 + pan.x, width: thumbPreviewWidth * zoom, height: thumbPreviewWidth / 16 * 9  * zoom} : { width: thumbPreviewWidth, height: thumbPreviewWidth / 16 * 9 }}>
+                            <div id="thumbPreview" className={`w-full h-full relative bg-white overflow-hidden rounded ${currentTool === 'PanZoom' ? 'pointer-events-none' : 'pointer-events-auto'}`} ref={thumbPreview} >
+                                {/* {thumbPreview.current && thumbPreviewWidth > 0 && 
+
+                                    <> */}
+                                        <div className={`absolute z-10 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? 'pointer-events-none' : ''}`}>
+                                            <ZoneEditor mouseRef={thumbPreview} zone={selectedZoneId !== null ? currentZone : null} index={currentSlide.zones.findIndex(zone => zone.id === selectedZoneId)} gridSize={gridSize} onClick={handleSelectedZone} /* onMouseEnter={handleHoveredZone} onMouseLeave={setHoveredZoneId} */ isDisabled={playingPreview || currentTool !== 'Cursor' /* || (selectedZoneId !== null && selectedZoneId !== zone.id && hoveredZoneId === selectedZoneId) */ || isDragging} isPlaying={playingPreview} isSelected={true} /* isHovered={hoveredZoneId === zone.id} */ onChange={handleChangeZone} adjusmentWidth={thumbPreviewWidth * zoom} /* mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} */ />
+                                            {zones === null ? currentSlide.zones.map((zone, index) => { 
+                                                if (zone.finalPosition) {
+                                                    return (zone.id !== selectedZoneId ? <ZoneContent zone={zone} index={index} onMouseDown={handleSelectedZone} isPlaying={playingPreview} key={`${zone.id}`} isDisabled={playingPreview || currentTool !== 'Cursor' /* || (selectedZoneId !== null && selectedZoneId !== zone.id && hoveredZoneId === selectedZoneId) */ || isDragging} adjusmentWidth={thumbPreviewWidth * zoom} />
+                                                    : <></>)
+                                                }
+
+                                                return <></>
+                                            })
+                                            :
+                                            zones.map((zone, index) => {
+                                                if (zone.finalPosition) {
+                                                    return <ZoneContent zone={zone} key={`preview-${zone.id}`} isPreview={true} adjusmentWidth={thumbPreviewWidth} />
+                                                    /* <Zone zone={zone} key={zone.id} index={index} gridSize={gridSize} onClick={() => {}} onMouseEnter={() => {}} onMouseLeave={() => {}} isDisabled={true} isPlaying={true} isSelected={false} isHovered={false} onChange={() => {}} adjusmentWidth={thumbPreviewWidth} mouseX={0} mouseY={0} mouseDown={false} mouseHover={false} /> */
+                                                }
+
+                                                return <></>
+                                            })}
+                                        </div>
+                                        <div className={`absolute z-20 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' && currentTool !== 'PanZoom' ? '' : 'hidden'}`}>
+                                            {/* {currentZone !== null && currentZone.id === 0 && <div key={'tempZone-key'} style={{ position: "absolute", left: getComputedPixelSize(currentZone.finalPosition.left), top: getComputedPixelSize(currentZone.finalPosition.top), width: getComputedPixelSize(currentZone.finalPosition.width), height: getComputedPixelSize(currentZone.finalPosition.height) }} className='bg-blue-500 opacity-40 z-0 pointer-event-none rounded-sm'></div>} */}
+                                            {currentTool !== 'Cursor' && currentTool !== 'PanZoom' && !isDragging && <VirtualGrid gridSize={gridSize} mouseRef={thumbPreview} hidden={playingPreview} adjusmentWidth={thumbPreviewWidth * zoom} zoom={zoom} onClick={handleCreateNewZone} onHover={handleCreateNewZone} />}
+                                            {/* {currentTool !== 'Cursor' && currentTool !== 'PanZoom' && <VirtualGrid mouseRef={thumbPreview} hidden={playingPreview ? true : !mouse.isOver} x={mouse.x / (zoom ? zoom : 1)} y={mouse.y / (zoom ? zoom : 1)} adjusmentWidth={thumbPreviewWidth} onClick={handleCreateNewZone} isDown={mouse.isDown} onHover={handleCreateNewZone} />} */}
+                                            {/* {currentTool === 'PanZoom' && <div className={`absolute top-0 left-0 w-full h-full ${currentTool === 'PanZoom' ? 'pointer-events-auto' : 'hidden'}`} ref={(el) => setContainer(el)} {...panZoomHandlers}></div>} */}
+                                        </div>
+                                    {/* </>
+
+                                } */}
+                            </div>
+                        </div>}
                 
-            <div className={`w-full h-full flex flex-row items-center justify-center bg-gray-900 overflow-hidden ${currentTool === 'PanZoom' ? 'cursor-grab' : ''}`} /* ref={(el) => {if (container === null) setContainer(el)}} {...panZoomHandlers} */ ref={thumbPreviewContainer} >
-
-            {thumbPreviewContainer.current && thumbPreviewContainerWidth > 0 && thumbPreviewWidth > 0 &&
-                <div className={`${currentTool === 'PanZoom' ? 'pointer-events-none' : ''}`} style={{ width: thumbPreviewWidth, height: thumbPreviewWidth / 16 * 9 }} /* style={{ transform }} */>
-                    <div id="thumbPreview" className={`w-full h-full relative bg-white overflow-hidden rounded ${currentTool === 'PanZoom' ? 'pointer-events-none' : ''}`} ref={thumbPreview} >
-                        {/* {thumbPreview.current && thumbPreviewWidth > 0 && 
-
-                            <> */}
-                                <div className={`absolute z-10 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' ? 'pointer-events-none' : ''}`}>
-                                    {zones === null ? currentSlide.zones.map((zone, index) => {
-                                        if (zone.finalPosition) {
-                                            return <Zone mouseRef={thumbPreview} zone={zone} key={zone.id} index={index} gridSize={gridSize} onClick={handleSelectedZone} onMouseEnter={handleHoveredZone} onMouseLeave={setHoveredZoneId} isDisabled={playingPreview || currentTool !== 'Cursor' || (selectedZoneId !== null && selectedZoneId !== zone.id && hoveredZoneId === selectedZoneId) || isDragging} isPlaying={playingPreview} isSelected={selectedZoneId === zone.id} isHovered={hoveredZoneId === zone.id} onChange={handleChangeZone} adjusmentWidth={thumbPreviewWidth} /* mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} */ />
-                                            /* <Zone mouseRef={thumbPreview} zone={zone} key={zone.id} index={index} onClick={handleSelectedZone} onMouseEnter={handleHoveredZone} onMouseLeave={setHoveredZoneId} isDisabled={playingPreview || currentTool !== 'Cursor' || (selectedZoneId !== null && selectedZoneId !== zone.id && hoveredZoneId === selectedZoneId)} isPlaying={playingPreview} isSelected={selectedZoneId === zone.id} isHovered={hoveredZoneId === zone.id} onChange={handleChangeZone} adjusmentWidth={thumbPreviewWidth} mouseX={mouse.x} mouseY={mouse.y} mouseDown={mouse.isDown} mouseHover={mouse.isOver} /> */
-                                        }
-
-                                        return <></>
-                                    })
-                                    :
-                                    zones.map((zone, index) => {
-                                        if (zone.finalPosition) {
-                                            return <ZoneContent zone={zone} key={`preview-${zone.id}`} isPreview={true} adjusmentWidth={thumbPreviewWidth} />
-                                            {/* <Zone zone={zone} key={zone.id} index={index} gridSize={gridSize} onClick={() => {}} onMouseEnter={() => {}} onMouseLeave={() => {}} isDisabled={true} isPlaying={true} isSelected={false} isHovered={false} onChange={() => {}} adjusmentWidth={thumbPreviewWidth} mouseX={0} mouseY={0} mouseDown={false} mouseHover={false} /> */}
-                                        }
-
-                                        return <></>
-                                    })}
-                                </div>
-                                {/* <div className={`absolute z-20 top-0 left-0 h-full w-full pointer-events-none ${currentTool === 'Cursor' && hoveredZoneId !== selectedZoneId && selectedZoneId !== null ? '' : 'hidden'}`}>
-                                    <button ref={hoverZoneRef} onMouseEnter={() => setHoveredZoneId(selectedZoneId)} className={`${currentTool !== 'Cursor' ? 'pointer-events-none' : 'pointer-events-auto'}`} style={{ position: "absolute", left: getComputedPixelSize(selectedZoneId !== null ? currentZone.finalPosition.left : 0), top: getComputedPixelSize(selectedZoneIdx !== null ? currentZone.finalPosition.top : 0), width: getComputedPixelSize(selectedZoneIdx !== null ? currentZone.finalPosition.width : 0), height: getComputedPixelSize(selectedZoneIdx !== null ? currentZone.finalPosition.height : 0) }}></button>
-                                </div> */}
-                                <div className={`absolute z-20 top-0 left-0 h-full w-full ${currentTool !== 'Cursor' && currentTool !== 'PanZoom' ? '' : 'hidden'}`}>
-                                    {/* {currentZone !== null && currentZone.id === 0 && <div key={'tempZone-key'} style={{ position: "absolute", left: getComputedPixelSize(currentZone.finalPosition.left), top: getComputedPixelSize(currentZone.finalPosition.top), width: getComputedPixelSize(currentZone.finalPosition.width), height: getComputedPixelSize(currentZone.finalPosition.height) }} className='bg-blue-500 opacity-40 z-0 pointer-event-none rounded-sm'></div>} */}
-                                    {currentTool !== 'Cursor' && currentTool !== 'PanZoom' && !isDragging && <VirtualGrid gridSize={gridSize} mouseRef={thumbPreview} hidden={playingPreview} adjusmentWidth={thumbPreviewWidth} onClick={handleCreateNewZone} onHover={handleCreateNewZone} />}
-                                    {/* {currentTool !== 'Cursor' && currentTool !== 'PanZoom' && <VirtualGrid mouseRef={thumbPreview} hidden={playingPreview ? true : !mouse.isOver} x={mouse.x / (zoom ? zoom : 1)} y={mouse.y / (zoom ? zoom : 1)} adjusmentWidth={thumbPreviewWidth} onClick={handleCreateNewZone} isDown={mouse.isDown} onHover={handleCreateNewZone} />} */}
-                                    {/* {currentTool === 'PanZoom' && <div className={`absolute top-0 left-0 w-full h-full ${currentTool === 'PanZoom' ? 'pointer-events-auto' : 'hidden'}`} ref={(el) => setContainer(el)} {...panZoomHandlers}></div>} */}
-                                </div>
-                            {/* </>
-
-                        } */}
-                    </div>
-                </div>}
 
                 {/* {currentTool === 'PanZoom' && <div className={`absolute top-0 left-0 w-full h-full ${currentTool === 'PanZoom' ? 'pointer-events-auto' : 'hidden'}`} ref={(el) => setContainer(el)} {...panZoomHandlers}></div>} */}
 
@@ -1559,7 +1511,7 @@ const LayoutToolV2 = ({ isHidden }) => {
                                                                     <PlusCircleIcon className={`h-8 w-8 pointer-events-none text-gray-600`} />
                                                                 </div>
                                                             </div> */}
-                                                            <div className={`z-50 group absolute bottom-0 right-0 p-1 m-1 bg-gray-100 opacity-50 hover:opacity-100 ${currentSlide.id === slide.id ? '' : 'hidden'}`}>
+                                                            <div className={`z-50 group absolute bottom-0 right-0 p-1 m-1 bg-gray-100 hover:bg-red-100 opacity-50 hover:opacity-100 ${currentSlide.id === slide.id ? '' : 'hidden'}`}>
                                                                 <TrashIcon key={`slide-${slide.id}-trash`} onClick={(e) => { e.stopPropagation(); handleDeleteSlide(slide.id)}} className={`h-5 w-5 text-gray-600 group-hover:text-red-600 cursor-pointer`} />
                                                             </div>
                                                             {smallThumbPreview.current && smallThumbPreviewWidth > 0 && 
@@ -1567,7 +1519,7 @@ const LayoutToolV2 = ({ isHidden }) => {
                                                                     {slide.zones.map((zone, index) => {
                                                                         if (zone.finalPosition) {
                                                                             return <ZoneContent zone={zone} key={`slide-${slide.id}-smallpreview-${zone.id}`} isPreview={true} adjusmentWidth={smallThumbPreviewWidth} />;
-                                                                            {/* <Zone zone={zone} key={`slide-${slide.id}-${zone.id}`} index={index} gridSize={gridSize} onClick={() => {}} onMouseEnter={() => {}} onMouseLeave={() => {}} isDisabled={true} isPlaying={true} isSelected={false} isHovered={false} onChange={() => {}} adjusmentWidth={smallThumbPreviewWidth} mouseX={0} mouseY={0} mouseDown={false} mouseHover={false} /> */}
+                                                                            /* <Zone zone={zone} key={`slide-${slide.id}-${zone.id}`} index={index} gridSize={gridSize} onClick={() => {}} onMouseEnter={() => {}} onMouseLeave={() => {}} isDisabled={true} isPlaying={true} isSelected={false} isHovered={false} onChange={() => {}} adjusmentWidth={smallThumbPreviewWidth} mouseX={0} mouseY={0} mouseDown={false} mouseHover={false} /> */
                                                                         }
 
                                                                         return <></>
@@ -1597,6 +1549,7 @@ const LayoutToolV2 = ({ isHidden }) => {
                     
             
             <div className="flex sm:flex-col">
+                {currentSlide.zones &&
                 <DragDropContext onDragEnd={result => handleDragEnd(result, 'zones')} onDragStart={handleDragStart}>
                     <Droppable droppableId="zones">
                         {(provided) => (
@@ -1607,7 +1560,7 @@ const LayoutToolV2 = ({ isHidden }) => {
                                 if (finalPosition) {
                                     return <Draggable draggableId={`zone-${id}`} key={`slide-${currentSlide.id}-zonesList-${id}`} index={index}>
                                             {(provided) => (
-                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`transition duration-200 ease-in-out delay-0 hover:scale-105 bg-white pointer-events-auto rounded-sm w-full text-sm flex flex-col items-center ${selectedZoneId === id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-700' : hoveredZoneId === id ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-700' : 'hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 hover:ring-offset-gray-700'}`}>
+                                            <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`transition duration-200 ease-in-out delay-0 hover:scale-105 bg-white pointer-events-auto rounded-sm w-full text-sm flex flex-col items-center ${selectedZoneId === id ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-700' /* : hoveredZoneId === id ? 'ring-2 ring-blue-300 ring-offset-2 ring-offset-gray-700' */ : 'hover:ring-2 hover:ring-blue-300 hover:ring-offset-2 hover:ring-offset-gray-700'}`}>
                                                 <div disabled={isDragging} className={`py-2 px-2 w-full text-sm flex flex-col space-y-2 items-center`} onClick={() => handleSelectedZone(zone)} /* onMouseEnter={() => setHoveredZoneId(id)} onMouseLeave={() => setHoveredZoneId(null)} */>
                                                     <div className='w-full text-sm flex flex-row items-center'>
                                                         <div className='mr-3' >
@@ -1637,7 +1590,7 @@ const LayoutToolV2 = ({ isHidden }) => {
                         </div>
                         )}
                     </Droppable>
-                </DragDropContext>
+                </DragDropContext>}
 
             </div>
             </div>
@@ -1647,8 +1600,6 @@ const LayoutToolV2 = ({ isHidden }) => {
 }
 
 const VirtualGrid = props => {
-
-    /* const gridSize = 24; */
 
     const [mouseDown, setMouseDown] = useState(false);
     const [isDrawing, setIsDrawing] = useState(false);
@@ -1682,15 +1633,13 @@ const VirtualGrid = props => {
 
     const handleClick = (event) => {
         if (event.button === 0) {
-            props.onClick(mouse.x, mouse.y, true);
+            props.onClick(getRealSquare(mouse.x, mouse.y), true);
             handleTempFinalPosition(mouse.x, mouse.y);
             setIsDrawing(true);
         }
     }
 
     const getPositions = (position) => {
-
-        /* const gridSize = 24; */
 
         if (position[0][0] <= position[1][2] && position[0][1] <= position[1][3]) {
             position = [position[0], position[1]];
@@ -1725,15 +1674,7 @@ const VirtualGrid = props => {
 
     const handleTempFinalPosition = (mouseX, mouseY) => {
 
-        /* const gridSize = 24; */
-
-        let realX = getRealPixelSize(mouseX);
-        let realY = getRealPixelSize(mouseY);
-
-        let x = realX - realX % props.gridSize;
-        let y = realY - realY % props.gridSize;
-
-        let square = [ x, y, x + props.gridSize, y + props.gridSize ];
+        let square = getRealSquare(mouseX, mouseY);
 
         let newTempFinalPosition = null;
 
@@ -1746,27 +1687,37 @@ const VirtualGrid = props => {
         }
     }
 
+    const getRealSquare = (mouseX, mouseY) => {
+        let realX = getRealPixelSize(mouseX);
+        let realY = getRealPixelSize(mouseY);
+
+        let x = realX - realX % props.gridSize;
+        let y = realY - realY % props.gridSize;
+
+        let square = [ x, y, x + props.gridSize, y + props.gridSize ];
+
+        return square;
+    }
+
     useEffect(() => {
         if (!props.hidden && mouse.isOver && isDrawing) {
             if (mouse.isDown) {
-                setMouseDown(true);    
-                /* props.onHover(mouse.x, mouse.y, true); */
+                setMouseDown(true);
                 handleTempFinalPosition(mouse.x, mouse.y);
                 setLastMousePosition({ x: mouse.x, y: mouse.y});
             } else if (mouseDown && !mouse.isDown) {
                 setMouseDown(false);
-                props.onClick(mouse.x, mouse.y, false);
+                props.onClick(getRealSquare(mouse.x, mouse.y), false);
                 setTempPositions(null);
                 setIsDrawing(false);
                 setLastMousePosition(null)
             } else if (!mouse.isDown) {
                 setMouseDown(false);
-                /* props.onClick(lastMousePosition.x, lastMousePosition.y, false); */
                 if (lastMousePosition !== null) {
                     handleTempFinalPosition(lastMousePosition.x, lastMousePosition.y);
                 } else {
                     setMouseDown(false);
-                    props.onClick(mouse.x, mouse.y, false);
+                    props.onClick(getRealSquare(mouse.x, mouse.y), false);
                     setTempPositions(null);
                     setLastMousePosition(null)
                 }
@@ -1783,7 +1734,7 @@ const VirtualGrid = props => {
 
     return <>
     <button className={`w-full h-full pointer-events-auto z-10 ${props.hidden || !mouse.isOver ? 'hidden' : ''}`} onMouseDown={(event) => handleClick(event)}>
-        <div className='bg-blue-500 rounded-sm cursor-pointer pointer-events-none'  /* onMouseUp={() => props.onClick(props.x, props.y)} */ style={{ position: "absolute", 
+        <div className='bg-blue-500 rounded-sm cursor-pointer pointer-events-none' style={{ position: "absolute", 
             left: mouse.x - mouse.x % computedGridSize, 
             top: mouse.y - mouse.y % computedGridSize, 
             width: computedGridSize, 

@@ -27,6 +27,7 @@
     "react-quill": "^1.3.5",
     "react-responsive": "^9.0.0-beta.6",
     "react-scripts": "5.0.0",
+    "recoil": "^0.6.1",
     "use-keyboard-shortcut": "^1.1.4",
     "use-pan-and-zoom": "^0.6.5",
     "web-vitals": "^2.1.4"
